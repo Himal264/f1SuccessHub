@@ -3,7 +3,12 @@ import axios from "axios";
 import { backendUrl } from "../App";
 import { toast } from "react-toastify";
 
-const Add = ({ token }) => {
+
+
+
+const Add = () => {
+
+  const token = localStorage.getItem('token');
   const [formData, setFormData] = useState({
     question: "",
     answer: "",
@@ -28,7 +33,12 @@ const Add = ({ token }) => {
       const response = await axios.post(
         backendUrl + "/api/question/add",
         formData,
-        {headers:{token}}
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          
+          },
+        }
       );
       console.log(response.data);
 

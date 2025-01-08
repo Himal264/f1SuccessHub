@@ -5,7 +5,7 @@ import adminAuth from '../middlewares/adminAuth.js';
 
 const questionRouter = express.Router();
 
-questionRouter.post('/add',  addQuestions);
+questionRouter.post('/add',adminAuth,  addQuestions);
 questionRouter.get('/list', listQuestions);
 questionRouter.post('/single', adminAuth, singleQuestion);
 questionRouter.post('/remove',removeQuestion);

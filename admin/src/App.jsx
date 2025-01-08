@@ -8,6 +8,9 @@ import Update from "./pages/Update";
 import Login from "./components/Login";
 import {ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import EmailForm from "./pages/EmailForm";
+import ListUniversity from "./pages/ListUniversity";
+import AddUniversity from "./pages/AddUni";
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL
 
@@ -35,6 +38,9 @@ const App = () => {
                 <Route path="/add" element={<Add token={token}/>} />
                 <Route path="/list" element={<List token={token}/>} />
                 <Route path="/update" element={<Update token={token}/>} />
+                <Route path="/email" element={<EmailForm setToken={setToken}/>} />
+                <Route path="/adduniversity" element={<AddUniversity setToken={setToken}/>} />
+                <Route path="/listuniverstiy" element={<ListUniversity setToken={setToken}/>} />
               </Routes>
             </div>
           </div>

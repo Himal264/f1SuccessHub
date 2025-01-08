@@ -4,7 +4,8 @@ import axios from "axios";
 import { backendUrl } from "../App";
 import { toast } from "react-toastify";
 
-const Update = ({ token }) => {
+const Update = () => {
+  const token = localStorage.getItem('token');
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
   const [reasoning, setReasoning] = useState("");
@@ -18,7 +19,9 @@ const Update = ({ token }) => {
     try {
       const response = await axios.get(`${backendUrl}/api/question/details`, {
         params: { questionId },
-        headers: { token },
+        headers: {
+          Authorization: `Bearer ${token}`,
+         },
       });
       if (response.data.success) {
         const { question, answer, reasoning, type } = response.data.question;

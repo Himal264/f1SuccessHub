@@ -2,6 +2,7 @@ import validator from "validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import userModel from "../models/userModel.js";
+import sendEmail from "../utils/sendEmail.js";
 
 const createToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET);
@@ -38,7 +39,7 @@ const registerUser = async (req, res) => {
     // checking user already exists or not
     const exists = await userModel.findOne({ email });
     if (exists) {
-      return res.json({ success: false, message: "User Already exists" });
+      return res.json({ success: false, message: "User already exists" });
     }
 
     // validating email format & strong password
@@ -69,6 +70,13 @@ const registerUser = async (req, res) => {
     const user = await newUser.save();
 
     const token = createToken(user._id);
+
+    // Send congratulatory email
+    const subject = "Welcome to F1 Success Hub!";
+const text = `Dear ${name},\n\nCongratulations on taking the first step towards your F1 visa journey with F1 Success Hub! We are delighted to welcome you to our platform, where your success is our mission.\n\nAs a member, you’ll have access to expert guidance throughout your F1 visa process, including personalized advice from our experienced former visa officers. Our team is here to ensure you are fully prepared and confident every step of the way.\n\nWhat’s next? Explore our platform to find exclusive resources, tips, and support tailored to help you achieve your academic and career goals in the United States.\n\nShould you have any questions, feel free to reach out to our support team anytime. We’re excited to be part of your journey to success!\n\nWarm regards,\n\nThe F1 Success Hub Team\nEmail: f1successhub@gmail.com\nPhone: +977-9764558713`;
+
+
+    await sendEmail({ to: email, subject, text });
 
     res.json({ success: true, token });
   } catch (error) {

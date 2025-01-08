@@ -4,15 +4,98 @@ import search_icon from './search_icon.png';
 import dropdown_icon from './dropdown_icon.png';
 import hero from './hero.png';
 import about from './about_img.png';
+import founder from './founder.png';
+import phoneIcon from './telephone.png';
+import emailIcon from './email.png';
+import locationIcon from './location.png';
+import websiteIcon from './website.png';
+import advisor1 from './advisor1.png';
+import advisor2 from './advisor2.png';  
+import advisor3 from './advisor3.png';
+import university_hero from './universityhero.png';
+import OurServiceHero from './ourservicehero.png';
+import loan_patner from './loan_patner.png';
+import interview_patner from './interview_patner.png';
+import education_patner from './education_patner.png';
+
+
+import BrownBrigham_logo from './Brown University Old.png'
+import Ohio_logo from './OSUniversity.png'
+import Nebraska_logo from './UniversityNebraska.png'
+
+import Christopher_logo from './ChristopherNewport.png'
+import ColoradoChristian_logo from './ColoradoChristian.png'
+import Coppin_logo from './CoppinState.png'
+import CornellUniversity_logo from './CornellUniversity.png'
+import Denison_logo from './DenisonUniversity.png'
+import DevryUniversity_logo from './DevryUniversity.png'
+import Drew_logo from './DrewUniversity.png'
+import Rutgers_logo from './Rutgers.png'
+import SFa_log from './SFAStephen.png'
+import SouthCAli_logo from './SouthernCalifornia.png'
+import South_logo from './SouthFlorida.png'
+import The_geo_logo from './TheGeorgeWashington.png'
+import UAH_logo from './UAH.png'
+import wash_logo from './University of Washington.png'//
+import UConn_logo from './UConnHuskies_logo.png'//
+import chico_logo from './UniversityChicago.png'//
+import georg_go from './UniversityGeorgia.png'//
+import nebara_logo from './UniversityNebraska.png'//
+import north_logo from './UniversityNorthCarolinaAthletics.png'//
+import vir_logo from './Virginia.png'//
+import wamu_logo from './WaMu American University Radio.png'//
+
 
 
 const assets = {
+  
   f1successhubLogo,
   menu_icon,
   search_icon,
   dropdown_icon,
   hero,
-  about
+  about,
+  founder,
+  phoneIcon,
+  emailIcon,
+  locationIcon,
+  websiteIcon,
+  advisor1,
+  advisor2,
+  advisor3,
+  university_hero,
+  OurServiceHero,
+  loan_patner,
+  interview_patner,
+  education_patner,
+  BrownBrigham_logo,
+  Ohio_logo,
+  Christopher_logo,
+  ColoradoChristian_logo,
+  Coppin_logo,
+  CornellUniversity_logo,
+  Denison_logo,
+  DevryUniversity_logo,
+  Drew_logo,
+  Nebraska_logo,
+  Rutgers_logo,
+  SFa_log,
+  SouthCAli_logo,
+  South_logo,
+  The_geo_logo,
+  UAH_logo,
+  UConn_logo,
+  wash_logo,
+  chico_logo,
+  georg_go,
+  nebara_logo,
+  north_logo,
+  vir_logo,
+  wamu_logo
+
+
+ 
+
 };
 
 export default assets;

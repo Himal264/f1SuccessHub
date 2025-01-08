@@ -1,14 +1,22 @@
-import React from 'react'
-import Hero from '../components/Hero'
-import Footer from '../components/Footer'
+import React from "react";
+import UniversityHero from "../components/UniversityHero";
+import Footer from "../components/Footer";
+import SuccessMatters from "../components/SuccessMatters";
+import FAQ from "../components/FAQ";
+import UniversitySearch from "../components/UniversitySearch";
+import StatsSection from "../components/StatsSection";
 
 const Home = () => {
   return (
     <div>
-      <Hero />
+      <UniversityHero />
+      <UniversitySearch />
+      <StatsSection />
+      <SuccessMatters />
+      <FAQ />
       <Footer />
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

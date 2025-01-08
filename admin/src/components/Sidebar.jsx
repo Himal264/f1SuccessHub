@@ -18,6 +18,18 @@ const Sidebar = () => {
           <img className='w-5 h-5' src={assets.update_icon} alt="" />
           <p className='hidden md:block'>Update Question</p>
         </NavLink>
+        <NavLink className='flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded' to="/email">
+          <img className='w-5 h-5' src={assets.mail_icon} alt="" />
+          <p className='hidden md:block'>Send Email</p>
+        </NavLink>
+        <NavLink className='flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded' to="/adduniversity">
+          <img className='w-5 h-5' src={assets.university_icon} alt="" />
+          <p className='hidden md:block'>Add Universites</p>
+        </NavLink>
+        <NavLink className='flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded' to="/listuniverstiy">
+          <img className='w-5 h-5' src={assets.university_icon} alt="" />
+          <p className='hidden md:block'>List Universites</p>
+        </NavLink>
       </div>
     </div>
   )

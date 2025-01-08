@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 import { backendUrl } from "../App";
 import { toast } from "react-toastify";
 
-const List = ({ token }) => {
+const List = () => {
+  const token = localStorage.getItem('token');
   const [questions, setQuestions] = useState([]);
   const [filteredQuestions, setFilteredQuestions] = useState([]);
   const [categories, setCategories] = useState(["All"]);
@@ -12,7 +13,10 @@ const List = ({ token }) => {
   const fetchQuestions = async () => {
     try {
       const response = await axios.get(backendUrl + "/api/question/list", {
-        headers: { token },
+        headers: {
+          Authorization: `Bearer ${token}`,
+         
+        },
       });
       if (response.data.success) {
         const questions = response.data.questions;
@@ -39,7 +43,12 @@ const List = ({ token }) => {
       const response = await axios.post(
         backendUrl + "/api/question/remove",
         { id },
-        { headers: { token } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            
+          },
+        }
       );
 
       if (response.data.success) {

@@ -1,55 +1,65 @@
 import React from "react";
 import assets from "../assets/assets";
+
 const Hero = () => {
   return (
-    <div className="flex flex-col sm:flex-row border border-gray-400">
+    <div className="flex flex-col sm:flex-row border border-gray-400 mb-12">
       {/* Hero Left Side */}
-      <div className="w-full sm:w-1/2 flex flex-col justify-center p-8 sm:p-12 h-[600px]">
-        <div className="text-[#414141] max-w-lg">
-          <h1 className="text-4xl sm:text-5xl font-serif mb-6">
+      <div className="w-full sm:w-1/2 flex flex-col justify-center p-6">
+        <div className="text-[#414141] max-w-lg mx-auto sm:mx-0 sm:max-w-none lg:max-w-lg">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif mb-4 sm:mb-6">
             F1 Visa Interview Questions & Answers Guide
           </h1>
-          <p className="text-lg mb-8 leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 leading-relaxed">
             All questions and answers are thoughtfully crafted in consultation with former visa officers and experienced students, ensuring you're fully prepared for your interview.
           </p>
           
           {/* Advisory Section */}
-          <div className="mb-8">
-            <h3 className="text-xl font-medium mb-4">
+          <div className="mb-6 sm:mb-8">
+            <h3 className="text-lg sm:text-xl font-medium mb-3 sm:mb-4">
               Our free advising helps you step by step - from application to graduation!
             </h3>
-            <div className="space-y-2 mb-6">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Advice & research</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Application & visa help</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Pre-arrival info</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>No application fee</span>
-              </div>
+            <div className="space-y-2 mb-4 sm:mb-6">
+              {[
+                "Advice & research",
+                "Application & visa help",
+                "Pre-arrival info",
+                "No application fee",
+              ].map((text, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <svg
+                    className="w-4 h-4 sm:w-5 sm:h-5 text-green-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span className="text-sm sm:text-base">{text}</span>
+                </div>
+              ))}
             </div>
-            <button 
-              className="bg-[#F37021] hover:bg-[#e26417] text-white px-6 py-3 rounded-lg text-lg transition-colors duration-300 font-medium flex items-center gap-2"
+            <button
+              className="w-full sm:w-auto bg-[#F37021] hover:bg-[#e26417] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base md:text-lg transition-colors duration-300 font-medium flex items-center justify-center sm:justify-start gap-2"
             >
               Ask an Advisor
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
           </div>
@@ -57,8 +67,8 @@ const Hero = () => {
       </div>
 
       {/* Hero Right Side */}
-      <div className="w-full sm:w-1/2 h-[600px]">
-        <img 
+      <div className="w-full sm:w-1/2 h-[300px] sm:h-auto">
+        <img
           className="w-full h-full object-cover"
           src={assets.hero}
           alt="Student consulting with advisor"
