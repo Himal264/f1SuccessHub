@@ -39,8 +39,7 @@ app.use('/api/email', emailRoutes);
 //university api endpoints
 app.use('/api/university', universityRouter);
 app.use('/api/university/:id', universityRouter);
-// app.use('/api/university', universityRouter);
-app.use("/api/university", universityRouter);
+
 
 
 

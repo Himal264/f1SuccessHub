@@ -1,16 +1,15 @@
-import University from '../models/universityModel.js';
-import { v2 as cloudinary } from 'cloudinary';
-
-
+import University from "../models/universityModel.js";
+import { v2 as cloudinary } from "cloudinary";
+import mongoose from "mongoose";
 
 // Add this to your backend route temporarily
 export const getUniversities = async (req, res) => {
   try {
     const universities = await University.find();
-    console.log('Found universities:', universities); // Debug log
+    console.log("Found universities:", universities); // Debug log
     res.status(200).json({ universities: universities });
   } catch (error) {
-    console.error('Database error:', error); // Debug log
+    console.error("Database error:", error); // Debug log
     res.status(500).json({ message: error.message });
   }
 };
@@ -23,79 +22,35 @@ export const getUniversityById = async (req, res) => {
   try {
     const { id } = req.params;
 
-
-    
     // Validate ID
     if (!id) {
-      return res.status(400).json({ message: 'University ID is required' });
+      return res.status(400).json({ message: "University ID is required" });
     }
 
     // Check if ID is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid university ID format' });
+      return res.status(400).json({ message: "Invalid university ID format" });
     }
 
-    console.log('Searching for university with ID:', id);
-    
-   
+    console.log("Searching for university with ID:", id);
+
     const university = await University.findById(id);
-if (!university) {
-  console.log('No university found for ID:', id); // Add this line for debugging
-  return res.status(404).json({ message: 'University not found' });
-}
-    
+
     if (!university) {
-      return res.status(404).json({ message: 'University not found' });
+      console.log("No university found for ID:", id);
+      return res.status(404).json({ message: "University not found" });
     }
-    
-    res.status(200).json(university);
+
+    // Return the university data in a consistent structure
+    res.status(200).json({ university });
   } catch (error) {
-    console.error('Error in getUniversityById:', error);
-    res.status(500).json({ 
-      message: 'Error fetching university', 
-      error: error.message 
+    console.error("Error in getUniversityById:", error);
+    res.status(500).json({
+      message: "Error fetching university",
+      error: error.message,
     });
   }
 };
-
-
-export const singleUniversity = async (req, res) => {
-  try {
-    const { id } = req.body; // Accepting id from request body instead of params
-
-    // Validate ID
-    if (!id) {
-      return res.status(400).json({ success: false, message: 'University ID is required' });
-    }
-
-    // Check if ID is a valid MongoDB ObjectId
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: 'Invalid university ID format' });
-    }
-
-    console.log('Searching for university with ID:', id);
-
-    // Fetch the university by ID
-    const university = await University.findById(id);
-    
-    if (!university) {
-      console.log('No university found for ID:', id); // Debugging line
-      return res.status(404).json({ success: false, message: 'University not found' });
-    }
-
-    // Return the university details
-    res.status(200).json({ success: true, university });
-
-  } catch (error) {
-    console.error('Error in singleUniversity:', error);
-    res.status(500).json({ success: false, message: 'Error fetching university', error: error.message });
-  }
-};
-
-
-
-
-
 
 export const addUniversity = async (req, res) => {
   try {
@@ -119,13 +74,12 @@ export const addUniversity = async (req, res) => {
       admissionRequirements,
     } = req.body;
 
-   
     const parsedData = {
       undergraduatePrograms: JSON.parse(undergraduatePrograms),
       graduatePrograms: JSON.parse(graduatePrograms),
       scholarships: JSON.parse(scholarships),
       rankings: JSON.parse(rankings),
-    
+
       feeStructure: JSON.parse(feeStructure),
       location: JSON.parse(location),
       contact: JSON.parse(contact),
@@ -136,60 +90,80 @@ export const addUniversity = async (req, res) => {
       admissionRequirements: JSON.parse(admissionRequirements),
     };
 
-    
-   
-    let logoUrl = '';
+    const parsedIntake = JSON.parse(intake).map((entry) => ({
+      month: entry.month,  // Month (e.g., January, Summer, etc.)
+      year: entry.year,    // Year for the intake
+      deadline: new Date(entry.deadline),  // Ensure deadline is a Date object
+    }));
+
+    // parse location for state and region
+    const parsedLocation = JSON.parse(location);
+    const {name: locationName, state, region, citysize, ...otherLocationDetails} = parsedLocation;
+
+    let logoUrl = "";
     if (req.files && req.files.logo) {
       const result = await cloudinary.uploader.upload(req.files.logo[0].path, {
-        folder: 'university-logos',
+        folder: "university-logos",
       });
       logoUrl = result.secure_url;
     }
 
-   
     const mediaUrls = [];
     if (req.files) {
       for (let i = 1; i <= 5; i++) {
         const mediaField = `media${i}`;
         if (req.files[mediaField]) {
-          const result = await cloudinary.uploader.upload(req.files[mediaField][0].path, {
-            folder: 'university-media',
-          });
+          const result = await cloudinary.uploader.upload(
+            req.files[mediaField][0].path,
+            {
+              folder: "university-media",
+            }
+          );
           mediaUrls.push(result.secure_url);
         }
       }
     }
 
     // Handle location photo upload (new)
-    let locationPhoto = '';
+    let locationPhoto = "";
     if (req.files && req.files.locationPhoto) {
-      const result = await cloudinary.uploader.upload(req.files.locationPhoto[0].path, {
-        folder: 'university-location-photos',
-      });
+      const result = await cloudinary.uploader.upload(
+        req.files.locationPhoto[0].path,
+        {
+          folder: "university-location-photos",
+        }
+      );
       locationPhoto = result.secure_url;
     }
 
+
+ 
     const university = new University({
       name,
       logoUrl,
       media: mediaUrls,
       applicationFee,
-      intake: JSON.parse(intake),
+      intake: parsedIntake,  // Store the intake with deadlines
       graduationrate,
       acceptancerate,
       locationPhoto,
+      location: {
+        name: locationName,
+        state,
+        region,
+        citysize,
+        ...otherLocationDetails,
+      },
       ...parsedData,
     });
 
     const createdUniversity = await university.save();
     res.status(201).json(createdUniversity);
   } catch (error) {
-    console.error('Error adding university:', error);
+    console.error("Error adding university:", error);
     res.status(500).json({ message: error.message });
   }
 };
-
-
 
 export const updateUniversity = async (req, res) => {
   const { id } = req.params; // Extract university ID from request parameters
@@ -197,10 +171,14 @@ export const updateUniversity = async (req, res) => {
 
   try {
     // Find the university by ID and update it with the provided data
-    const updatedUniversity = await University.findByIdAndUpdate(id, updateData, {
-      new: true, // Return the updated document
-      runValidators: true, // Ensure validation rules in schema are applied
-    });
+    const updatedUniversity = await University.findByIdAndUpdate(
+      id,
+      updateData,
+      {
+        new: true, // Return the updated document
+        runValidators: true, // Ensure validation rules in schema are applied
+      }
+    );
 
     // If the university is found and updated, send it in the response
     if (updatedUniversity) {
@@ -226,7 +204,6 @@ export const updateUniversity = async (req, res) => {
   }
 };
 
-
 export const deleteUniversity = async (req, res) => {
   const { id } = req.params;
 
@@ -234,13 +211,11 @@ export const deleteUniversity = async (req, res) => {
     const university = await University.findById(id);
     if (university) {
       await university.remove();
-      res.status(200).json({ message: 'University removed' });
+      res.status(200).json({ message: "University removed" });
     } else {
-      res.status(404).json({ message: 'University not found' });
+      res.status(404).json({ message: "University not found" });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
-

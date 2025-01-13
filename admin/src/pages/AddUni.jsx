@@ -4,11 +4,63 @@ import { backendUrl } from "../App";
 import { toast } from "react-toastify";
 
 const AddUniversity = () => {
-
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   const [logoFile, setLogoFile] = useState(null);
   const [mediaFiles, setMediaFiles] = useState([null, null, null, null, null]);
   const [locationPhoto, setlocationPhoto] = useState(null);
+  const citysizeList = ["Small", "Medium", "Large", "Metropolitan"];
+  const statesList = [
+    "Alabama",
+    "Alaska",
+    "Arizona",
+    "Arkansas",
+    "California",
+    "Colorado",
+    "Connecticut",
+    "Delaware",
+    "Florida",
+    "Georgia",
+    "Hawaii",
+    "Idaho",
+    "Illinois",
+    "Indiana",
+    "Iowa",
+    "Kansas",
+    "Kentucky",
+    "Louisiana",
+    "Maine",
+    "Maryland",
+    "Massachusetts",
+    "Michigan",
+    "Minnesota",
+    "Mississippi",
+    "Missouri",
+    "Montana",
+    "Nebraska",
+    "Nevada",
+    "New Hampshire",
+    "New Jersey",
+    "New Mexico",
+    "New York",
+    "North Carolina",
+    "North Dakota",
+    "Ohio",
+    "Oklahoma",
+    "Oregon",
+    "Pennsylvania",
+    "Rhode Island",
+    "South Carolina",
+    "South Dakota",
+    "Tennessee",
+    "Texas",
+    "Utah",
+    "Vermont",
+    "Virginia",
+    "Washington",
+    "West Virginia",
+    "Wisconsin",
+    "Wyoming",
+  ];
 
   const [formData, setFormData] = useState({
     name: "",
@@ -17,7 +69,13 @@ const AddUniversity = () => {
     applicationFee: "",
     graduationrate: "",
     acceptancerate: "",
-    intake: [],
+    intake: [
+      {
+        month: "",
+        year: new Date().getFullYear(),
+        deadline: "",
+      },
+    ],
     undergraduatePrograms: {
       description: "",
       programs: {
@@ -57,14 +115,23 @@ const AddUniversity = () => {
     totalEnrollment: "",
     internationalStudentPercentage: "",
     feeStructure: {
-      tuitionFee: "",
-      livingFee: "",
-      otherFees: "",
+      undergraduate: {
+        tuitionFee: "",
+        livingFee: "",
+        otherFees: "",
+      },
+      graduate: {
+        tuitionFee: "",
+        livingFee: "",
+        otherFees: "",
+      },
     },
     location: {
       name: "",
+      state: "",
+      region: "",
       totalPopulation: "",
-      citysize:"",
+      citysize: "",
       nearbyCities: [],
       keyIndustries: [],
       landmarks: [],
@@ -106,6 +173,43 @@ const AddUniversity = () => {
     },
   });
 
+  // Updated intake change handler
+  const handleIntakeChange = (index, field, value) => {
+    setFormData((prev) => {
+      const newIntakes = [...prev.intake];
+      newIntakes[index] = {
+        ...newIntakes[index],
+        [field]: value,
+      };
+      return {
+        ...prev,
+        intake: newIntakes,
+      };
+    });
+  };
+
+  // Add new intake entry
+  const addIntakeEntry = () => {
+    setFormData((prev) => ({
+      ...prev,
+      intake: [
+        ...prev.intake,
+        {
+          month: "",
+          year: new Date().getFullYear(),
+          deadline: "",
+        },
+      ],
+    }));
+  };
+
+  // Remove intake entry
+  const removeIntakeEntry = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      intake: prev.intake.filter((_, i) => i !== index),
+    }));
+  };
   // Generic handler for simple field changes
   const handleChange = (e, section = null) => {
     const { name, value } = e.target;
@@ -244,20 +348,56 @@ const AddUniversity = () => {
       }));
     }
   };
+  // const handlelocationPhotoChange = (e) => {
+  //   const file = e.target.files[0];
+  //   if (file) {
+  //     setlocationPhoto(file); // Store the file for FormData submission
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       location: {
+  //         ...prev.location,
+  //         locationPhoto: URL.createObjectURL(file), // Preview URL for the photo
+  //       },
+  //     }));
+  //   }
+  // };
   const handlelocationPhotoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setlocationPhoto(file); // Store the file for FormData submission
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File size should be less than 5MB");
+        return;
+      }
+      if (!["image/jpeg", "image/png"].includes(file.type)) {
+        toast.error("Invalid file type. Please upload JPEG or PNG.");
+        return;
+      }
+      setlocationPhoto(file);
       setFormData((prev) => ({
         ...prev,
         location: {
           ...prev.location,
-          locationPhoto: URL.createObjectURL(file), // Preview URL for the photo
+          locationPhoto: URL.createObjectURL(file),
         },
       }));
     }
   };
-  
+
+  const handleFeeStructureChange = (e, level, field) => {
+    const { name, value } = e.target;
+
+    // Update the corresponding fee structure field
+    setFormData((prevData) => ({
+      ...prevData,
+      feeStructure: {
+        ...prevData.feeStructure,
+        [level]: {
+          ...prevData.feeStructure[level],
+          [field]: value, // Update the specific field value
+        },
+      },
+    }));
+  };
 
   const handleMediaChange = (e, index) => {
     const file = e.target.files[0];
@@ -275,8 +415,7 @@ const AddUniversity = () => {
     }
   };
 
-  console.log('Sending token:', token);
-
+  console.log("Sending token:", token);
 
   // Submit handler remains the same
   const onSubmitHandler = async (e) => {
@@ -284,7 +423,6 @@ const AddUniversity = () => {
     try {
       const formDataToSend = new FormData();
 
-   
       // Append all the regular form data
       Object.keys(formData).forEach((key) => {
         if (key !== "logoUrl" && key !== "media") {
@@ -309,7 +447,6 @@ const AddUniversity = () => {
       if (locationPhoto) {
         formDataToSend.append("locationPhoto", locationPhoto);
       }
-    
 
       const response = await axios.post(
         `${backendUrl}/api/university/add`,
@@ -334,7 +471,13 @@ const AddUniversity = () => {
           applicationFee: "",
           graduationrate: "",
           acceptancerate: "",
-          intake: [],
+          intake: [
+            {
+              month: "",
+              year: new Date().getFullYear(),
+              deadline: "",
+            },
+          ],
           undergraduatePrograms: {
             description: "",
             programs: {
@@ -374,14 +517,23 @@ const AddUniversity = () => {
           totalEnrollment: "",
           internationalStudentPercentage: "",
           feeStructure: {
-            tuitionFee: "",
-            livingFee: "",
-            otherFees: "",
+            undergraduate: {
+              tuitionFee: "",
+              livingFee: "",
+              otherFees: "",
+            },
+            graduate: {
+              tuitionFee: "",
+              livingFee: "",
+              otherFees: "",
+            },
           },
           location: {
             name: "",
+            state: "",
+            region: "",
             totalPopulation: "",
-            citysize:"",
+            citysize: "",
             nearbyCities: [],
             keyIndustries: [],
             landmarks: [],
@@ -511,13 +663,103 @@ const AddUniversity = () => {
             className="p-2 border rounded"
             required
           />
-          <input
-            placeholder="Intake (comma-separated)"
-            value={formData.intake.join(", ")}
-            onChange={(e) => handleArrayChange("intake", e.target.value)}
-            className="p-2 border rounded"
-            required
-          />
+          {/* Updated Intake Section */}
+          <div className="col-span-2 border rounded-lg p-4">
+            <h3 className="text-lg font-semibold mb-4">Intake Periods</h3>
+            <div className="space-y-4">
+              {formData.intake.map((intake, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col md:flex-row gap-4 p-4 bg-gray-50 rounded-lg"
+                >
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium mb-1">
+                      Term/Season
+                    </label>
+                    <select
+                      value={intake.month}
+                      onChange={(e) =>
+                        handleIntakeChange(index, "month", e.target.value)
+                      }
+                      className="w-full p-2 border rounded bg-white"
+                      required
+                    >
+                      <option value="">Select Term/Season</option>
+                      <optgroup label="Seasons">
+                        <option value="Spring">Spring</option>
+                        <option value="Summer">Summer</option>
+                        <option value="Fall">Fall</option>
+                        <option value="Winter">Winter</option>
+                      </optgroup>
+                      <optgroup label="Months">
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                      </optgroup>
+                    </select>
+                  </div>
+
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium mb-1">
+                      Year
+                    </label>
+                    <input
+                      type="number"
+                      value={intake.year}
+                      min={new Date().getFullYear()}
+                      max={new Date().getFullYear() + 5}
+                      onChange={(e) =>
+                        handleIntakeChange(index, "year", e.target.value)
+                      }
+                      className="w-full p-2 border rounded"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium mb-1">
+                      Application Deadline
+                    </label>
+                    <input
+                      type="date"
+                      value={intake.deadline}
+                      onChange={(e) =>
+                        handleIntakeChange(index, "deadline", e.target.value)
+                      }
+                      className="w-full p-2 border rounded"
+                      required
+                    />
+                  </div>
+
+                  {index > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => removeIntakeEntry(index)}
+                      className="self-end px-3 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addIntakeEntry}
+                className="mt-2 px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors flex items-center gap-2"
+              >
+                <span>Add Intake Period</span>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -634,17 +876,26 @@ const AddUniversity = () => {
       <section className="space-y-4">
         <h2 className="text-xl font-bold">Fee Structure</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.keys(formData.feeStructure).map((fee) => (
-            <input
-              key={fee}
-              placeholder={fee.replace(/([A-Z])/g, " $1").trim()}
-              name={fee}
-              type="number"
-              value={formData.feeStructure[fee]}
-              onChange={(e) => handleChange(e, "feeStructure")}
-              className="p-2 border rounded"
-              required
-            />
+          {Object.keys(formData.feeStructure).map((level) => (
+            <div key={level} className="space-y-2">
+              <h3 className="text-lg font-semibold capitalize">{level}</h3>
+              {Object.keys(formData.feeStructure[level]).map((field) => (
+                <div key={field} className="space-y-1">
+                  <label htmlFor={field} className="block text-sm font-medium">
+                    {field.replace(/([A-Z])/g, " $1").trim()}
+                  </label>
+                  <input
+                    id={field}
+                    name={field}
+                    type="number"
+                    value={formData.feeStructure[level][field]}
+                    onChange={(e) => handleFeeStructureChange(e, level, field)} // Pass field as well
+                    className="p-2 border rounded w-full"
+                    required
+                  />
+                </div>
+              ))}
+            </div>
           ))}
         </div>
       </section>
@@ -661,6 +912,43 @@ const AddUniversity = () => {
             className="p-2 border rounded"
             required
           />
+          {/* State Selection */}
+          <div className="space-y-2">
+            <label
+              htmlFor="state"
+              className="block text-sm font-medium text-gray-700"
+            >
+              State
+            </label>
+            <select
+              id="state"
+              name="state"
+              value={formData.location.state}
+              onChange={(e) => handleChange(e, "location")}
+              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            >
+              <option value="">Select a State</option>
+              {statesList.map((state) => (
+                <option key={state} value={state}>
+                  {state}
+                </option>
+              ))}
+            </select>
+          </div>
+          <select
+            name="region"
+            value={formData.location.region}
+            onChange={(e) => handleChange(e, "location")}
+            className="p-2 border rounded"
+            required
+          >
+            <option value="">Select Region</option>
+            <option value="US - Midwest">US - Midwest</option>
+            <option value="US - Northeast">US - Northeast</option>
+            <option value="US - South">US - South</option>
+            <option value="US - West">US - West</option>
+          </select>
           <input
             placeholder="Total Population"
             name="totalPopulation"
@@ -670,15 +958,21 @@ const AddUniversity = () => {
             className="p-2 border rounded"
             required
           />
-          <input
-            placeholder="City Size"
+          <select
             name="citysize"
-            type="number"
             value={formData.location.citysize}
             onChange={(e) => handleChange(e, "location")}
             className="p-2 border rounded"
             required
-          />
+          >
+            <option value="">Select City Size</option>
+            {citysizeList.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </select>
+
           <input
             placeholder="Nearby Cities (comma-separated)"
             value={formData.location.nearbyCities.join(", ")}
@@ -730,7 +1024,6 @@ const AddUniversity = () => {
             className="p-2 border rounded"
             required
           />
-           
         </div>
 
         <div className="space-y-2">
@@ -751,7 +1044,6 @@ const AddUniversity = () => {
             />
           )}
         </div>
-       
 
         {/* Weather */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

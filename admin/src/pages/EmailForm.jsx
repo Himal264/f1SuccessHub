@@ -9,6 +9,7 @@ const EmailForm = () => {
     body: "",
     file: null,
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,6 +28,7 @@ const EmailForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
     const { subject, body, file } = formData;
     const formPayload = new FormData();
@@ -35,26 +37,37 @@ const EmailForm = () => {
     if (file) formPayload.append("file", file);
 
     try {
-      const response = await axios.post(`${backendUrl}/email/send}`, formPayload, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axios.post(
+        `${backendUrl}/email/broadcast`,
+        formPayload,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       if (response.data.success) {
-        toast.success("Email sent successfully!");
+        toast.success("Email broadcast sent successfully to all users!");
         setFormData({ subject: "", body: "", file: null });
       } else {
-        toast.error("Failed to send email");
+        toast.error(response.data.message || "Failed to send broadcast email");
       }
     } catch (error) {
-      toast.error("Error sending email");
+      toast.error(
+        error.response?.data?.message || "Error sending broadcast email"
+      );
       console.error("Error:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col w-full items-start gap-3">
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col w-full items-start gap-3"
+    >
       <div className="w-full">
         <p className="mb-2">Subject</p>
         <input
@@ -78,7 +91,9 @@ const EmailForm = () => {
           placeholder="Enter email body"
           required
         />
-        <p className="mt-1 text-sm text-gray-500">{formData.body.length}/1000 characters</p>
+        <p className="mt-1 text-sm text-gray-500">
+          {formData.body.length}/1000 characters
+        </p>
       </div>
 
       <div className="w-full">
@@ -90,8 +105,12 @@ const EmailForm = () => {
         />
       </div>
 
-      <button type="submit" className="w-28 py-2 mt-4 bg-black text-white">
-        Send Email
+      <button
+        type="submit"
+        className="w-28 py-2 mt-4 bg-black text-white disabled:bg-gray-400"
+        disabled={isLoading}
+      >
+        {isLoading ? "Sending..." : "Send Email"}
       </button>
     </form>
   );

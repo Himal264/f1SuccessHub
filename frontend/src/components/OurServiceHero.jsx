@@ -3,14 +3,14 @@ import assets from "../assets/assets";
 
 const OurServiceHero = () => {
   return (
-    <div className="flex flex-col sm:flex-row bordermb-12">
+    <div className="flex flex-col sm:flex-row border mb-12">
   {/* Hero Left Side */}
   <div className="w-full sm:w-1/2 flex flex-col justify-center p-6">
     <div className="text-[#414141] max-w-lg mx-auto sm:mx-0 sm:max-w-none lg:max-w-lg">
-      <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif mb-4 sm:mb-6">
+      <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-serif mb-2 sm:mb-4">
         Explore Our Comprehensive Services
       </h1>
-      <p className="text-base sm:text-2xl md:text-3xl mb-6 sm:mb-8 leading-relaxed">
+      <p className="text-sm sm:text-lg md:text-xl mb-6 sm:mb-8 leading-relaxed">
         We provide a full range of services to support students pursuing higher education in the U.S., from the initial application process to graduation and beyond. Our services also extend to career guidance, ensuring a smooth transition from academics to your professional journey.
       </p>
 

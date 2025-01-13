@@ -10,7 +10,7 @@ const UniversityHero = () => {
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif mb-4 sm:mb-6">
             Find Best University
           </h1>
-          <p className="text-base sm:text-xl md:text-2xl mb-6 sm:mb-8 leading-relaxed">
+          <p className="text-base sm:text-sm md:text-xl mb-6 sm:mb-8 leading-relaxed">
           Find the University connects students with over 1,200 universities across the USA, offering a comprehensive and up-to-date database of institutions. Our mission is to simplify the search for higher education opportunities by providing personalized guidance and accurate information to help students make informed decisions about their academic future.
           </p>
 

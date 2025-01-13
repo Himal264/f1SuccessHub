@@ -11,7 +11,6 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import OurpatnerC from "../components/OurpatnerC";
 
-
 const About = () => {
   return (
     <div className="bg-white">
@@ -110,7 +109,7 @@ const About = () => {
         <div className="text-2xl text-center py-4">
           <Title text1={"OUR"} text2={"MAKERS"} />
         </div>
-        
+
         <div className="w-full max-w-[400px] mx-auto mt-8 mb-9">
           <div className="relative group">
             <img
@@ -118,7 +117,7 @@ const About = () => {
               alt="Founder"
               className="w-full h-[400px] object-cover"
             />
-            
+
             <div className="absolute top-4 right-4 flex gap-2">
               <a href="#" className=" p-2 rounded-full">
                 <FontAwesomeIcon icon={faSquareFacebook} className="w-4 h-4" />
@@ -140,28 +139,32 @@ const About = () => {
             </p>
           </div>
         </div>
-        <p className="text-center text-xl">This platform is created and maintained by Himal Pache Magar, with all rights reserved exclusively to him. Any unauthorized use, reproduction, or distribution of its content or design is prohibited. For inquiries or bussiness collaborations, visit himalpachemagar.com or email pachemagarhimal@gmail.com.
-
-
-
-
-
-
-</p>
+        <p className="text-center text-xl">
+          This platform is created and maintained by Himal Pache Magar, with all
+          rights reserved exclusively to him. Any unauthorized use,
+          reproduction, or distribution of its content or design is prohibited.
+          For inquiries or bussiness collaborations, visit himalpachemagar.com
+          or email pachemagarhimal@gmail.com.
+        </p>
       </div>
-      <div className="mb-10">
-      <div className="text-2xl text-center py-4">
+      <div className="mb-10 hidden">
+        <div className="text-2xl text-center py-4">
           <Title text1={"OUR"} text2={"PARTNERS"} />
         </div>
         {/* <OurpatnerC /> */}
         <p className="text-center text-xl mt-7 mb-10">
-  Our trusted partners—Global Edu Consult, LoanEase Financials, and VisaPrep Experts—are dedicated to helping you achieve your dreams. From expert educational guidance to affordable financial solutions and comprehensive F1 visa preparation, we ensure a seamless journey toward your goals. Together, we make success accessible, affordable, and stress-free.
-</p>
+          Our trusted partners—Global Edu Consult, LoanEase Financials, and
+          VisaPrep Experts—are dedicated to helping you achieve your dreams.
+          From expert educational guidance to affordable financial solutions and
+          comprehensive F1 visa preparation, we ensure a seamless journey toward
+          your goals. Together, we make success accessible, affordable, and
+          stress-free.
+        </p>
       </div>
 
       <FollowFoo />
       <div className="mt-12 p-6">
-      <Footer />
+        <Footer />
       </div>
     </div>
   );

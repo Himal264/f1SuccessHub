@@ -5,21 +5,21 @@ const Hero = () => {
   return (
     <div className="flex flex-col sm:flex-row border border-gray-400 mb-12">
       {/* Hero Left Side */}
-      <div className="w-full sm:w-1/2 flex flex-col justify-center p-6">
+      <div className="w-full sm:w-1/2 flex flex-col justify-center p-4">
         <div className="text-[#414141] max-w-lg mx-auto sm:mx-0 sm:max-w-none lg:max-w-lg">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif mb-4 sm:mb-6">
+          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-serif mb-2 sm:mb-4">
             F1 Visa Interview Questions & Answers Guide
           </h1>
-          <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 leading-relaxed">
+          <p className="text-base sm:text-sm md:text-lg mb-6 sm:mb-8 leading-relaxed">
             All questions and answers are thoughtfully crafted in consultation with former visa officers and experienced students, ensuring you're fully prepared for your interview.
           </p>
           
           {/* Advisory Section */}
-          <div className="mb-6 sm:mb-8">
-            <h3 className="text-lg sm:text-xl font-medium mb-3 sm:mb-4">
+          <div className="mb-6 sm:mb-5">
+            <h3 className="text-sm sm:text-lg font-medium text-black mb-3 sm:mb-4">
               Our free advising helps you step by step - from application to graduation!
             </h3>
-            <div className="space-y-2 mb-4 sm:mb-6">
+            <div className="space-y-2 mb-2 sm:mb-4">
               {[
                 "Advice & research",
                 "Application & visa help",
@@ -45,7 +45,7 @@ const Hero = () => {
               ))}
             </div>
             <button
-              className="w-full sm:w-auto bg-[#F37021] hover:bg-[#e26417] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base md:text-lg transition-colors duration-300 font-medium flex items-center justify-center sm:justify-start gap-2"
+              className="w-full sm:w-auto bg-[#F37021] hover:bg-[#e26417] text-white px-2 sm:px-4 py-1 sm:py-2 rounded-lg text-sm sm:text-base md:text-lg transition-colors duration-300 font-medium flex items-center justify-center sm:justify-start gap-2"
             >
               Ask an Advisor
               <svg

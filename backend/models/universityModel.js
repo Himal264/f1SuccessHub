@@ -25,16 +25,36 @@ const universitySchema = new mongoose.Schema(
       required: true,
     },
     intake: {
-      type: [String],
+      type: [
+        {
+          month: {
+            type: String,
+            required: true,
+            enum: [
+              'January', 'February', 'March', 'April', 'May', 'June', 
+              'July', 'August', 'September', 'October', 'November', 'December',
+              'Summer', 'Fall', 'Winter', 'Spring'
+            ], // We allow month names as well as seasons like Summer, Fall, etc.
+          },
+          year: {
+            type: Number,
+            required: true,
+          },
+          deadline: {
+            type: Date,
+            required: true, // Ensure deadline is provided
+          },
+        },
+      ],
       required: true,
     },
-    graduationrate:{
+    graduationrate: {
       type: Number,
-      required: true
+      required: true,
     },
     acceptancerate: {
       type: Number,
-      required: true
+      required: true,
     },
     undergraduatePrograms: {
       description: { type: String, required: true },
@@ -85,19 +105,50 @@ const universitySchema = new mongoose.Schema(
       required: true,
     },
     feeStructure: {
-      tuitionFee: { type: Number, required: true },
-      livingFee: { type: Number, required: true },
-      otherFees: { type: Number, required: true },
+      undergraduate: {
+        tuitionFee: { type: Number, required: true },
+        livingFee: { type: Number, required: true },
+        otherFees: { type: Number, required: true },
+      },
+      graduate: {
+        tuitionFee: { type: Number, required: true },
+        livingFee: { type: Number, required: true },
+        otherFees: { type: Number, required: true },
+      },
     },
     location: {
       name: { type: String, required: true },
+      state: {
+        type: String,
+        required: true,
+        enum: [
+          "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+          "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho",
+          "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine",
+          "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri",
+          "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico",
+          "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon",
+          "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee",
+          "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
+        ],
+      },
+      region: {
+        type: String,
+        required: true,
+        enum: ["US - Midwest", "US - Northeast", "US - South", "US - West"], // Predefined regions
+      },
       totalPopulation: { type: Number, required: true },
-      citysize: { type: Number, required: true },
+      citysize: {
+        type: String,
+        required: true,
+        enum: ["Small", "Medium", "Large", "Metropolitan"], // Predefined city sizes (without Megacity)
+      },
+    
       nearbyCities: { type: [String], required: true },
       keyIndustries: { type: [String], required: true },
       landmarks: { type: [String], required: true },
       locationPhoto: { type: String, required: true },
-     
+
       weather: {
         summer: { type: String, required: true },
         winter: { type: String, required: true },
@@ -128,20 +179,20 @@ const universitySchema = new mongoose.Schema(
     admissionRequirements: {
       undergraduate: {
         SAT: { type: Number, min: 1, max: 1600, required: false },
-        GPA: { type: Number, min: 1, max: 4.0, required: true }, 
-        Duolingo: { type: Number, min: 1, max: 160, required: false }, 
-        IELTS: { type: Number, min: 1, max: 9.0, required: false }, 
-        PTE: { type: Number, min: 1, max: 90, required: false }, 
-        ACT: { type: Number, min: 1, max: 36, required: false }, 
+        GPA: { type: Number, min: 1, max: 4.0, required: true },
+        Duolingo: { type: Number, min: 1, max: 160, required: false },
+        IELTS: { type: Number, min: 1, max: 9.0, required: false },
+        PTE: { type: Number, min: 1, max: 90, required: false },
+        ACT: { type: Number, min: 1, max: 36, required: false },
       },
       graduate: {
-        SAT: { type: Number, min: 1, max: 1600, required: false }, 
-        GPA: { type: Number, min: 1, max: 4.0, required: true }, 
+        SAT: { type: Number, min: 1, max: 1600, required: false },
+        GPA: { type: Number, min: 1, max: 4.0, required: true },
         Duolingo: { type: Number, min: 1, max: 160, required: false },
-        IELTS: { type: Number, min: 1, max: 9.0, required: false }, 
-        PTE: { type: Number, min: 1, max: 90, required: false }, 
-        ACT: { type: Number, min: 1, max: 36, required: false }, 
-        GRE: { type: Number, min: 1, max: 340, required: false }, 
+        IELTS: { type: Number, min: 1, max: 9.0, required: false },
+        PTE: { type: Number, min: 1, max: 90, required: false },
+        ACT: { type: Number, min: 1, max: 36, required: false },
+        GRE: { type: Number, min: 1, max: 340, required: false },
       },
     },
   },

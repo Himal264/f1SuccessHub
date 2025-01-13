@@ -1,129 +1,152 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { Search } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom"; // Import Link for routing
 
 const UniversitySearch = () => {
+  const navigate = useNavigate()
   const [universities, setUniversities] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [programLevel, setProgramLevel] = useState('Graduate');
+  const [programLevel, setProgramLevel] = useState("Undergraduate");
+  const [subject, setSubject] = useState("Engineering");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const navigate = useNavigate();
+
+  const subjects = [
+    "Engineering",
+    "Humanities",
+    "MedicalandHealthSciences",
+    "NaturalSciences",
+    "Business",
+    "ComputerScience",
+    "SocialScience",
+    "Education"
+  ];
+
+  const handleSearch = () => {
+    // Navigate to the subject program page instead of search results
+    navigate(`/subject/${programLevel}/${subject}`);
+  };
 
   useEffect(() => {
     const fetchUniversities = async () => {
       try {
-        setLoading(true);
-        const response = await fetch('http://localhost:9000/api/university/list');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const response = await fetch("http://localhost:9000/api/university/list");
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         setUniversities(data.universities || []);
-        setError(null);
-      } catch (error) {
-        console.error('Error fetching universities:', error);
-        setError('Failed to fetch universities');
-        setUniversities([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchUniversities();
   }, []);
 
-  const handleUniversityClick = (universityId) => {
-    console.log('Clicking university with ID:', universityId);
-    if (universityId) {
-      navigate(`/university/${universityId}`);
-    }
-  };
-
-  const filteredUniversities = universities.filter(uni => 
-    uni?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-900"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl text-red-600">{error}</div>
-      </div>
-    );
-  }
+  const firstRow = universities.slice(0, Math.ceil(universities.length / 2));
+  const secondRow = universities.slice(Math.ceil(universities.length / 2));
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-serif text-center mb-4">
-          Find your perfect university
-        </h1>
-        <p className="text-center text-xl text-gray-600 mb-8">
-          Explore top universities and find the right program for your future.
+    <div className="w-full bg-gray-50">
+      <div className="max-w-4xl mx-auto pt-12 pb-8 px-4 text-center">
+        <h1 className="text-4xl font-serif text-gray-900 mb-4">Find your perfect program</h1>
+        <p className="text-gray-600 mb-8">
+          We offer thousands of university programs, serving every type of learner,<br />
+          across the US and beyond.
         </p>
-
-        <div className="flex flex-col md:flex-row gap-4 mb-12 max-w-3xl mx-auto">
+        
+        <div className="flex gap-2 max-w-2xl mx-auto">
           <select
             value={programLevel}
             onChange={(e) => setProgramLevel(e.target.value)}
-            className="p-3 rounded-md border border-gray-300 flex-1 md:w-1/3"
+            className="w-48 p-2 border border-gray-300 rounded-md bg-white"
           >
-            <option value="Graduate">Graduate</option>
             <option value="Undergraduate">Undergraduate</option>
-            <option value="Doctorate">Doctorate</option>
+            <option value="Graduate">Graduate</option>
+          </select>
+          
+          <select
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            className="flex-1 p-2 border border-gray-300 rounded-md bg-white"
+          >
+            {subjects.map((sub) => (
+              <option key={sub} value={sub}>
+                {sub.replace(/([A-Z])/g, ' $1').trim()}
+              </option>
+            ))}
           </select>
 
-          <div className="relative flex-1">
-            <input
-              type="text"
-              placeholder="Search universities..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full p-3 pr-12 rounded-md border border-gray-300"
-            />
-            <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          </div>
+          <button
+            onClick={handleSearch}
+            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2"
+          >
+            <Search className="h-5 w-5" />
+            Search
+          </button>
         </div>
+      </div>
 
-        {filteredUniversities.length === 0 ? (
-          <div className="text-center text-gray-600">
-            No universities found matching your search.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredUniversities.map((university) => (
-              <div
-                key={university._id}
-                onClick={() => handleUniversityClick(university._id)}
-                className="p-6 bg-white rounded-lg shadow-md cursor-pointer transform transition-transform hover:scale-105"
-                role="button"
-                tabIndex={0}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    handleUniversityClick(university._id);
-                  }
-                }}
-              >
-                <div className="h-32 flex items-center justify-center mb-4">
-                  <img
-                    src={university.logoUrl || '/api/placeholder/128/128'}
-                    alt={`${university.name} logo`}
-                    className="max-h-full max-w-full object-contain"
-                  />
+      <style>
+        {`
+          @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+          }
+          .scroll-container {
+            overflow: hidden;
+            margin: 20px 0;
+          }
+          .scroll-content {
+            display: flex;
+            width: max-content;
+            animation: scroll 40s linear infinite;
+          }
+          .university-card {
+            width: 280px;
+            flex-shrink: 0;
+          }
+        `}
+      </style>
+
+      {/* First Row */}
+      <div className="scroll-container">
+        <div className="scroll-content">
+          {[...firstRow, ...firstRow].map((uni, index) => (
+            <div key={`${uni._id}-${index}`} className="university-card p-4">
+              <Link to={`/university/${uni._id}`}> {/* Wrap with Link */}
+                <div className="bg-white rounded-lg p-6 flex flex-col items-center">
+                  <div className="h-20 w-20 mb-4 flex items-center justify-center">
+                    <img
+                      src={uni.logoUrl || "/api/placeholder/80/80"}
+                      alt={uni.name}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+                  <h3 className="text-center font-medium text-gray-800">{uni.name}</h3>
                 </div>
-                <p className="text-center font-medium">{university.name}</p>
-              </div>
-            ))}
-          </div>
-        )}
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Second Row */}
+      <div className="scroll-container">
+        <div className="scroll-content">
+          {[...secondRow, ...secondRow].map((uni, index) => (
+            <div key={`${uni._id}-${index}`} className="university-card p-4">
+              <Link to={`/university/${uni._id}`}> {/* Wrap with Link */}
+                <div className="bg-white rounded-lg p-6 flex flex-col items-center">
+                  <div className="h-20 w-20 mb-4 flex items-center justify-center">
+                    <img
+                      src={uni.logoUrl || "/api/placeholder/80/80"}
+                      alt={uni.name}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+                  <h3 className="text-center font-medium text-gray-800">{uni.name}</h3>
+                </div>
+              </Link>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

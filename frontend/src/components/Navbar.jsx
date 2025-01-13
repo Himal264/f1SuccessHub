@@ -16,6 +16,10 @@ const Navbar = () => {
       <ul className="hidden sm:flex gap-5 text-sm text-gray-700">
         
 
+        <NavLink to="/" className="flex flex-col items-center gap-1 mr-4">
+          <p className='text-sm'>Home</p>
+          <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
+        </NavLink>
         <NavLink to="/f1questionsandanswers/:f1questionsandanswersId" className="flex flex-col items-center gap-1 mr-4">
           <p className='text-sm'>F1 Questions</p>
           <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
