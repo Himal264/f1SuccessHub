@@ -3,7 +3,7 @@ import { Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom"; // Import Link for routing
 
 const UniversitySearch = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [universities, setUniversities] = useState([]);
   const [programLevel, setProgramLevel] = useState("Undergraduate");
   const [subject, setSubject] = useState("Engineering");
@@ -17,7 +17,7 @@ const UniversitySearch = () => {
     "Business",
     "ComputerScience",
     "SocialScience",
-    "Education"
+    "Education",
   ];
 
   const handleSearch = () => {
@@ -28,8 +28,11 @@ const UniversitySearch = () => {
   useEffect(() => {
     const fetchUniversities = async () => {
       try {
-        const response = await fetch("http://localhost:9000/api/university/list");
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const response = await fetch(
+          "http://localhost:9000/api/university/list"
+        );
+        if (!response.ok)
+          throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         setUniversities(data.universities || []);
       } finally {
@@ -44,40 +47,42 @@ const UniversitySearch = () => {
 
   return (
     <div className="w-full bg-gray-50">
-      <div className="max-w-4xl mx-auto pt-12 pb-8 px-4 text-center">
-        <h1 className="text-4xl font-serif text-gray-900 mb-4">Find your perfect program</h1>
-        <p className="text-gray-600 mb-8">
-          We offer thousands of university programs, serving every type of learner,<br />
-          across the US and beyond.
+      <div className="max-w-4xl mx-auto pt-8 sm:pt-12 pb-6 sm:pb-8 px-4 text-center">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif text-[#414141] mb-3 sm:mb-4">
+          Find your perfect program
+        </h1>
+        <p className="text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base">
+          We offer thousands of university programs, serving every type of
+          learner, across the US and beyond.
         </p>
-        
-        <div className="flex gap-2 max-w-2xl mx-auto">
+
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 max-w-2xl mx-auto">
           <select
             value={programLevel}
             onChange={(e) => setProgramLevel(e.target.value)}
-            className="w-48 p-2 border border-gray-300 rounded-md bg-white"
+            className="w-full sm:w-48 p-2 border border-gray-300 rounded-md bg-white text-sm sm:text-base"
           >
             <option value="Undergraduate">Undergraduate</option>
             <option value="Graduate">Graduate</option>
           </select>
-          
+
           <select
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="flex-1 p-2 border border-gray-300 rounded-md bg-white"
+            className="w-full sm:flex-1 p-2 border border-gray-300 rounded-md bg-white text-sm sm:text-base"
           >
             {subjects.map((sub) => (
               <option key={sub} value={sub}>
-                {sub.replace(/([A-Z])/g, ' $1').trim()}
+                {sub.replace(/([A-Z])/g, " $1").trim()}
               </option>
             ))}
           </select>
 
           <button
             onClick={handleSearch}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 flex items-center gap-2"
+            className="w-full sm:w-auto bg-[#F37021] hover:bg-[#e26417] text-white px-4 sm:px-6 py-2 rounded-md flex items-center justify-center gap-2 text-sm sm:text-base transition-colors duration-300"
           >
-            <Search className="h-5 w-5" />
+            <Search className="h-4 w-4 sm:h-5 sm:w-5" />
             Search
           </button>
         </div>
@@ -110,7 +115,9 @@ const UniversitySearch = () => {
         <div className="scroll-content">
           {[...firstRow, ...firstRow].map((uni, index) => (
             <div key={`${uni._id}-${index}`} className="university-card p-4">
-              <Link to={`/university/${uni._id}`}> {/* Wrap with Link */}
+              <Link to={`/university/${uni._id}`}>
+                {" "}
+                {/* Wrap with Link */}
                 <div className="bg-white rounded-lg p-6 flex flex-col items-center">
                   <div className="h-20 w-20 mb-4 flex items-center justify-center">
                     <img
@@ -119,7 +126,9 @@ const UniversitySearch = () => {
                       className="max-h-full max-w-full object-contain"
                     />
                   </div>
-                  <h3 className="text-center font-medium text-gray-800">{uni.name}</h3>
+                  <h3 className="text-center font-medium text-gray-800">
+                    {uni.name}
+                  </h3>
                 </div>
               </Link>
             </div>
@@ -132,7 +141,9 @@ const UniversitySearch = () => {
         <div className="scroll-content">
           {[...secondRow, ...secondRow].map((uni, index) => (
             <div key={`${uni._id}-${index}`} className="university-card p-4">
-              <Link to={`/university/${uni._id}`}> {/* Wrap with Link */}
+              <Link to={`/university/${uni._id}`}>
+                {" "}
+                {/* Wrap with Link */}
                 <div className="bg-white rounded-lg p-6 flex flex-col items-center">
                   <div className="h-20 w-20 mb-4 flex items-center justify-center">
                     <img
@@ -141,7 +152,9 @@ const UniversitySearch = () => {
                       className="max-h-full max-w-full object-contain"
                     />
                   </div>
-                  <h3 className="text-center font-medium text-gray-800">{uni.name}</h3>
+                  <h3 className="text-center font-medium text-gray-800">
+                    {uni.name}
+                  </h3>
                 </div>
               </Link>
             </div>

@@ -1,5 +1,6 @@
 import React from "react";
 import assets from "../assets/assets";
+import { Link } from "react-router-dom";
 
 const UniversityHero = () => {
   return (
@@ -18,7 +19,7 @@ const UniversityHero = () => {
           <button
             className="w-full sm:w-auto bg-[#F37021] hover:bg-[#e26417] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base md:text-lg transition-colors duration-300 font-medium flex items-center justify-center sm:justify-start gap-2"
           >
-            Find Best University
+            <Link to="/universitysearchform">Find University</Link>
             <svg
               className="w-4 h-4 sm:w-5 sm:h-5"
               fill="none"

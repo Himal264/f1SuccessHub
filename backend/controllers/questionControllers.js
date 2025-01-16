@@ -1,7 +1,7 @@
 import QuestionModel from "../models/questionModel.js"
 
 
-// function for add questions
+
 const addQuestions = async (req, res) => {
   try {
     const { question, answer, reasoning, type} = req.body;
@@ -25,7 +25,7 @@ const addQuestions = async (req, res) => {
   }
 };
 
-// function for list questions
+
 const listQuestions = async (req, res) => {
   try {
     const questions = await QuestionModel.find().sort({ _id: -1 });
@@ -45,7 +45,7 @@ const listQuestions = async (req, res) => {
 
 
 
-// Remove a question by ID
+
 const removeQuestion = async (req, res) => {
   try {
 
@@ -61,7 +61,7 @@ const removeQuestion = async (req, res) => {
 };
 
 
-// function for single question info
+
 const singleQuestion = async (req, res) => {
   try {
     const {questionId} = req.body;
@@ -74,10 +74,9 @@ const singleQuestion = async (req, res) => {
   }
 };
 
-// function for update question
 const updateQuestion = async (req, res) => {
   try {
-    const { questionId, updates } = req.body; // Extract questionId and updates from the request body
+    const { questionId, updates } = req.body; 
 
     if (!questionId || !updates) {
       return res.status(400).json({
@@ -87,9 +86,9 @@ const updateQuestion = async (req, res) => {
     }
 
     const updatedQuestion = await QuestionModel.findByIdAndUpdate(
-      questionId,     // The ID of the question to update
-      updates,        // The fields to update
-      { new: true }   // Return the updated document
+      questionId,    
+      updates,        
+      { new: true }   
     );
 
     if (!updatedQuestion) {

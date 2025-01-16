@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { backendUrl } from "../App";
 
 const EmailForm = () => {
+ 
   const [formData, setFormData] = useState({
     subject: "",
     body: "",
@@ -11,18 +12,21 @@ const EmailForm = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  // Handle text input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
+    setFormData((prevData) => ({
+      ...prevData,
       [name]: value,
     }));
   };
 
+  // Handle file input change
   const handleFileChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      file: e.target.files[0],
+    const file = e.target.files[0];
+    setFormData((prevData) => ({
+      ...prevData,
+      file: file,
     }));
   };
 
@@ -36,27 +40,31 @@ const EmailForm = () => {
     formPayload.append("body", body);
     if (file) formPayload.append("file", file);
 
+    // Get the token from localStorage
+    const token = localStorage.getItem('token'); // Make sure you save token here during login
+
     try {
       const response = await axios.post(
-        `${backendUrl}/email/broadcast`,
+        `${backendUrl}/api/email/broadcast`,
         formPayload,
         {
           headers: {
             "Content-Type": "multipart/form-data",
-          },
+            "Authorization": `Bearer ${token}` // Add Bearer token
+          }
         }
       );
 
       if (response.data.success) {
-        toast.success("Email broadcast sent successfully to all users!");
+        toast.success("Email broadcast sent successfully!");
         setFormData({ subject: "", body: "", file: null });
-      } else {
-        toast.error(response.data.message || "Failed to send broadcast email");
       }
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || "Error sending broadcast email"
-      );
+      if (error.response?.status === 403) {
+        toast.error("Not authorized. Please log in as admin.");
+      } else {
+        toast.error(error.response?.data?.message || "Error sending broadcast email");
+      }
       console.error("Error:", error);
     } finally {
       setIsLoading(false);

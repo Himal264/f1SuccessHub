@@ -4,7 +4,6 @@ import Sidebar from "./components/Sidebar";
 import { Routes, Route } from "react-router-dom";
 import Add from "./pages/Add";
 import List from "./pages/List";
-import Update from "./pages/Update";
 import Login from "./components/Login";
 import {ToastContainer} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -37,7 +36,6 @@ const App = () => {
               <Routes>
                 <Route path="/add" element={<Add token={token}/>} />
                 <Route path="/list" element={<List token={token}/>} />
-                <Route path="/update" element={<Update token={token}/>} />
                 <Route path="/email" element={<EmailForm setToken={setToken}/>} />
                 <Route path="/adduniversity" element={<AddUniversity setToken={setToken}/>} />
                 <Route path="/listuniverstiy" element={<ListUniversity setToken={setToken}/>} />

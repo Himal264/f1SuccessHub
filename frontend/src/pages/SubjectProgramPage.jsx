@@ -102,12 +102,18 @@ const SubjectProgramPage = () => {
           return;
         }
 
-        // Get top 9 universities based on ranking instead of 3
-        const featured = data.universities
-          .sort((a, b) => (a.rankings?.usa || 999) - (b.rankings?.usa || 999))
-          .slice(0, 9);
-        console.log("Featured Universities:", featured);
-        setFeaturedUniversities(featured);
+        // Filter universities that have programs in the selected subject
+        const universitiesWithProgram = data.universities.filter(
+          (university) => {
+            const programs =
+              level === "Undergraduate"
+                ? university?.undergraduatePrograms?.programs?.[subject]
+                : university?.graduatePrograms?.programs?.[subject];
+            return programs && programs.length > 0;
+          }
+        );
+
+        setFeaturedUniversities(universitiesWithProgram);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching universities:", error);
@@ -178,7 +184,9 @@ const SubjectProgramPage = () => {
         <div className="max-w-6xl mx-auto px-4 pt-12">
           <div className="flex flex-col lg:flex-row gap-12 mb-8">
             <div className="lg:w-2/3">
-              <p className="text-gray-600 mb-2">7 UNIVERSITIES</p>
+              <p className="text-gray-600 mb-2">
+                {featuredUniversities.length} UNIVERSITIES
+              </p>
               <h1 className="text-4xl font-serif text-gray-900 mb-4">
                 {level} Degrees in {formatSubject(subject)}
               </h1>

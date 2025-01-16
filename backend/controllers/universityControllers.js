@@ -2,32 +2,25 @@ import University from "../models/universityModel.js";
 import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
 
-// Add this to your backend route temporarily
 export const getUniversities = async (req, res) => {
   try {
     const universities = await University.find();
-    console.log("Found universities:", universities); // Debug log
+    console.log("Found universities:", universities);
     res.status(200).json({ universities: universities });
   } catch (error) {
-    console.error("Database error:", error); // Debug log
+    console.error("Database error:", error); 
     res.status(500).json({ message: error.message });
   }
 };
 
-// In your university controller
-// In your universityController.js
-// In your universityController.js
-// In your universityControllers.js
 export const getUniversityById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Validate ID
     if (!id) {
       return res.status(400).json({ message: "University ID is required" });
     }
 
-    // Check if ID is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid university ID format" });
     }
@@ -41,7 +34,6 @@ export const getUniversityById = async (req, res) => {
       return res.status(404).json({ message: "University not found" });
     }
 
-    // Return the university data in a consistent structure
     res.status(200).json({ university });
   } catch (error) {
     console.error("Error in getUniversityById:", error);
@@ -91,14 +83,19 @@ export const addUniversity = async (req, res) => {
     };
 
     const parsedIntake = JSON.parse(intake).map((entry) => ({
-      month: entry.month,  // Month (e.g., January, Summer, etc.)
-      year: entry.year,    // Year for the intake
-      deadline: new Date(entry.deadline),  // Ensure deadline is a Date object
+      month: entry.month,
+      year: entry.year,
+      deadline: new Date(entry.deadline),
     }));
 
-    // parse location for state and region
     const parsedLocation = JSON.parse(location);
-    const {name: locationName, state, region, citysize, ...otherLocationDetails} = parsedLocation;
+    const {
+      name: locationName,
+      state,
+      region,
+      citysize,
+      ...otherLocationDetails
+    } = parsedLocation;
 
     let logoUrl = "";
     if (req.files && req.files.logo) {
@@ -124,7 +121,6 @@ export const addUniversity = async (req, res) => {
       }
     }
 
-    // Handle location photo upload (new)
     let locationPhoto = "";
     if (req.files && req.files.locationPhoto) {
       const result = await cloudinary.uploader.upload(
@@ -136,14 +132,12 @@ export const addUniversity = async (req, res) => {
       locationPhoto = result.secure_url;
     }
 
-
- 
     const university = new University({
       name,
       logoUrl,
       media: mediaUrls,
       applicationFee,
-      intake: parsedIntake,  // Store the intake with deadlines
+      intake: parsedIntake,
       graduationrate,
       acceptancerate,
       locationPhoto,
@@ -166,21 +160,19 @@ export const addUniversity = async (req, res) => {
 };
 
 export const updateUniversity = async (req, res) => {
-  const { id } = req.params; // Extract university ID from request parameters
-  const updateData = req.body; // Extract data to be updated from request body
+  const { id } = req.params;
+  const updateData = req.body;
 
   try {
-    // Find the university by ID and update it with the provided data
     const updatedUniversity = await University.findByIdAndUpdate(
       id,
       updateData,
       {
-        new: true, // Return the updated document
-        runValidators: true, // Ensure validation rules in schema are applied
+        new: true,
+        runValidators: true,
       }
     );
 
-    // If the university is found and updated, send it in the response
     if (updatedUniversity) {
       return res.status(200).json({
         success: true,
@@ -189,13 +181,11 @@ export const updateUniversity = async (req, res) => {
       });
     }
 
-    // If no university is found, respond with a 404 status
     return res.status(404).json({
       success: false,
       message: "University not found",
     });
   } catch (error) {
-    // Handle server errors
     return res.status(500).json({
       success: false,
       message: "An error occurred while updating the university",

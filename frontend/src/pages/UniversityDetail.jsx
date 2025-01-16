@@ -146,7 +146,6 @@ const UniversityDetail = () => {
 
 
           <FAQpage/>
-          <Footer />
         </>
       ) : (
         <p className="p-4 text-center">Loading university data...</p>
