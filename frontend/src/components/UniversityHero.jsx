@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const UniversityHero = () => {
   return (
-    <div className="flex flex-col sm:flex-row border border-gray-400 mb-12">
+    <div className="flex flex-col sm:flex-row mb-12">
       {/* Hero Left Side */}
       <div className="w-full sm:w-1/2 flex flex-col justify-center p-6">
         <div className="text-[#414141] max-w-lg mx-auto sm:mx-0 sm:max-w-none lg:max-w-lg">

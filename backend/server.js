@@ -13,6 +13,7 @@ import path from "path";
 import fs from "fs";
 import emailRouter from "./routes/emailRoutes.js";
 import cookieParser from "cookie-parser";
+import applicationRouter from "./routes/applicationRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -87,6 +88,9 @@ app.use("/api/university/:id", universityRouter);
 
 //email broadcast
 app.use("/api/email", emailRouter);
+
+//application api endpoints 
+app.use("/api/application", applicationRouter);
 
 app.get("/", (req, res) => {
   res.send("API Working");

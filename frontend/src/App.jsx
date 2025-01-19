@@ -1,7 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-import { FormContextProvider } from "./context/FormContext";
 import Home from "./pages/Home";
 import F1QestionsandAnswer from "./pages/F1QestionsandAnswer";
 import About from "./pages/About";
@@ -67,7 +66,7 @@ export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 const App = () => {
   return (
-    <FormContextProvider>
+   
       <Router>
         <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
           <Navbar />
@@ -261,7 +260,7 @@ const App = () => {
           <ScrollToTop />
         </div>
       </Router>
-    </FormContextProvider>
+
   );
 };
 

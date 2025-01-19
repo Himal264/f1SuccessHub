@@ -1,71 +1,72 @@
-import { useFormContext } from '../context/FormContext';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import useFormSubmissionManager from '../context/useFormSubmissionManager';
+
+
+const countries = [
+  { code: 'NP', name: 'Nepal', intlCode: '+977' },
+  { code: 'US', name: 'United States', intlCode: '+1' },
+  { code: 'UK', name: 'United Kingdom', intlCode: '+44' },
+  { code: 'CA', name: 'Canada', intlCode: '+1' },
+  { code: 'AU', name: 'Australia', intlCode: '+61' },
+];
 
 const ContactInformationForm = () => {
-  const { formData, updateFormData } = useFormContext();
-  const navigate = useNavigate();
-  const [errors, setErrors] = useState({});
+  const {
+    formData,
+    errors,
+    isSubmitting,
+    updateFormData,
+    handleBlur,
+    submitApplication
+  } = useFormSubmissionManager();
 
-  const handleSubmit = async (e) => {
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name === 'country') {
+      const selectedCountry = countries.find(c => c.code === value);
+      updateFormData({
+        country: value,
+        countryCode: selectedCountry ? selectedCountry.intlCode : ''
+      });
+    } else {
+      updateFormData({ [name]: value });
+    }
+    handleBlur(name);
+  };
+
+  const onSubmit = async (e) => {
     e.preventDefault();
     
-    const newErrors = validateForm();
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    // Update final user data in context
-    updateFormData({
-      user: {
+    // Format the data for submission
+    const applicationData = {
+      studentInfo: {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
-        phone: {
-          countryCode: formData.countryCode,
-          number: formData.phoneNumber
-        }
+        country: formData.country,
+        countryCode: formData.countryCode,
+        phoneNumber: formData.phoneNumber
       },
-      termsAccepted: formData.acceptMarketing
-    });
-
-    try {
-      // Submit complete profile to your API
-      const response = await fetch('/api/search-profiles', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit profile');
+      academicInfo: {
+        studyLevel: formData.studyLevel,
+        fieldOfStudy: formData.fieldOfStudy,
+        gpa: formData.gpa,
+        englishTest: formData.englishTest,
+        admissionTest: formData.admissionTest,
+        intake: formData.intake
+      },
+      preferences: {
+        priorities: formData.preferences,
+        budget: formData.budget
       }
+    };
 
-      // Fetch university matches
-      const matchesResponse = await fetch('/api/find-matches', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!matchesResponse.ok) {
-        throw new Error('Failed to fetch matches');
-      }
-
-      const matches = await matchesResponse.json();
-      
-      // Navigate to results
-      navigate('/', { state: { matches } });
-
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      setErrors({
-        submit: 'Failed to submit form. Please try again.'
-      });
+    const success = await submitApplication(applicationData);
+    if (success) {
+      navigate('/success');
     }
   };
 
@@ -81,7 +82,8 @@ const ContactInformationForm = () => {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={onSubmit} className="space-y-6">
+        {/* Rest of the form JSX remains the same */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* First Name */}
           <div>
@@ -89,10 +91,10 @@ const ContactInformationForm = () => {
             <input
               type="text"
               name="firstName"
-              value={formData.firstName}
+              value={formData.firstName || ''}
               onChange={handleChange}
               className={`w-full p-3 border rounded-lg ${
-                errors.firstName ? "border-red-500" : "border-gray-300"
+                errors.firstName ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Your first name"
             />
@@ -107,10 +109,10 @@ const ContactInformationForm = () => {
             <input
               type="text"
               name="lastName"
-              value={formData.lastName}
+              value={formData.lastName || ''}
               onChange={handleChange}
               className={`w-full p-3 border rounded-lg ${
-                errors.lastName ? "border-red-500" : "border-gray-300"
+                errors.lastName ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Your last name"
             />
@@ -126,10 +128,10 @@ const ContactInformationForm = () => {
           <input
             type="email"
             name="email"
-            value={formData.email}
+            value={formData.email || ''}
             onChange={handleChange}
             className={`w-full p-3 border rounded-lg ${
-              errors.email ? "border-red-500" : "border-gray-300"
+              errors.email ? 'border-red-500' : 'border-gray-300'
             }`}
             placeholder="Your email address"
           />
@@ -138,14 +140,15 @@ const ContactInformationForm = () => {
           )}
         </div>
 
+        {/* Country */}
         <div>
           <label className="block text-sm font-medium mb-2">COUNTRY</label>
           <select
             name="country"
-            value={formData.country}
+            value={formData.country || ''}
             onChange={handleChange}
             className={`w-full p-3 border rounded-lg ${
-              errors.country ? "border-red-500" : "border-gray-300"
+              errors.country ? 'border-red-500' : 'border-gray-300'
             }`}
           >
             <option value="">Select your country</option>
@@ -160,73 +163,52 @@ const ContactInformationForm = () => {
           )}
         </div>
 
-        {/* Phone */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              INTERNATIONAL CODE
-            </label>
-            <input
-              type="text"
-              name="countryCode"
-              value={formData.countryCode}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg"
-              placeholder="Your country code"
-            />
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium mb-2">PHONE</label>
-            <input
-              type="tel"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              className={`w-full p-3 border rounded-lg ${
-                errors.phoneNumber ? "border-red-500" : "border-gray-300"
-              }`}
-              placeholder="Your phone number"
-            />
-            {errors.phoneNumber && (
-              <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Marketing Consent */}
-        <div className="flex items-start space-x-2">
-          <input
-            type="checkbox"
-            name="acceptMarketing"
-            checked={formData.acceptMarketing}
-            onChange={handleChange}
-            className="mt-1"
-          />
-          <label className="text-sm text-gray-600">
-            Yes, I would like to receive news and information about Shorelight.
+        {/* International Code */}
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            INTERNATIONAL CODE
           </label>
+          <input
+            type="text"
+            name="countryCode"
+            value={formData.countryCode || ''}
+            readOnly
+            className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100"
+            placeholder="International code will appear here"
+          />
         </div>
 
-        <div className="text-sm text-gray-600 mt-4">
-          Your phone number and email allow our admissions representatives to
-          contact you to discuss your options. Your information is secure and
-          will only be used by a representative to provide you with more
-          details.
+        {/* Phone */}
+        <div>
+          <label className="block text-sm font-medium mb-2">PHONE</label>
+          <input
+            type="tel"
+            name="phoneNumber"
+            value={formData.phoneNumber || ''}
+            onChange={handleChange}
+            className={`w-full p-3 border rounded-lg ${
+              errors.phoneNumber ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Your phone number"
+          />
+          {errors.phoneNumber && (
+            <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>
+          )}
         </div>
 
         <div className="flex justify-between items-center mt-8">
-          <button
-            type="button"
-            onClick={() => window.history.back()}
+          <Link
+            to="/universitysearchform"
             className="text-blue-600 hover:text-blue-800"
           >
-            <Link to="/universitysearchform">← Previous</Link>
-          </button>
+            ← Previous
+          </Link>
           <button
             type="submit"
-            className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
+            disabled={isSubmitting}
+            className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400"
           >
-            <Link to="/">Submit →</Link>
+            {isSubmitting ? 'Submitting...' : 'Submit →'}
           </button>
         </div>
       </form>

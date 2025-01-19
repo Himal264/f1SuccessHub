@@ -84,6 +84,17 @@ const SubjectProgramPage = () => {
 
   const currentSubject = subjectData[subject] || subjectData.ComputerScience;
 
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const yOffset = -100; // Offset for fixed header
+      const y =
+        element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
+    setActiveSection(sectionId);
+  };
+
   useEffect(() => {
     const fetchProgramAndUniversities = async () => {
       try {
@@ -102,7 +113,6 @@ const SubjectProgramPage = () => {
           return;
         }
 
-        // Filter universities that have programs in the selected subject
         const universitiesWithProgram = data.universities.filter(
           (university) => {
             const programs =
@@ -124,6 +134,11 @@ const SubjectProgramPage = () => {
 
     fetchProgramAndUniversities();
   }, [level, subject]);
+
+  useEffect(() => {
+    // Scroll to active section when it changes
+    scrollToSection(activeSection);
+  }, [activeSection]);
 
   const getSortedUniversities = (universities, sortType) => {
     const sortedUniversities = [...universities];
@@ -177,6 +192,7 @@ const SubjectProgramPage = () => {
   if (loading) {
     return <p>Loading...</p>;
   }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section with Navigation */}
@@ -226,57 +242,34 @@ const SubjectProgramPage = () => {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Navigation at bottom of hero section */}
-          <div className="border-b border-gray-200">
-            <div className="flex space-x-8">
-              <button
-                onClick={() => setActiveSection("introduction")}
-                className={`py-4 px-1 border-b-2 ${
-                  activeSection === "introduction"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Introduction
-              </button>
-              <button
-                onClick={() => setActiveSection("featured")}
-                className={`py-4 px-1 border-b-2 ${
-                  activeSection === "featured"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Featured Universities
-              </button>
-              <button
-                onClick={() => setActiveSection("stories")}
-                className={`py-4 px-1 border-b-2 ${
-                  activeSection === "stories"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Relevant Stories
-              </button>
-              <button
-                onClick={() => setActiveSection("faqs")}
-                className={`py-4 px-1 border-b-2 ${
-                  activeSection === "faqs"
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                FAQs
-              </button>
+        {/* Navigation */}
+        <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-wrap sm:space-x-8 space-y-2 sm:space-y-0">
+              {["introduction", "featured universities", "Relevent stories", "faqs"].map(
+                (section) => (
+                  <button
+                    key={section}
+                    onClick={() => scrollToSection(section)}
+                    className={`py-4 px-1 border-b-2 ${
+                      activeSection === section
+                        ? "border-blue-600 text-blue-600"
+                        : "border-transparent text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    {section.charAt(0).toUpperCase() + section.slice(1)}
+                  </button>
+                )
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* Introduction Section with Stats */}
-      <div className="bg-white">
+      <div id="introduction" className="bg-white pt-16">
         <div className="max-w-6xl mx-auto px-4 py-12">
           <div className="flex flex-col lg:flex-row gap-12">
             <div className="lg:w-2/3">
@@ -320,156 +313,159 @@ const SubjectProgramPage = () => {
       </div>
 
       {/* Featured Universities Section */}
-      <div className="max-w-7xl mx-auto px-4 py-12 bg-gray-100">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-serif">Featured Universities</h2>
+      <div id="featured universities" className="bg-gray-100 pt-16">
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-serif">Featured Universities</h2>
 
-          {/* Sorting dropdown */}
-          <div className="relative">
-            <select
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
-              className="block w-64 pl-4 pr-8 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-            >
-              <option value="rank-low">Ranking: Low to High</option>
-              <option value="rank-high">Ranking: High to Low</option>
-              <option value="name-asc">Name: A to Z</option>
-              <option value="name-desc">Name: Z to A</option>
-              <option value="tuition-low">Tuition: Low to High</option>
-              <option value="tuition-high">Tuition: High to Low</option>
-            </select>
+            {/* Sorting dropdown */}
+            <div className="relative">
+              <select
+                value={sortOption}
+                onChange={(e) => setSortOption(e.target.value)}
+                className="block w-64 pl-4 pr-8 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+              >
+                <option value="rank-low">Ranking: Low to High</option>
+                <option value="rank-high">Ranking: High to Low</option>
+                <option value="name-asc">Name: A to Z</option>
+                <option value="name-desc">Name: Z to A</option>
+                <option value="tuition-low">Tuition: Low to High</option>
+                <option value="tuition-high">Tuition: High to Low</option>
+              </select>
+            </div>
           </div>
+
+          {featuredUniversities.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {getSortedUniversities(featuredUniversities, sortOption)
+                .slice(0, 9)
+                .map((university) => (
+                  <Link
+                    key={university?._id}
+                    to={`/university/${university?._id}`}
+                    className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow"
+                  >
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-xl font-medium text-gray-900 mb-1">
+                            {university?.name || "University Name"}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {university?.location?.name || ""},{" "}
+                            {university?.location?.state || ""}
+                          </p>
+                        </div>
+                        <img
+                          src={
+                            university?.logoUrl ||
+                            "/default-university-logo.png"
+                          }
+                          alt={`${university?.name || "University"} logo`}
+                          className="w-12 h-12 object-contain"
+                        />
+                      </div>
+
+                      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <h4 className="text-sm font-semibold text-blue-900 mb-2">
+                          Available {level} Programs in {formatSubject(subject)}
+                        </h4>
+                        {level === "Undergraduate" ? (
+                          <div>
+                            {university?.undergraduatePrograms?.programs?.[
+                              subject
+                            ]?.map((program, index) => (
+                              <div
+                                key={index}
+                                className="text-sm text-blue-800 mb-1"
+                              >
+                                • {program}
+                              </div>
+                            )) || (
+                              <p className="text-sm text-gray-600 italic">
+                                No specific programs listed
+                              </p>
+                            )}
+                            {university?.undergraduatePrograms?.description && (
+                              <p className="text-xs text-gray-600 mt-2">
+                                {university.undergraduatePrograms.description}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div>
+                            {university?.graduatePrograms?.programs?.[
+                              subject
+                            ]?.map((program, index) => (
+                              <div
+                                key={index}
+                                className="text-sm text-blue-800 mb-1"
+                              >
+                                • {program}
+                              </div>
+                            )) || (
+                              <p className="text-sm text-gray-600 italic">
+                                No specific programs listed
+                              </p>
+                            )}
+                            {university?.graduatePrograms?.description && (
+                              <p className="text-xs text-gray-600 mt-2">
+                                {university.graduatePrograms.description}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-2 mt-4">
+                        <div>
+                          <span className="text-sm text-gray-600">
+                            {level} Tuition
+                          </span>
+                          <p className="font-medium">
+                            $
+                            {(level === "Undergraduate"
+                              ? university?.feeStructure?.undergraduate
+                                  ?.tuitionFee
+                              : university?.feeStructure?.graduate
+                                  ?.tuitionFee || 0
+                            ).toLocaleString()}
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="text-sm text-gray-600">
+                            Acceptance Rate
+                          </span>
+                          <p className="font-medium">
+                            {university?.acceptancerate || "N/A"}%
+                          </p>
+                        </div>
+
+                        <div>
+                          <span className="text-sm text-gray-600">
+                            Graduation Rate
+                          </span>
+                          <p className="font-medium">
+                            {university?.graduationrate || "N/A"}%
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 w-full flex items-center justify-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors">
+                        <span>View Details</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-600">
+              No featured universities available.
+            </p>
+          )}
         </div>
-
-        {featuredUniversities.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {getSortedUniversities(featuredUniversities, sortOption)
-              .slice(0, 9)
-              .map((university) => (
-                <Link
-                  key={university?._id}
-                  to={`/university/${university?._id}`}
-                  className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow"
-                >
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-xl font-medium text-gray-900 mb-1">
-                          {university?.name || "University Name"}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {university?.location?.name || ""},{" "}
-                          {university?.location?.state || ""}
-                        </p>
-                      </div>
-                      <img
-                        src={
-                          university?.logoUrl || "/default-university-logo.png"
-                        }
-                        alt={`${university?.name || "University"} logo`}
-                        className="w-12 h-12 object-contain"
-                      />
-                    </div>
-
-                    <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                      <h4 className="text-sm font-semibold text-blue-900 mb-2">
-                        Available {level} Programs in {formatSubject(subject)}
-                      </h4>
-                      {level === "Undergraduate" ? (
-                        <div>
-                          {university?.undergraduatePrograms?.programs?.[
-                            subject
-                          ]?.map((program, index) => (
-                            <div
-                              key={index}
-                              className="text-sm text-blue-800 mb-1"
-                            >
-                              • {program}
-                            </div>
-                          )) || (
-                            <p className="text-sm text-gray-600 italic">
-                              No specific programs listed
-                            </p>
-                          )}
-                          {university?.undergraduatePrograms?.description && (
-                            <p className="text-xs text-gray-600 mt-2">
-                              {university.undergraduatePrograms.description}
-                            </p>
-                          )}
-                        </div>
-                      ) : (
-                        <div>
-                          {university?.graduatePrograms?.programs?.[
-                            subject
-                          ]?.map((program, index) => (
-                            <div
-                              key={index}
-                              className="text-sm text-blue-800 mb-1"
-                            >
-                              • {program}
-                            </div>
-                          )) || (
-                            <p className="text-sm text-gray-600 italic">
-                              No specific programs listed
-                            </p>
-                          )}
-                          {university?.graduatePrograms?.description && (
-                            <p className="text-xs text-gray-600 mt-2">
-                              {university.graduatePrograms.description}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2 mt-4">
-                      <div>
-                        <span className="text-sm text-gray-600">
-                          {level} Tuition
-                        </span>
-                        <p className="font-medium">
-                          $
-                          {(level === "Undergraduate"
-                            ? university?.feeStructure?.undergraduate
-                                ?.tuitionFee
-                            : university?.feeStructure?.graduate?.tuitionFee ||
-                              0
-                          ).toLocaleString()}
-                        </p>
-                      </div>
-
-                      <div>
-                        <span className="text-sm text-gray-600">
-                          Acceptance Rate
-                        </span>
-                        <p className="font-medium">
-                          {university?.acceptancerate || "N/A"}%
-                        </p>
-                      </div>
-
-                      <div>
-                        <span className="text-sm text-gray-600">
-                          Graduation Rate
-                        </span>
-                        <p className="font-medium">
-                          {university?.graduationrate || "N/A"}%
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 w-full flex items-center justify-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors">
-                      <span>View Details</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </div>
-                  </div>
-                </Link>
-              ))}
-          </div>
-        ) : (
-          <p className="text-center text-gray-600">
-            No featured universities available.
-          </p>
-        )}
       </div>
     </div>
   );

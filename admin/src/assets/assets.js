@@ -7,6 +7,7 @@ import f1successhubLogo from './f1successhubLogo.png'
 import update_icon from './updated.png'
 import mail_icon from './mail.png'
 import university_icon from './university.png'
+import dashboard_icon from './dashboard.png'
 
 export const assets = {
     logo,
@@ -16,6 +17,7 @@ export const assets = {
     f1successhubLogo,
     update_icon,
     mail_icon,
-    university_icon
+    university_icon,
+    dashboard_icon
 }
 
