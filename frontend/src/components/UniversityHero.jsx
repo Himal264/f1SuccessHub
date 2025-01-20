@@ -12,28 +12,33 @@ const UniversityHero = () => {
             Find Best University
           </h1>
           <p className="text-base sm:text-sm md:text-xl mb-6 sm:mb-8 leading-relaxed">
-          Find the University connects students with over 1,200 universities across the USA, offering a comprehensive and up-to-date database of institutions. Our mission is to simplify the search for higher education opportunities by providing personalized guidance and accurate information to help students make informed decisions about their academic future.
+            Find the University connects students with over 1,200 universities
+            across the USA, offering a comprehensive and up-to-date database of
+            institutions. Our mission is to simplify the search for higher
+            education opportunities by providing personalized guidance and
+            accurate information to help students make informed decisions about
+            their academic future.
           </p>
 
           {/* Find University Button */}
-          <button
-            className="w-full sm:w-auto bg-[#F37021] hover:bg-[#e26417] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base md:text-lg transition-colors duration-300 font-medium flex items-center justify-center sm:justify-start gap-2"
-          >
-            <Link to="/universitysearchform">Find University</Link>
-            <svg
-              className="w-4 h-4 sm:w-5 sm:h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
+          <Link to="/universitysearchform">
+            <button className="w-full sm:w-auto bg-[#F37021] hover:bg-[#e26417] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base md:text-lg transition-colors duration-300 font-medium flex items-center justify-center sm:justify-start gap-2">
+              Find University
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </Link>
         </div>
       </div>
 

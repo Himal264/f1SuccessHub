@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const UniPageHero = ({ university }) => {
   const [level, setLevel] = useState("Graduate");
@@ -10,9 +11,10 @@ const UniPageHero = ({ university }) => {
   console.log("Raw intake data:", university?.intake);
 
   // Determine which description to display based on the selected level
-  const levelDescription = level === 'Graduate'
-    ? university?.graduatePrograms?.description
-    : university?.undergraduatePrograms?.description;
+  const levelDescription =
+    level === "Graduate"
+      ? university?.graduatePrograms?.description
+      : university?.undergraduatePrograms?.description;
 
   // Get available intakes that haven't passed their deadline
   const availableIntakes = useMemo(() => {
@@ -31,7 +33,7 @@ const UniPageHero = ({ university }) => {
     });
 
     const filtered = university.intake
-      .filter(intake => {
+      .filter((intake) => {
         if (!intake?.deadline) {
           console.log("Missing deadline for intake:", intake);
           return false;
@@ -42,7 +44,7 @@ const UniPageHero = ({ university }) => {
           intake: intake,
           deadlineDate: deadlineDate,
           currentDate: currentDate,
-          isValid: isValid
+          isValid: isValid,
         });
         return isValid;
       })
@@ -72,11 +74,12 @@ const UniPageHero = ({ university }) => {
 
     const deadline = new Date(selectedIntake.deadline);
     const currentDate = new Date();
-    
+
     // Calculate months difference
-    let months = (deadline.getFullYear() - currentDate.getFullYear()) * 12 + 
-                (deadline.getMonth() - currentDate.getMonth());
-    
+    let months =
+      (deadline.getFullYear() - currentDate.getFullYear()) * 12 +
+      (deadline.getMonth() - currentDate.getMonth());
+
     // Adjust for day of month
     if (currentDate.getDate() > deadline.getDate()) {
       months--;
@@ -86,19 +89,19 @@ const UniPageHero = ({ university }) => {
     const deadlineStr = deadline.toLocaleDateString("en-US", {
       month: "long",
       day: "numeric",
-      year: "numeric"
+      year: "numeric",
     });
 
     console.log("Deadline calculations:", {
       deadline,
       currentDate,
       months,
-      deadlineStr
+      deadlineStr,
     });
 
     return {
       monthsLeft: Math.max(0, months),
-      deadlineStr
+      deadlineStr,
     };
   }, [selectedIntake]);
 
@@ -109,13 +112,13 @@ const UniPageHero = ({ university }) => {
   console.log("Deadline string:", deadlineStr);
 
   const nextMedia = () => {
-    setCurrentMediaIndex(prev => 
+    setCurrentMediaIndex((prev) =>
       prev === (university?.media?.length || 1) - 1 ? 0 : prev + 1
     );
   };
 
   const prevMedia = () => {
-    setCurrentMediaIndex(prev => 
+    setCurrentMediaIndex((prev) =>
       prev === 0 ? (university?.media?.length || 1) - 1 : prev - 1
     );
   };
@@ -226,7 +229,10 @@ const UniPageHero = ({ university }) => {
             {/* Media Carousel */}
             <div className="relative w-full h-72 mb-4 rounded-lg overflow-hidden">
               <img
-                src={university?.media?.[currentMediaIndex] || "/api/placeholder/800/600"}
+                src={
+                  university?.media?.[currentMediaIndex] ||
+                  "/api/placeholder/800/600"
+                }
                 alt={`University view ${currentMediaIndex + 1}`}
                 className="w-full h-full object-cover object-center"
               />
@@ -250,70 +256,78 @@ const UniPageHero = ({ university }) => {
 
             {/* Intake and Actions Container */}
             <div className="flex flex-col lg:flex-row gap-4 h-auto lg:h-24 mt-7">
-                {/* Left Side - Intake and Deadline */}
-                <div className="flex-1">
-                  {availableIntakes.length > 0 ? (
-                    <>
-                      <div className="relative mb-2">
-                        <select
-                          value={selectedIntake ? `${selectedIntake.month}-${selectedIntake.year}` : ''}
-                          onChange={(e) => {
-                            const [month, year] = e.target.value.split('-');
-                            const intake = availableIntakes.find(
-                              i => i.month === month && parseInt(i.year) === parseInt(year)
-                            );
-                            console.log("Selected new intake:", intake);
-                            setSelectedIntake(intake || null);
-                          }}
-                          className="w-full appearance-none bg-white border rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                        >
-                          {availableIntakes.map((intake) => (
-                            <option 
-                              key={`${intake.month}-${intake.year}`} 
-                              value={`${intake.month}-${intake.year}`}
-                            >
-                              {`${intake.month} ${intake.year}`}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-500" />
-                      </div>
-
-                      {selectedIntake && (
-                        <div className="bg-blue-900 p-2 rounded-lg text-white h-14">
-                          <p className="text-sm leading-tight">
-                            There are <span className="font-bold">{monthsLeft} months</span> left to apply
-                          </p>
-                          <p className="text-xs text-blue-100">
-                            Deadline {deadlineStr}
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="bg-gray-100 p-2 rounded-lg text-gray-600">
-                      <p className="text-sm">No upcoming intakes available</p>
+              {/* Left Side - Intake and Deadline */}
+              <div className="flex-1">
+                {availableIntakes.length > 0 ? (
+                  <>
+                    <div className="relative mb-2">
+                      <select
+                        value={
+                          selectedIntake
+                            ? `${selectedIntake.month}-${selectedIntake.year}`
+                            : ""
+                        }
+                        onChange={(e) => {
+                          const [month, year] = e.target.value.split("-");
+                          const intake = availableIntakes.find(
+                            (i) =>
+                              i.month === month &&
+                              parseInt(i.year) === parseInt(year)
+                          );
+                          console.log("Selected new intake:", intake);
+                          setSelectedIntake(intake || null);
+                        }}
+                        className="w-full appearance-none bg-white border rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      >
+                        {availableIntakes.map((intake) => (
+                          <option
+                            key={`${intake.month}-${intake.year}`}
+                            value={`${intake.month}-${intake.year}`}
+                          >
+                            {`${intake.month} ${intake.year}`}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-500" />
                     </div>
-                  )}
-                </div>
 
-                {/* Right Side - Action Buttons */}
-                <div className="flex-1 flex flex-col justify-between h-auto lg:h-full">
-                  <button className="w-full bg-blue-900 text-white py-2 px-3 rounded-md hover:bg-blue-800 transition-colors font-medium text-sm mb-2 lg:mb-0">
-                    Apply Now
-                  </button>
+                    {selectedIntake && (
+                      <div className="bg-blue-900 p-2 rounded-lg text-white h-14">
+                        <p className="text-sm leading-tight">
+                          There are{" "}
+                          <span className="font-bold">{monthsLeft} months</span>{" "}
+                          left to apply
+                        </p>
+                        <p className="text-xs text-blue-100">
+                          Deadline {deadlineStr}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="bg-gray-100 p-2 rounded-lg text-gray-600">
+                    <p className="text-sm">No upcoming intakes available</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Side - Action Buttons */}
+              <div className="flex-1 flex flex-col justify-between h-auto lg:h-full">
+                <button className="w-full bg-blue-900 text-white py-2 px-3 rounded-md hover:bg-blue-800 transition-colors font-medium text-sm mb-2 lg:mb-0">
+                  Apply Now
+                </button>
+                <Link to="/advisor-inquiriesform" className="w-full">
                   <button className="w-full bg-white border-2 border-blue-900 text-blue-900 py-2 px-3 rounded-md hover:bg-blue-50 transition-colors font-medium text-sm">
                     Ask an Advisor
                   </button>
-                </div>
+                </Link>
               </div>
             </div>
           </div>
         </div>
       </div>
-    
+    </div>
   );
 };
-
 
 export default UniPageHero;

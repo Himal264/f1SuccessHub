@@ -2,7 +2,7 @@
 import University from "../models/universityModel.js";
 import Application from '../models/applicationModel.js';
 
-class ApplicationController {
+export default class ApplicationController {
   static calculateBudgetScore(university, studyLevel, budgetPreference) {
     const budgetRanges = {
       "Less than $10,000": 10000,
@@ -27,20 +27,42 @@ class ApplicationController {
     const { englishTest, admissionTest } = application.academicInfo;
     let score = 0;
 
-    // Check English test requirements
     if (requirements[englishTest.type] && englishTest.score >= requirements[englishTest.type]) {
       score += 0.5;
     }
 
-    // Check admission test if provided
     if (admissionTest?.type && requirements[admissionTest.type] && 
         admissionTest.score >= requirements[admissionTest.type]) {
       score += 0.5;
     } else if (!admissionTest?.type) {
-      score += 0.5; // Don't penalize if test not provided
+      score += 0.5;
     }
 
     return score;
+  }
+
+  static generateRecommendationReasons(university, application) {
+    const reasons = [];
+    
+    const budgetScore = this.calculateBudgetScore(
+      university,
+      application.academicInfo.studyLevel,
+      application.preferences.budget
+    );
+    if (budgetScore > 0) {
+      reasons.push("Matches your budget requirements");
+    }
+
+    const gpaRequirement = university.admissionRequirements?.[application.academicInfo.studyLevel]?.GPA || 0;
+    if (application.academicInfo.gpa >= gpaRequirement) {
+      reasons.push("Meets academic requirements");
+    }
+
+    if (this.calculateTestScore(university, application) > 0) {
+      reasons.push("Test scores meet requirements");
+    }
+
+    return reasons;
   }
 
   static calculateMatchScore(university, application) {
@@ -60,10 +82,10 @@ class ApplicationController {
       }
 
       // Test Scores (20%)
-      score += this.calculateTestScore(university, application) * weights.testScores;
+      score += ApplicationController.calculateTestScore(university, application) * weights.testScores;
 
       // Budget Match (20%)
-      score += this.calculateBudgetScore(
+      score += ApplicationController.calculateBudgetScore(
         university, 
         application.academicInfo.studyLevel, 
         application.preferences.budget
@@ -71,8 +93,12 @@ class ApplicationController {
 
       // Preferences Match (30%)
       let preferenceScore = 0;
-      const priorities = application.preferences.priorities || [];
-      priorities.forEach(priority => {
+      // Ensure priorities is an array and handle null/undefined case
+      const priorities = Array.isArray(application.preferences?.priorities) 
+        ? application.preferences.priorities 
+        : [];
+
+      for (const priority of priorities) {
         switch(priority) {
           case 'Safety':
             preferenceScore += (university.scores?.safety || 0) / 100;
@@ -90,7 +116,7 @@ class ApplicationController {
             preferenceScore += (1000 - (university.rankings?.world || 1000)) / 1000;
             break;
         }
-      });
+      }
 
       score += priorities.length > 0 ? 
         (preferenceScore / priorities.length) * weights.preferences : 
@@ -105,25 +131,23 @@ class ApplicationController {
 
   static async submitApplication(req, res) {
     try {
-      // Validate request body
       if (!req.body?.academicInfo?.fieldOfStudy || !req.body?.academicInfo?.studyLevel) {
         return res.status(400).json({ 
           error: 'Missing required fields: fieldOfStudy or studyLevel' 
         });
       }
 
-      // Format the application data
+      // Ensure preferences is properly structured
       const applicationData = {
         studentInfo: req.body.studentInfo,
         academicInfo: req.body.academicInfo,
         preferences: {
           intake: req.body.intake,
-          priorities: req.body.preferences,
+          priorities: Array.isArray(req.body.preferences) ? req.body.preferences : [],
           budget: req.body.budget
         }
       };
 
-      // Find matching universities
       const programCategory = req.body.academicInfo.fieldOfStudy.replace(/\s+/g, '');
       const programPath = `${req.body.academicInfo.studyLevel}Programs.programs.${programCategory}`;
       
@@ -137,16 +161,15 @@ class ApplicationController {
         });
       }
 
-      // Calculate match scores and generate recommendations
       const recommendations = matchingUniversities
         .map(university => ({
           university: university._id,
-          matchScore: this.calculateMatchScore(university, applicationData),
-          reasons: this.generateRecommendationReasons(university, applicationData)
+          matchScore: ApplicationController.calculateMatchScore(university, applicationData),
+          reasons: ApplicationController.generateRecommendationReasons(university, applicationData)
         }))
         .filter(rec => rec.matchScore >= 60)
         .sort((a, b) => b.matchScore - a.matchScore)
-        .slice(0, 7); // Changed to top 7 recommendations
+        .slice(0, 7);
 
       if (!recommendations.length) {
         return res.status(404).json({
@@ -154,7 +177,6 @@ class ApplicationController {
         });
       }
 
-      // Create and save application
       const application = new Application({
         ...applicationData,
         recommendedUniversities: recommendations
@@ -162,7 +184,6 @@ class ApplicationController {
 
       await application.save();
 
-      // Return recommendations with university details
       const fullRecommendations = await Application.findById(application._id)
         .populate('recommendedUniversities.university')
         .select('recommendedUniversities');
@@ -182,5 +203,3 @@ class ApplicationController {
     }
   }
 }
-
-export default ApplicationController;

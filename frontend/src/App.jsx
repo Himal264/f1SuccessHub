@@ -8,7 +8,6 @@ import Login from "./pages/Login";
 import Navbar from "./components/Navbar";
 import TermsConditions from "./pages/TermsConditions";
 import Policy from "./pages/Policy";
-import AskAdvisor from "./pages/AskAdvisor";
 import Signup from "./pages/Signup";
 
 import FAQpage from "./pages/FAQpage";
@@ -61,6 +60,8 @@ import ProgramSearchResults from "./components/ProgramSearchResults";
 import SubjectProgramPage from "./pages/SubjectProgramPage";
 import UniversitySearchForm from "./pages/UniversitySearchForm";
 import ContactInformationForm from "./pages/ContactInformationForm";
+import AdvisorInquiryForm from "./pages/AdvisorInquiryForm";
+import ScholarshipSection from "./components/ScholarshipSection";
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -76,6 +77,10 @@ const App = () => {
             <Route
               path="/programs/:level/:subject"
               element={<ProgramSearchResults />}
+            />
+            <Route
+              path="/scholarships"
+              element={<ScholarshipSection />}
             />
 
             <Route
@@ -118,7 +123,7 @@ const App = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/termsandconditions" element={<TermsConditions />} />
             <Route path="/policy" element={<Policy />} />
-            <Route path="/askadvisor" element={<AskAdvisor />} />
+            <Route path="/advisor-inquiriesform" element={<AdvisorInquiryForm />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forf1success" element={<SuccessMatterspage />} />
             <Route path="/f1successhubfaqs?" element={<FAQpage />} />

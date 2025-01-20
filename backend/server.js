@@ -14,6 +14,7 @@ import fs from "fs";
 import emailRouter from "./routes/emailRoutes.js";
 import cookieParser from "cookie-parser";
 import applicationRouter from "./routes/applicationRoutes.js";
+import inquiryRouter from "./routes/advisorinquiriesRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -90,7 +91,10 @@ app.use("/api/university/:id", universityRouter);
 app.use("/api/email", emailRouter);
 
 //application api endpoints 
-app.use("/api/application", applicationRouter);
+app.use("/api/application-submit", applicationRouter);
+
+//advisor inquiry form
+app.use("/api/advisor-inquiryform", inquiryRouter);
 
 app.get("/", (req, res) => {
   res.send("API Working");

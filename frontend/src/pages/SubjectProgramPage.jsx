@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Play, ChevronRight } from "lucide-react";
+import Footer from "../components/Footer";
 
 const subjectData = {
   Engineering: {
@@ -213,9 +214,24 @@ const SubjectProgramPage = () => {
                 {formatSubject(subject).toLowerCase()} programs for
                 international students.
               </p>
-              <button className="bg-orange-500 text-white px-6 py-3 rounded-md hover:bg-orange-600 flex items-center">
-                Ask an Advisor <ChevronRight className="ml-2 h-4 w-4" />
-              </button>
+              <Link to="/advisor-inquiriesform">
+                <button className="w-full sm:w-auto bg-[#F37021] hover:bg-[#e26417] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base md:text-lg transition-colors duration-300 font-medium flex items-center justify-center sm:justify-start gap-2">
+                  Ask Advisor
+                  <svg
+                    className="w-4 h-4 sm:w-5 sm:h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              </Link>
             </div>
             <div className="lg:w-1/3">
               <div className="relative bg-gray-100 rounded-lg overflow-hidden">
@@ -248,21 +264,24 @@ const SubjectProgramPage = () => {
         <div className="sticky top-0 z-50 bg-white border-b border-gray-200">
           <div className="max-w-6xl mx-auto">
             <div className="flex flex-wrap sm:space-x-8 space-y-2 sm:space-y-0">
-              {["introduction", "featured universities", "Relevent stories", "faqs"].map(
-                (section) => (
-                  <button
-                    key={section}
-                    onClick={() => scrollToSection(section)}
-                    className={`py-4 px-1 border-b-2 ${
-                      activeSection === section
-                        ? "border-blue-600 text-blue-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    {section.charAt(0).toUpperCase() + section.slice(1)}
-                  </button>
-                )
-              )}
+              {[
+                "introduction",
+                "featured universities",
+                "Relevent stories",
+                "faqs",
+              ].map((section) => (
+                <button
+                  key={section}
+                  onClick={() => scrollToSection(section)}
+                  className={`py-4 px-1 border-b-2 ${
+                    activeSection === section
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {section.charAt(0).toUpperCase() + section.slice(1)}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -467,6 +486,7 @@ const SubjectProgramPage = () => {
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

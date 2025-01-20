@@ -4,27 +4,30 @@ import { useNavigate } from 'react-router-dom';
 
 const useFormSubmissionManager = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    country: "",
-    countryCode: "",
-    phoneNumber: "",
-    studyLevel: "",
-    fieldOfStudy: "",
-    gpa: "",
-    englishTest: {
-      type: "",
-      score: ""
-    },
-    admissionTest: {
-      type: "",
-      score: ""
-    },
-    intake: "",
-    preferences: [],
-    budget: ""
+  const [formData, setFormData] = useState(() => {
+    const savedData = localStorage.getItem('formData');
+    return savedData ? JSON.parse(savedData) : {
+      firstName: "",
+      lastName: "",
+      email: "",
+      country: "",
+      countryCode: "",
+      phoneNumber: "",
+      studyLevel: "",
+      fieldOfStudy: "",
+      gpa: "",
+      englishTest: {
+        type: "",
+        score: ""
+      },
+      admissionTest: {
+        type: "",
+        score: ""
+      },
+      intake: "",
+      preferences: [],
+      budget: ""
+    };
   });
 
   const [errors, setErrors] = useState({});
@@ -34,30 +37,28 @@ const useFormSubmissionManager = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    // Validate study level
+    // Add contact information validation
+    if (!formData.firstName) newErrors.firstName = 'First name is required';
+    if (!formData.lastName) newErrors.lastName = 'Last name is required';
+    if (!formData.email) newErrors.email = 'Email is required';
+    if (!formData.country) newErrors.country = 'Country is required';
+    if (!formData.phoneNumber) newErrors.phoneNumber = 'Phone number is required';
+
+    // Existing academic validation
     if (!formData.studyLevel) newErrors.studyLevel = 'Study level is required';
-    
-    // Validate field of study
     if (!formData.fieldOfStudy) newErrors.fieldOfStudy = 'Field of study is required';
-    
-    // Validate GPA
     if (!formData.gpa || formData.gpa < 0 || formData.gpa > 4.0) {
       newErrors.gpa = 'Valid GPA between 0 and 4.0 is required';
     }
-
-    // Validate English test
     if (!formData.englishTest.type) {
       newErrors['englishTest.type'] = 'English test type is required';
-    } else if (!formData.englishTest.score && formData.englishTest.score !== 0) {
+    }
+    if (!formData.englishTest.score && formData.englishTest.score !== 0) {
       newErrors['englishTest.score'] = 'English test score is required';
     }
-
-    // Validate preferences
     if (!formData.preferences || formData.preferences.length === 0) {
       newErrors.preferences = 'At least one preference is required';
     }
-
-    // Validate budget
     if (!formData.budget) newErrors.budget = 'Budget range is required';
 
     setErrors(newErrors);
@@ -70,7 +71,6 @@ const useFormSubmissionManager = () => {
       [fieldName]: true
     }));
 
-    // Only validate the specific field that was blurred
     const fieldError = validateField(fieldName);
     if (fieldError) {
       setErrors(prev => ({
@@ -92,6 +92,16 @@ const useFormSubmissionManager = () => {
       : formData[fieldName];
 
     switch (fieldName) {
+      case 'firstName':
+        return !value ? 'First name is required' : '';
+      case 'lastName':
+        return !value ? 'Last name is required' : '';
+      case 'email':
+        return !value ? 'Email is required' : '';
+      case 'country':
+        return !value ? 'Country is required' : '';
+      case 'phoneNumber':
+        return !value ? 'Phone number is required' : '';
       case 'studyLevel':
         return !value ? 'Study level is required' : '';
       case 'fieldOfStudy':
@@ -115,7 +125,6 @@ const useFormSubmissionManager = () => {
     setFormData(prev => {
       const updated = { ...prev };
       
-      // Handle nested updates
       Object.entries(updates).forEach(([key, value]) => {
         if (key.includes('.')) {
           const [parent, child] = key.split('.');
@@ -133,9 +142,13 @@ const useFormSubmissionManager = () => {
     });
   };
 
-  
   const hasRequiredFields = () => {
-    return (
+    return !!(
+      formData.firstName &&
+      formData.lastName &&
+      formData.email &&
+      formData.country &&
+      formData.phoneNumber &&
       formData.studyLevel &&
       formData.fieldOfStudy &&
       formData.gpa &&
@@ -148,52 +161,56 @@ const useFormSubmissionManager = () => {
 
   const submitApplication = async () => {
     if (!validateForm()) {
-      return false;
+      throw new Error('Form validation failed');
     }
   
     setIsSubmitting(true);
     try {
-      // Log the entire formData
-      console.log("FormData to be sent:", formData);
-  
-      // Log each field in formData
-      Object.entries(formData).forEach(([key, value]) => {
-        if (typeof value === 'object') {
-          console.log(`Field "${key}" data:`, JSON.stringify(value, null, 2));
-        } else {
-          console.log(`Field "${key}" data:`, value);
-        }
-      });
-  
-      const response = await fetch('/api/application', {
+      const response = await fetch('/api/application-submit/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData) // Send the formData as JSON
+        body: JSON.stringify({
+          studentInfo: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            country: formData.country,
+            countryCode: formData.countryCode,
+            phoneNumber: formData.phoneNumber,
+          },
+          academicInfo: {
+            studyLevel: formData.studyLevel,
+            fieldOfStudy: formData.fieldOfStudy,
+            gpa: formData.gpa,
+            englishTest: formData.englishTest,
+            admissionTest: formData.admissionTest,
+            intake: formData.intake,
+          },
+          preferences: {
+            priorities: formData.preferences,
+            budget: formData.budget,
+          },
+        })
       });
-  
+
       if (!response.ok) {
-        throw new Error('Failed to submit application');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit application');
       }
-  
+
       const result = await response.json();
-      localStorage.setItem('applicationResult', JSON.stringify(result));
       localStorage.removeItem('formData');
-      window.location.reload(); // Refresh the page after successful submission
-      return true;
+      return result;
     } catch (error) {
       console.error('Error submitting application:', error);
-      setErrors(prev => ({
-        ...prev,
-        submit: 'Failed to submit application. Please try again.'
-      }));
-      return false;
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   return {
     formData,
     errors,

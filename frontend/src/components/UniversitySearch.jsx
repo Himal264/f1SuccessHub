@@ -101,7 +101,7 @@ const UniversitySearch = () => {
           .scroll-content {
             display: flex;
             width: max-content;
-            animation: scroll 40s linear infinite;
+            animation: scroll 10s linear infinite;
           }
           .university-card {
             width: 280px;

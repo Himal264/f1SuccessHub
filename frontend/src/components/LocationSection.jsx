@@ -3,17 +3,20 @@ import { MapPin } from "lucide-react";
 
 const LocationSection = ({ university }) => {
   const defaultLocation = {
-    locationPhoto: "/api/placeholder/600/400",
+    name: "Unknown",
+    state: "Unknown",
+    region: "Unknown",
     totalPopulation: 0,
-    weather: { summer: "Unknown", winter: "Unknown" },
+    citysize: "Unknown",
+    nearbyCities: [],
     keyIndustries: [],
+    landmarks: [],
+    locationPhoto: "/api/placeholder/600/400",
+    weather: { summer: "Unknown", winter: "Unknown" },
     travelTime: [],
   };
 
   const location = university?.location || defaultLocation;
-  console.log("University prop:", university);
-console.log("Location Photo:", university?.location?.locationPhoto);
-
 
   return (
     <section id="location" className="py-12 bg-gray-50">
@@ -26,8 +29,8 @@ console.log("Location Photo:", university?.location?.locationPhoto);
         <div className="grid md:grid-cols-2 gap-8">
           <div>
             <img
-              src={location.locationPhoto || "/path-to-your-default-image.jpg"}
-              alt="City View"
+              src={location.locationPhoto}
+              alt={`${location.name} View`}
               className="w-full h-64 object-cover rounded-lg mb-6"
             />
 
@@ -38,6 +41,20 @@ console.log("Location Photo:", university?.location?.locationPhoto);
                   {location.totalPopulation.toLocaleString()}
                 </p>
               </div>
+              <div className="bg-white p-4 rounded-lg">
+                <h3 className="font-medium mb-2">City Size</h3>
+                <p className="text-blue-900 font-medium">{location.citysize}</p>
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg mb-6">
+              <h3 className="font-medium mb-2">Region</h3>
+              <p className="text-blue-900">{location.region}</p>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg mb-6">
+              <h3 className="font-medium mb-2">State</h3>
+              <p className="text-blue-900">{location.state}</p>
             </div>
           </div>
 
@@ -59,9 +76,9 @@ console.log("Location Photo:", university?.location?.locationPhoto);
             <div className="bg-white p-6 rounded-lg">
               <h3 className="font-semibold text-lg mb-4">Key Industries</h3>
               <div className="flex flex-wrap gap-2">
-                {location.keyIndustries.map((industry) => (
+                {location.keyIndustries.map((industry, index) => (
                   <span
-                    key={industry}
+                    key={index}
                     className="bg-blue-100 text-blue-900 px-3 py-1 rounded-full"
                   >
                     {industry}
@@ -72,11 +89,29 @@ console.log("Location Photo:", university?.location?.locationPhoto);
 
             <div className="bg-white p-6 rounded-lg">
               <h3 className="font-semibold text-lg mb-4">Nearby Cities</h3>
+              <ul className="list-disc pl-5">
+                {location.nearbyCities.map((city, index) => (
+                  <li key={index} className="text-gray-600">{city}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg">
+              <h3 className="font-semibold text-lg mb-4">Landmarks</h3>
+              <ul className="list-disc pl-5">
+                {location.landmarks.map((landmark, index) => (
+                  <li key={index} className="text-gray-600">{landmark}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="bg-white p-6 rounded-lg">
+              <h3 className="font-semibold text-lg mb-4">Travel Time to Nearby Cities</h3>
               <div className="space-y-3">
-                {location.travelTime.map((city) => (
-                  <div key={city.city} className="flex justify-between">
-                    <span>{city.city}</span>
-                    <span className="text-gray-600">{city.time}</span>
+                {location.travelTime.map((cityInfo, index) => (
+                  <div key={index} className="flex justify-between">
+                    <span>{cityInfo.city}</span>
+                    <span className="text-gray-600">{cityInfo.time}</span>
                   </div>
                 ))}
               </div>
@@ -87,5 +122,6 @@ console.log("Location Photo:", university?.location?.locationPhoto);
     </section>
   );
 };
+
 
 export default LocationSection;

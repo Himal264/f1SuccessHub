@@ -371,7 +371,7 @@ const AddUniversity = () => {
         toast.error("File size should be less than 5MB");
         return;
       }
-      if (!["image/jpeg", "image/png"].includes(file.type)) {
+      if (!["image/jpeg", "image/png", "image/jpg", "image/webp"].includes(file.type)) {
         toast.error("Invalid file type. Please upload JPEG or PNG.");
         return;
       }

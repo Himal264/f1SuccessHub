@@ -1,35 +1,63 @@
-import React from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import useFormSubmissionManager from '../context/useFormSubmissionManager';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import useFormSubmissionManager from "../context/useFormSubmissionManager";
 
+const Toast = ({ message, type, onClose }) => {
+  return (
+    <div
+      className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg max-w-sm z-50 animate-slide-in 
+        ${type === "success" ? "bg-green-500" : "bg-red-500"} text-white`}
+    >
+      <div className="flex justify-between items-center">
+        <p>{message}</p>
+        <button
+          onClick={onClose}
+          className="ml-4 text-white hover:text-gray-200"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const countries = [
-  { code: 'NP', name: 'Nepal', intlCode: '+977' },
-  { code: 'US', name: 'United States', intlCode: '+1' },
-  { code: 'UK', name: 'United Kingdom', intlCode: '+44' },
-  { code: 'CA', name: 'Canada', intlCode: '+1' },
-  { code: 'AU', name: 'Australia', intlCode: '+61' },
+  { code: "NP", name: "Nepal", intlCode: "+977" },
+  { code: "US", name: "United States", intlCode: "+1" },
+  { code: "UK", name: "United Kingdom", intlCode: "+44" },
+  { code: "CA", name: "Canada", intlCode: "+1" },
+  { code: "AU", name: "Australia", intlCode: "+61" },
 ];
 
 const ContactInformationForm = () => {
+  const [toast, setToast] = useState({ show: false, message: "", type: "" });
+  
   const {
     formData,
     errors,
     isSubmitting,
     updateFormData,
     handleBlur,
-    submitApplication
+    submitApplication,
   } = useFormSubmissionManager();
 
   const navigate = useNavigate();
 
+  // Moved showToast inside the component
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: "", type: "" });
+    }, 3000);
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'country') {
-      const selectedCountry = countries.find(c => c.code === value);
+    if (name === "country") {
+      const selectedCountry = countries.find((c) => c.code === value);
       updateFormData({
         country: value,
-        countryCode: selectedCountry ? selectedCountry.intlCode : ''
+        countryCode: selectedCountry ? selectedCountry.intlCode : "",
       });
     } else {
       updateFormData({ [name]: value });
@@ -40,38 +68,33 @@ const ContactInformationForm = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     
-    // Format the data for submission
-    const applicationData = {
-      studentInfo: {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        country: formData.country,
-        countryCode: formData.countryCode,
-        phoneNumber: formData.phoneNumber
-      },
-      academicInfo: {
-        studyLevel: formData.studyLevel,
-        fieldOfStudy: formData.fieldOfStudy,
-        gpa: formData.gpa,
-        englishTest: formData.englishTest,
-        admissionTest: formData.admissionTest,
-        intake: formData.intake
-      },
-      preferences: {
-        priorities: formData.preferences,
-        budget: formData.budget
-      }
-    };
-
-    const success = await submitApplication(applicationData);
-    if (success) {
-      navigate('/success');
+    try {
+      await submitApplication();
+      showToast("Application submitted successfully! Redirecting...", "success");
+      setTimeout(() => {
+        navigate("/success");
+      }, 2000);
+    } catch (error) {
+      showToast(
+        error.message || "Failed to submit application. Please try again.",
+        "error"
+      );
     }
   };
 
+  console.log('Submitting data:', formData);
+
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      {/* Toast notification */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ show: false, message: "", type: "" })}
+        />
+      )}
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">
           Tell us your contact information
@@ -83,7 +106,6 @@ const ContactInformationForm = () => {
       </div>
 
       <form onSubmit={onSubmit} className="space-y-6">
-        {/* Rest of the form JSX remains the same */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* First Name */}
           <div>
@@ -91,10 +113,10 @@ const ContactInformationForm = () => {
             <input
               type="text"
               name="firstName"
-              value={formData.firstName || ''}
+              value={formData.firstName || ""}
               onChange={handleChange}
               className={`w-full p-3 border rounded-lg ${
-                errors.firstName ? 'border-red-500' : 'border-gray-300'
+                errors.firstName ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Your first name"
             />
@@ -109,10 +131,10 @@ const ContactInformationForm = () => {
             <input
               type="text"
               name="lastName"
-              value={formData.lastName || ''}
+              value={formData.lastName || ""}
               onChange={handleChange}
               className={`w-full p-3 border rounded-lg ${
-                errors.lastName ? 'border-red-500' : 'border-gray-300'
+                errors.lastName ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Your last name"
             />
@@ -128,10 +150,10 @@ const ContactInformationForm = () => {
           <input
             type="email"
             name="email"
-            value={formData.email || ''}
+            value={formData.email || ""}
             onChange={handleChange}
             className={`w-full p-3 border rounded-lg ${
-              errors.email ? 'border-red-500' : 'border-gray-300'
+              errors.email ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="Your email address"
           />
@@ -145,10 +167,10 @@ const ContactInformationForm = () => {
           <label className="block text-sm font-medium mb-2">COUNTRY</label>
           <select
             name="country"
-            value={formData.country || ''}
+            value={formData.country || ""}
             onChange={handleChange}
             className={`w-full p-3 border rounded-lg ${
-              errors.country ? 'border-red-500' : 'border-gray-300'
+              errors.country ? "border-red-500" : "border-gray-300"
             }`}
           >
             <option value="">Select your country</option>
@@ -171,7 +193,7 @@ const ContactInformationForm = () => {
           <input
             type="text"
             name="countryCode"
-            value={formData.countryCode || ''}
+            value={formData.countryCode || ""}
             readOnly
             className="w-full p-3 border border-gray-300 rounded-lg bg-gray-100"
             placeholder="International code will appear here"
@@ -184,10 +206,10 @@ const ContactInformationForm = () => {
           <input
             type="tel"
             name="phoneNumber"
-            value={formData.phoneNumber || ''}
+            value={formData.phoneNumber || ""}
             onChange={handleChange}
             className={`w-full p-3 border rounded-lg ${
-              errors.phoneNumber ? 'border-red-500' : 'border-gray-300'
+              errors.phoneNumber ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="Your phone number"
           />
@@ -208,12 +230,32 @@ const ContactInformationForm = () => {
             disabled={isSubmitting}
             className="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400"
           >
-            {isSubmitting ? 'Submitting...' : 'Submit →'}
+            {isSubmitting ? "Submitting..." : "Submit →"}
           </button>
         </div>
       </form>
     </div>
   );
 };
+
+// Add the animation styles to your CSS
+const styles = document.createElement('style');
+styles.textContent = `
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+`;
+document.head.appendChild(styles);
 
 export default ContactInformationForm;
