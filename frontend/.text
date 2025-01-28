@@ -1,0 +1,32 @@
+
+Sample of post
+
+Stories: {
+Stories Type: {
+type: String,
+required: true,
+enum: [
+news, study in us, success stories, university, students
+]
+},
+post create type(its mean who can create below to one of them): {
+type: string,
+required: true,
+enum:[
+F1SuccessHub Team, Alumini, Proffessor, Counselor, Patner Company
+]
+},
+Post Category type: {
+type: String,
+required: true,
+enum:[
+cultural shock, internshis, scholarships tips, visa experience, part-times jobs, networking, research opportunities, health and wellness, annoucements, financial aid, university application, career planning, campus life, advice for students,state, travel tips, Engineering, Humanities, MedicalandHealthSciences, NaturalSciences, Business, ComputerScience, SocialScience, Education
+]
+},
+text:{
+  type:string,
+  required true,
+  limit:[max-7000]
+}
+
+},

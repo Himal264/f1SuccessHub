@@ -11,6 +11,7 @@ import EmailForm from "./pages/EmailForm";
 import ListUniversity from "./pages/ListUniversity";
 import AddUniversity from "./pages/AddUni";
 import Dashboard from "./pages/Dashboard";
+import CreateStory from "./pages/CreateStory";
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL
 
@@ -41,6 +42,7 @@ const App = () => {
                 <Route path="/email" element={<EmailForm setToken={setToken}/>} />
                 <Route path="/adduniversity" element={<AddUniversity setToken={setToken}/>} />
                 <Route path="/listuniverstiy" element={<ListUniversity setToken={setToken}/>} />
+                <Route path="/createstory" element={<CreateStory setToken={setToken}/>} />
               </Routes>
             </div>
           </div>
