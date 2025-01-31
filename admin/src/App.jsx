@@ -12,6 +12,7 @@ import ListUniversity from "./pages/ListUniversity";
 import AddUniversity from "./pages/AddUni";
 import Dashboard from "./pages/Dashboard";
 import CreateStory from "./pages/CreateStory";
+import RoleRequest from "./pages/RoleRequest";
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL
 
@@ -43,6 +44,7 @@ const App = () => {
                 <Route path="/adduniversity" element={<AddUniversity setToken={setToken}/>} />
                 <Route path="/listuniverstiy" element={<ListUniversity setToken={setToken}/>} />
                 <Route path="/createstory" element={<CreateStory setToken={setToken}/>} />
+                <Route path="/rolerequest" element={<RoleRequest setToken={setToken}/>} />
               </Routes>
             </div>
           </div>

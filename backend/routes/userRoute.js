@@ -1,11 +1,212 @@
 import express from "express";
-import { loginUser, registerUser, adminLogin} from "../controllers/userController.js";
+import multer from "multer";
+import path from "path";
+import {
+  loginUser,
+  registerUser,
+  adminLogin,
+} from "../controllers/userController.js";
+import userModel from "../models/userModel.js";
+import sendEmail from "../utils/emailSender.js";
 
 const userRouter = express.Router();
 
-userRouter.post('/register', registerUser);
-userRouter.post('/login', loginUser);
-userRouter.post('/adminlogin', adminLogin);
+// Configure multer for file upload
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
+    );
+  },
+});
 
+// Update fileFilter to only allow images
+const fileFilter = (req, file, cb) => {
+  // Accept only image files
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only image files are allowed!"), false);
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 2 * 1024 * 1024, // 2MB limit
+  },
+});
+
+// Wrap the route handler in try-catch
+userRouter.post(
+  "/register",
+  upload.fields([
+    { name: "academicCertificate", maxCount: 1 },
+    { name: "professionalCertification", maxCount: 1 },
+    { name: "institutionDocument", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      await registerUser(req, res);
+    } catch (error) {
+      if (error instanceof multer.MulterError) {
+        if (error.code === "LIMIT_FILE_SIZE") {
+          return res.status(400).json({
+            success: false,
+            message: "File is too large. Maximum size is 2MB",
+          });
+        }
+      }
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+);
+
+userRouter.post("/login", loginUser);
+userRouter.post("/adminlogin", adminLogin);
+
+// Get all verification requests
+userRouter.get("/verification-requests", async (req, res) => {
+  try {
+    console.log("Starting to fetch verification requests...");
+
+    // First, check if the model exists
+    if (!userModel) {
+      console.error("userModel is not defined");
+      return res.status(500).json({
+        success: false,
+        message: "Database model not initialized",
+      });
+    }
+
+    // Try to find all users with pending verification
+    const requests = await userModel
+      .find({
+        "verificationRequest.status": "pending",
+      })
+      .lean(); // Use lean() for better performance
+
+    console.log("Database query completed");
+    console.log("Number of requests found:", requests ? requests.length : 0);
+    console.log("Requests data:", JSON.stringify(requests, null, 2));
+
+    // Send response
+    return res.status(200).json({
+      success: true,
+      data: requests || [],
+      count: requests ? requests.length : 0,
+    });
+  } catch (error) {
+    console.error("Detailed error in verification-requests:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error fetching verification requests",
+      error: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
+  }
+});
+
+// Update verification status - Add this route for admin
+userRouter.put("/verify-role/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { status, adminFeedback } = req.body;
+
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Update verification status
+    user.verificationRequest.status = status;
+    user.verificationRequest.adminFeedback = adminFeedback;
+
+    // If approved, update the user's role
+    if (status === "approved") {
+      user.role = user.verificationRequest.requestedRole;
+    }
+
+    await user.save();
+
+    // Send email notification to user
+    const emailSubject = `Role Verification ${
+      status.charAt(0).toUpperCase() + status.slice(1)
+    }`;
+    const emailText = `Dear ${user.name},
+
+Your request to be verified as a ${
+      user.verificationRequest.requestedRole
+    } has been ${status}.
+
+${
+  adminFeedback
+    ? `Admin Feedback: ${adminFeedback}
+
+`
+    : ""
+}Best regards,
+The F1 Success Hub Team`;
+
+    await sendEmail({
+      to: user.email,
+      subject: emailSubject,
+      text: emailText,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Verification status updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating verification status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating verification status",
+      error: error.message,
+    });
+  }
+});
+
+// Protect admin routes middleware
+const isAdmin = async (req, res, next) => {
+  try {
+    // Get user from token
+    const user = req.user;
+
+    if (user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admin only.",
+      });
+    }
+    next();
+  } catch (error) {
+    res.status(401).json({
+      success: false,
+      message: "Authentication failed",
+    });
+  }
+};
+
+// Apply admin middleware to admin routes
+userRouter.use(["/verification-requests", "/verify-role"], isAdmin);
+
+// Test route
+userRouter.get("/test", (req, res) => {
+  res.json({ message: "User route is working" });
+});
 
 export default userRouter;

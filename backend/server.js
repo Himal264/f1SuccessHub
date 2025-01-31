@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import "dotenv/config";
 import connectDB from "./config/mongodb.js";
-import connectCloudinary from "./config/cloudinary.js";
+import { connectCloudinary } from "./config/cloudinary.js";
 import userRouter from "./routes/userRoute.js";
 import questionRouter from "./routes/questionRoute.js";
 import emailRoutes from "./routes/emailRoutes.js";
@@ -15,14 +15,24 @@ import emailRouter from "./routes/emailRoutes.js";
 import cookieParser from "cookie-parser";
 import applicationRouter from "./routes/applicationRoutes.js";
 import inquiryRouter from "./routes/advisorinquiriesRoutes.js";
+import multer from "multer";
+import universityMatchRouter from "./routes/universityMatchRoute.js";
+
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-// Ensure uploads directory exists
+
+// Create required directories
 const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-}
+const verificationDocsDir = path.join(uploadsDir, "verification-documents");
+
+// Create directories if they don't exist
+[uploadsDir, verificationDocsDir].forEach((dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
 
 // App Config
 const app = express();
@@ -30,53 +40,31 @@ const port = process.env.PORT || 9000;
 connectDB();
 connectCloudinary();
 
-// Define allowed origins
-const allowedOrigins = [
-  "http://localhost:5174", // Frontend
-  "http://localhost:5173", // Admin
-  // Add any other origins you need
-];
-
-// CORS configuration
+// Middleware order is important
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Check if origin is in allowedOrigins
-      if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// Add error handling middleware
-app.use((err, req, res, next) => {
-  if (err.message === "Not allowed by CORS") {
-    res.status(403).json({
-      error: "CORS not allowed for this origin",
-    });
-  } else {
-    next(err);
-  }
-});
-
-app.use(express.json());
-const corsOptions = {
-  origin: ["http://localhost:5173", "http://localhost:3000"], // add any additional frontend URLs
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-app.use(cors(corsOptions));
+// Serve uploaded files statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(cookieParser());
-app.use(express.urlencoded({ extended: false }));
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Global error handler:", err);
+  res.status(500).json({
+    success: false,
+    message: "Internal server error",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
+});
+
 
 // api endpoints
 app.use("/api/user", userRouter);
@@ -86,11 +74,14 @@ app.use("/api/email", emailRoutes);
 //university api endpoints
 app.use("/api/university", universityRouter);
 app.use("/api/university/:id", universityRouter);
+app.use("/api/universities", universityMatchRouter);
+
+
 
 //email broadcast
 app.use("/api/email", emailRouter);
 
-//application api endpoints 
+//application api endpoints
 app.use("/api/application-submit", applicationRouter);
 
 //advisor inquiry form

@@ -3,6 +3,10 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import userModel from "../models/userModel.js";
 import sendEmail from "../utils/sendEmail.js";
+import cloudinary from "../config/cloudinary.js";
+import fs from "fs";
+import util from "util";
+const unlinkFile = util.promisify(fs.unlink);
 
 const createToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET);
@@ -34,15 +38,16 @@ const loginUser = async (req, res) => {
 // Route for user register
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, requestedRole, additionalInfo } = req.body;
+    const documents = req.files;
 
-    // checking user already exists or not
+    // Check if user already exists
     const exists = await userModel.findOne({ email });
     if (exists) {
       return res.json({ success: false, message: "User already exists" });
     }
 
-    // validating email format & strong password
+    // Validate email format & password strength
     if (!validator.isEmail(email)) {
       return res.json({
         success: false,
@@ -57,51 +62,164 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // hashing user password
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Upload documents to Cloudinary and store URLs
+    let uploadedDocuments = {};
+    if (documents) {
+      for (const [fieldName, files] of Object.entries(documents)) {
+        if (fieldName === "otherDocuments") {
+          // Handle multiple files
+          uploadedDocuments[fieldName] = [];
+          for (const file of files) {
+            try {
+              const result = await cloudinary.uploader.upload(file.path, {
+                folder: `verification-documents/${requestedRole}`,
+                resource_type: "auto",
+              });
+              uploadedDocuments[fieldName].push({
+                url: result.secure_url,
+                public_id: result.public_id,
+              });
+              // Delete local file after upload
+              await unlinkFile(file.path);
+            } catch (error) {
+              console.error("Cloudinary upload error:", error);
+            }
+          }
+        } else {
+          // Handle single file
+          try {
+            const result = await cloudinary.uploader.upload(files[0].path, {
+              folder: `verification-documents/${requestedRole}`,
+              resource_type: "auto",
+            });
+            uploadedDocuments[fieldName] = {
+              url: result.secure_url,
+              public_id: result.public_id,
+            };
+            // Delete local file after upload
+            await unlinkFile(files[0].path);
+          } catch (error) {
+            console.error("Cloudinary upload error:", error);
+          }
+        }
+      }
+    }
+
+    // Parse additionalInfo
+    let parsedAdditionalInfo = {};
+    try {
+      parsedAdditionalInfo = JSON.parse(additionalInfo);
+    } catch (error) {
+      console.error("Error parsing additionalInfo:", error);
+    }
+
+    // Create user with role-specific info and documents
     const newUser = new userModel({
       name,
       email,
       password: hashedPassword,
+      role: "user",
+      verificationRequest: {
+        status: "pending",
+        requestedRole,
+        adminFeedback: "",
+      },
     });
 
-    const user = await newUser.save();
+    // Add role-specific info and documents
+    if (requestedRole === "alumni") {
+      newUser.alumniInfo = {
+        ...parsedAdditionalInfo,
+        documents: {
+          academicCertificate: uploadedDocuments.academicCertificate,
+          otherDocuments: uploadedDocuments.otherDocuments || [],
+        },
+      };
+    } else if (requestedRole === "counselor") {
+      newUser.counselorInfo = {
+        ...parsedAdditionalInfo,
+        documents: {
+          professionalCertificate: uploadedDocuments.professionalCertificate,
+          otherDocuments: uploadedDocuments.otherDocuments || [],
+        },
+      };
+    } else if (requestedRole === "university") {
+      newUser.universityInfo = {
+        ...parsedAdditionalInfo,
+        documents: {
+          institutionDocument: uploadedDocuments.institutionDocument,
+          otherDocuments: uploadedDocuments.otherDocuments || [],
+        },
+      };
+    }
 
+    // Save user
+    const user = await newUser.save();
     const token = createToken(user._id);
 
-    // Send congratulatory email
-    const subject = "Welcome to F1 Success Hub!";
-const text = `Dear ${name},\n\nCongratulations on taking the first step towards your F1 visa journey with F1 Success Hub! We are delighted to welcome you to our platform, where your success is our mission.\n\nAs a member, you’ll have access to expert guidance throughout your F1 visa process, including personalized advice from our experienced former visa officers. Our team is here to ensure you are fully prepared and confident every step of the way.\n\nWhat’s next? Explore our platform to find exclusive resources, tips, and support tailored to help you achieve your academic and career goals in the United States.\n\nShould you have any questions, feel free to reach out to our support team anytime. We’re excited to be part of your journey to success!\n\nWarm regards,\n\nThe F1 Success Hub Team\nEmail: f1successhub@gmail.com\nPhone: +977-9764558713`;
+    // Send role-specific verification email
+    try {
+      let emailText = `Dear ${name},\n\nThank you for registering with F1 Success Hub! Your account has been created as a standard user.\n\n`;
 
+      if (requestedRole !== "user") {
+        emailText += `We have received your request to be registered as a ${requestedRole}. Our team will review your submitted documents and verify the information.\n\nOnce verified, your role will be updated accordingly.\n\n`;
+      }
 
-    await sendEmail({ to: email, subject, text });
+      emailText += `For any queries, feel free to contact us.\n\nBest regards,\nThe F1 Success Hub Team\nEmail: f1successhub@gmail.com\nPhone: +977-9764558713`;
 
-    res.json({ success: true, token });
+      await sendEmail({
+        to: email,
+        subject: "Your Registration is Pending Verification",
+        text: emailText,
+      });
+    } catch (emailError) {
+      console.error("Error sending email:", emailError);
+      // Continue with registration even if email fails
+    }
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        name: user.name,
+        email: user.email,
+        role: user.role
+      },
+      message: requestedRole !== "user"
+        ? "Registration successful! Your verification is pending."
+        : "Registration successful!",
+    });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error("Registration error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error during registration",
+    });
   }
 };
 
+export { loginUser, registerUser, adminLogin };
+
 // Route for admin login
 const adminLogin = (req, res) => {
-  try{
+  try {
+    const { email, password } = req.body;
 
-    const {email, password} = req.body;
-    
-    if(email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD){
+    if (
+      email === process.env.ADMIN_EMAIL &&
+      password === process.env.ADMIN_PASSWORD
+    ) {
       const token = createToken(email);
-      res.json({success: true, token});
+      res.json({ success: true, token });
     } else {
-      res.json({success: false, message: "Invalid credentials"});
-
+      res.json({ success: false, message: "Invalid credentials" });
     }
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
   }
 };
-
-export { loginUser, registerUser, adminLogin };

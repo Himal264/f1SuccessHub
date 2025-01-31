@@ -4,12 +4,12 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import F1QestionsandAnswer from "./pages/F1QestionsandAnswer";
 import About from "./pages/About";
-import Login from "./pages/Login";
+
+import LoginForm from "./components/LoginForm";
 import Navbar from "./components/Navbar";
 import TermsConditions from "./pages/TermsConditions";
 import Policy from "./pages/Policy";
-import Signup from "./pages/Signup";
-
+import SignupForm from "./components/SignupForm";
 import FAQpage from "./pages/FAQpage";
 import SuccessMatterspage from "./pages/SuccessMatterspage";
 import Academics from "./subpages/Academics";
@@ -58,10 +58,12 @@ import UniversityDetail from "./pages/UniversityDetail";
 import ScrollToTop from "./subcomponents/ScrollToTop";
 import ProgramSearchResults from "./components/ProgramSearchResults";
 import SubjectProgramPage from "./pages/SubjectProgramPage";
-import UniversitySearchForm from "./pages/UniversitySearchForm";
-import ContactInformationForm from "./pages/ContactInformationForm";
 import AdvisorInquiryForm from "./pages/AdvisorInquiryForm";
 import ScholarshipSection from "./components/ScholarshipSection";
+import UniversityForm from "./components/UniversityForm";
+import ContactInformationForm from "./components/ContactInformationForm";
+import SuccessPage from "./pages/SuccessPage";
+
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -74,6 +76,12 @@ const App = () => {
           <ScrollToTop />
 
           <Routes>
+
+          <Route path="/universityform" element={<UniversityForm />} />
+    <Route path="/contactform" element={<ContactInformationForm/>}/>
+        <Route path="/success" element={<SuccessPage />} />
+
+          
             <Route
               path="/programs/:level/:subject"
               element={<ProgramSearchResults />}
@@ -88,15 +96,9 @@ const App = () => {
               element={<SubjectProgramPage />}
             />
 
-            <Route
-              path="/contactinformationform"
-              element={<ContactInformationForm />}
-            />
+          
 
-            <Route
-              path="/universitysearchform"
-              element={<UniversitySearchForm />}
-            />
+           
             <Route path="/" element={<Home />} />
             <Route
               path="/programs/:level/:subject"
@@ -120,12 +122,14 @@ const App = () => {
               path="/programs/:level/:subject"
               element={<ProgramSearchResults />}
             />
-            <Route path="/login" element={<Login />} />
+            <Route path="/loginform" element={<LoginForm />} />
             <Route path="/termsandconditions" element={<TermsConditions />} />
             <Route path="/policy" element={<Policy />} />
             <Route path="/advisor-inquiriesform" element={<AdvisorInquiryForm />} />
-            <Route path="/signup" element={<Signup />} />
+            <Route path="/signupform" element={<SignupForm />} />
             <Route path="/forf1success" element={<SuccessMatterspage />} />
+
+
             <Route path="/f1successhubfaqs?" element={<FAQpage />} />
             <Route path="/wearepatner-with" element={<WeArePatnerWith />} />
             <Route

@@ -14,12 +14,13 @@ export const submitInquiry = async (req, res) => {
 
     // Send confirmation email
     const transporter = nodemailer.createTransport({
-      service: "gmail", // Change this based on your email service
+      service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER, // Your email address
-        pass: process.env.EMAIL_PASS, // Your email password or app password
+        user: process.env.EMAIL_USER, // "f1successhub@gmail.com"
+        pass: process.env.EMAIL_PASS, // Use App Password here
       },
     });
+    
 
    const mailOptions = {
     from: process.env.EMAIL_USER, // Sender email
