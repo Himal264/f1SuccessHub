@@ -17,7 +17,23 @@ const userSchema = new mongoose.Schema(
       associatedCompany: { type: String, default: "" },
       startDate: { type: Date, default: null },
       documents: {
-        professionalCertificate: {
+        professionalCertification: {
+          url: { type: String },
+          public_id: { type: String },
+        },
+        experienceLetter: {
+          url: { type: String },
+          public_id: { type: String },
+        },
+        licenseDocument: {
+          url: { type: String },
+          public_id: { type: String },
+        },
+        professionalId: {
+          url: { type: String },
+          public_id: { type: String },
+        },
+        resume: {
           url: { type: String },
           public_id: { type: String },
         },
@@ -42,6 +58,18 @@ const userSchema = new mongoose.Schema(
           url: { type: String },
           public_id: { type: String },
         },
+        studentIdCard: {
+          url: { type: String },
+          public_id: { type: String },
+        },
+        transcript: {
+          url: { type: String },
+          public_id: { type: String },
+        },
+        employmentProof: {
+          url: { type: String },
+          public_id: { type: String },
+        },
         otherDocuments: [
           {
             url: { type: String },
@@ -61,7 +89,23 @@ const userSchema = new mongoose.Schema(
       contactEmail: { type: String, default: "" },
       contactPhone: { type: String, default: "" },
       documents: {
-        institutionDocument: {
+        accreditationCertificate: {
+          url: { type: String },
+          public_id: { type: String },
+        },
+        institutionLicense: {
+          url: { type: String },
+          public_id: { type: String },
+        },
+        registrationDocument: {
+          url: { type: String },
+          public_id: { type: String },
+        },
+        taxRegistration: {
+          url: { type: String },
+          public_id: { type: String },
+        },
+        authorizationLetter: {
           url: { type: String },
           public_id: { type: String },
         },

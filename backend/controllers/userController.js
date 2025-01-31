@@ -44,19 +44,19 @@ const registerUser = async (req, res) => {
     // Check if user already exists
     const exists = await userModel.findOne({ email });
     if (exists) {
-      return res.json({ success: false, message: "User already exists" });
+      return res.status(400).json({ success: false, message: "User already exists" });
     }
 
     // Validate email format & password strength
     if (!validator.isEmail(email)) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         message: "Please enter a valid email",
       });
     }
 
     if (password.length < 8) {
-      return res.json({
+      return res.status(400).json({
         success: false,
         message: "Please enter a strong password",
       });
@@ -70,41 +70,19 @@ const registerUser = async (req, res) => {
     let uploadedDocuments = {};
     if (documents) {
       for (const [fieldName, files] of Object.entries(documents)) {
-        if (fieldName === "otherDocuments") {
-          // Handle multiple files
-          uploadedDocuments[fieldName] = [];
-          for (const file of files) {
-            try {
-              const result = await cloudinary.uploader.upload(file.path, {
-                folder: `verification-documents/${requestedRole}`,
-                resource_type: "auto",
-              });
-              uploadedDocuments[fieldName].push({
-                url: result.secure_url,
-                public_id: result.public_id,
-              });
-              // Delete local file after upload
-              await unlinkFile(file.path);
-            } catch (error) {
-              console.error("Cloudinary upload error:", error);
-            }
-          }
-        } else {
-          // Handle single file
-          try {
-            const result = await cloudinary.uploader.upload(files[0].path, {
-              folder: `verification-documents/${requestedRole}`,
-              resource_type: "auto",
-            });
-            uploadedDocuments[fieldName] = {
-              url: result.secure_url,
-              public_id: result.public_id,
-            };
-            // Delete local file after upload
-            await unlinkFile(files[0].path);
-          } catch (error) {
-            console.error("Cloudinary upload error:", error);
-          }
+        try {
+          const result = await cloudinary.uploader.upload(files[0].path, {
+            folder: `verification-documents/${requestedRole}`,
+            resource_type: "auto",
+          });
+          uploadedDocuments[fieldName] = {
+            url: result.secure_url,
+            public_id: result.public_id,
+          };
+          // Delete local file after upload
+          await unlinkFile(files[0].path);
+        } catch (error) {
+          console.error("Cloudinary upload error:", error);
         }
       }
     }
@@ -135,8 +113,10 @@ const registerUser = async (req, res) => {
       newUser.alumniInfo = {
         ...parsedAdditionalInfo,
         documents: {
-          academicCertificate: uploadedDocuments.academicCertificate,
-          otherDocuments: uploadedDocuments.otherDocuments || [],
+          academicCertificate: uploadedDocuments.academic_certificate,
+          studentIdCard: uploadedDocuments.student_id_card,
+          transcript: uploadedDocuments.transcript,
+          employmentProof: uploadedDocuments.employment_proof,
         },
       };
     } else if (requestedRole === "counselor") {
@@ -181,7 +161,7 @@ const registerUser = async (req, res) => {
       // Continue with registration even if email fails
     }
 
-    res.json({
+    res.status(201).json({
       success: true,
       token,
       user: {

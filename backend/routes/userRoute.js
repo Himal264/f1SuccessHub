@@ -43,13 +43,15 @@ const upload = multer({
   },
 });
 
-// Wrap the route handler in try-catch
+// Update the fields to match those being sent from the frontend
 userRouter.post(
   "/register",
   upload.fields([
-    { name: "academicCertificate", maxCount: 1 },
-    { name: "professionalCertification", maxCount: 1 },
-    { name: "institutionDocument", maxCount: 1 },
+    { name: "academic_certificate", maxCount: 1 },
+    { name: "student_id_card", maxCount: 1 },
+    { name: "transcript", maxCount: 1 },
+    { name: "employment_proof", maxCount: 1 },
+    // Add other fields as necessary
   ]),
   async (req, res) => {
     try {

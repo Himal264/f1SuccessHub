@@ -15,8 +15,9 @@ import emailRouter from "./routes/emailRoutes.js";
 import cookieParser from "cookie-parser";
 import applicationRouter from "./routes/applicationRoutes.js";
 import inquiryRouter from "./routes/advisorinquiriesRoutes.js";
-import multer from "multer";
-import universityMatchRouter from "./routes/universityMatchRoute.js";
+
+import MatchRouter from "./routes/universityRoutes.js";
+
 
 
 
@@ -74,7 +75,7 @@ app.use("/api/email", emailRoutes);
 //university api endpoints
 app.use("/api/university", universityRouter);
 app.use("/api/university/:id", universityRouter);
-app.use("/api/universities", universityMatchRouter);
+app.use('/api/university', MatchRouter);
 
 
 

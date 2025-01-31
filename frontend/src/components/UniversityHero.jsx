@@ -21,7 +21,7 @@ const UniversityHero = () => {
           </p>
 
           {/* Find University Button */}
-          <Link to="/universitysearchform">
+          <Link to="/universityform">
             <button className="w-full sm:w-auto bg-[#F37021] hover:bg-[#e26417] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-sm sm:text-base md:text-lg transition-colors duration-300 font-medium flex items-center justify-center sm:justify-start gap-2">
               Find University
               <svg

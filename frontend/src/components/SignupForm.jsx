@@ -38,10 +38,10 @@ const SignupForm = ({ onClose }) => {
 
   const roleDocuments = {
     alumni: [
-      { label: "Degree Certificate", required: true },
+      { label: "Academic Certificate", required: true }, // Changed from "Degree Certificate"
       { label: "Student ID Card", required: true },
       { label: "Transcript", required: true },
-      { label: "Employment Proof", required: false },
+      { label: "Employment Proof", required: true }
     ],
     counselor: [
       { label: "Professional Certification", required: true },
@@ -154,13 +154,20 @@ const SignupForm = ({ onClose }) => {
       }
     }
 
-    console.log("Form Data to Send:", Array.from(formDataToSend.entries()));
+    // Log FormData entries
+    for (let [key, value] of formDataToSend.entries()) {
+      console.log(`${key}:`, value);
+    }
 
     try {
-      const response = await fetch("/api/user/register", {
+      const response = await fetch("http://localhost:9000/api/user/register", {
         method: "POST",
         body: formDataToSend,
       });
+
+      const responseData = await response.json(); // Add this line
+      console.log('Server response:', responseData); // Add this line
+    
 
       if (response.ok) {
         toast.success("Account created successfully! Please check your email for verification.", {

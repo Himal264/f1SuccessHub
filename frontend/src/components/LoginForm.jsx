@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-const LoginForm = ({ onClose }) => {
+const LoginForm = ({ onClose = () => {} }) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +23,7 @@ const LoginForm = ({ onClose }) => {
         const data = await response.json();
         localStorage.setItem("token", data.token);
         localStorage.setItem("userInfo", JSON.stringify(data.user));
-        toast.success("Login successful! Redirecting...", {
+        toast.success("You have successfully logged in! Redirecting to the home page...", {
           position: "top-right",
           autoClose: 3000,
         });

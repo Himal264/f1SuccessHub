@@ -1,92 +1,32 @@
 import mongoose from "mongoose";
 
 const searchProfileSchema = new mongoose.Schema({
-  user: {
-    firstName: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    lastName: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    email: {
-      type: String,
-      required: true,
-      trim: true,
-      lowercase: true
-    },
-    phone: {
-      countryCode: {
-        type: String,
-        required: true
-      },
-      number: {
-        type: String,
-        required: true
-      }
-    },
-    nationality: {
-      type: String,
-      required: true
-    }
+  contact: {
+    firstName: String,
+    lastName: String,
+    email: String,
+    phone: String,
+    country: String
   },
-  academicProfile: {
-    studyLevel: {
-      type: String,
-      enum: ['undergraduate', 'graduate'],
-      required: true
-    },
-    fieldOfStudy: {
-      type: String,
-      required: true
-    },
-    gpa: {
-      type: Number,
-      required: true,
-      min: 0,
-      max: 4.0
-    },
+  academic: {
+    studyLevel: String,
+    fieldOfStudy: String,
+    gpa: Number,
     englishTest: {
-      type: {
-        type: String,
-        enum: ['SAT', 'IELTS', 'Duolingo', 'PTE', 'ACT', 'GRE', 'GMAT']
-      },
+      type: String,
+      score: Number
+    },
+    admissionTest: {
+      type: String,
       score: Number
     }
   },
   preferences: {
-    intake: {
-      type: String,
-      required: true
-    },
-    priorities: [{
-      type: String,
-      enum: ['School Ranking', 'Quality of Teaching', 'Safety', 'Employability', 'Diversity', 'Student Loan']
-    }],
-    budgetRange: {
-      type: String,
-      required: true,
-      enum: [
-        'Less than $10,000',
-        'up to $20,000',
-        'up to $30,000',
-        'up to $40,000',
-        '$40,000 or higher'
-      ]
-    }
-  },
-  termsAccepted: {
-    type: Boolean,
-    required: true,
-    default: false
+    intake: String,
+    priorities: [String],
+    budgetRange: String,
+    citySizePreference: String
   }
-}, {
-  timestamps: true
-});
+}, { timestamps: true });
 
-const SearchProfile = mongoose.model('SearchProfile', searchProfileSchema);
-
-export default SearchProfile;
+export default mongoose.model('SearchProfile', searchProfileSchema);

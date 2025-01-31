@@ -43,7 +43,7 @@ const Add = () => {
       console.log(response.data);
 
       if (response.data.success) {
-        toast.success(response.data.message)
+        toast.success("Question added successfully!");
         // Reset form
         setFormData({
           question: "",

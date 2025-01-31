@@ -1,223 +1,184 @@
-import SearchProfile from "../models/SearchModel";
-import mongoose from "mongoose";
+// controllers/universityMatch.js
+import University from '../models/universityModel.js';
+import SearchProfile from '../models/SearchModel.js';
 
-export function calculateUniversityMatch(studentProfile, university) {
-  let totalScore = 0;
-  let maxPossibleScore = 0;
-  const scores = {
-    academicMatch: {
-      weight: 40,
-      criteria: {
-        gpaMatch: 15,
-        englishScoreMatch: 15,
-        programMatch: 10,
-      },
-    },
+// Helper function to get related programs
+function getRelatedPrograms(mainProgram) {
+  const programRelations = {
+    'NaturalSciences': ['Environmental Science', 'Physics', 'Chemistry'],
+    'Engineering': ['Computer Science', 'Mechanical Engineering'],
+    'Business': ['Economics', 'Finance'],
+    'ComputerScience': ['Information Technology', 'Software Engineering']
+  };
+  return programRelations[mainProgram] || [];
+}
 
-    financialFit: {
-      weight: 25,
-      criteria: {
-        tuitionMatch: 15,
-        scholarshipOpportunities: 10,
-      },
-    },
-
-    preferencesMatch: {
-      weight: 20,
-      criteria: {
-        locationMatch: 5,
-        universitySize: 5,
-        campusLife: 5,
-        teachingQuality: 5,
-      },
-    },
-
-    additionalCriteria: {
-      weight: 15,
-      criteria: {
-        employmentRate: 5,
-        internationalSupport: 5,
-        researchOpportunities: 5,
-      },
-    },
+export const calculateUniversityMatch = (studentProfile, university) => {
+  // Convert budget ranges to numerical values
+  const budgetRanges = {
+    "Less than $10,000": 10000,
+    "up to $20,000": 20000,
+    "up to $30,000": 30000,
+    "up to $40,000": 40000,
+    "$40,000 or higher": 50000
   };
 
-  function calculateGPAMatch(studentGPA, universityMinGPA) {
-    const gpaScore =
-      studentGPA >= universityMinGPA
-        ? 15
-        : 15 * (studentGPA / universityMinGPA);
-    return Math.max(0, Math.min(15, gpaScore));
-  }
+  // Calculate GPA Match
+  const calculateGPAMatch = (studentGPA, universityMinGPA) => {
+    return studentGPA >= universityMinGPA ? 15 : 15 * (studentGPA / universityMinGPA);
+  };
 
-  function calculateEnglishScoreMatch(
-    studentScore,
-    universityRequirement,
-    testType
-  ) {
+  // Calculate English Test Match
+  const calculateEnglishScoreMatch = (studentScore, universityRequirement, testType) => {
     const scoreRanges = {
       IELTS: { max: 9, min: 6 },
       TOEFL: { max: 120, min: 80 },
       Duolingo: { max: 160, min: 100 },
-      PTE: { max: 90, min: 50 },
-      SAT: { max: 1600, min: 1000 },
-      ACT: { max: 36, min: 20 },
-      GRE: { max: 340, min: 290 },
+      PTE: { max: 90, min: 50 }
     };
+    
+    const range = scoreRanges[testType] || { max: 1, min: 0 };
+    const normalizedScore = (studentScore - range.min) / (range.max - range.min);
+    const normalizedRequirement = (universityRequirement - range.min) / (range.max - range.min);
+    
+    return 15 * Math.min(normalizedScore / normalizedRequirement, 1);
+  };
 
-    const range = scoreRanges[testType];
-    if (!range) return 0;
+  // Calculate Program Match
+  const calculateProgramMatch = (studentProgram, universityPrograms) => {
+    if (universityPrograms[studentProgram]) return 10;
+    return getRelatedPrograms(studentProgram).some(p => universityPrograms[p]) ? 7 : 0;
+  };
 
-    const normalizedScore =
-      (studentScore - range.min) / (range.max - range.min);
-    const normalizedRequirement =
-      (universityRequirement - range.min) / (range.max - range.min);
-
-    return Math.max(
-      0,
-      Math.min(15, 15 * (normalizedScore / normalizedRequirement))
-    );
-  }
-
-  function calculateProgramMatch(studentProgram, universityPrograms) {
-    if (universityPrograms[studentProgram]) {
-      return 10;
+  // Calculate Financial Fit
+  const calculateFinancialFit = (studentBudget, universityTuition, scholarships) => {
+    const maxBudget = budgetRanges[studentBudget] || 0;
+    let score = Math.min(15, 15 * (maxBudget / universityTuition));
+    
+    if (scholarships?.length > 0) {
+      const totalScholarships = scholarships.reduce((sum, s) => sum + s.amount, 0);
+      score += 10 * (totalScholarships / universityTuition);
     }
-
-    const relatedPrograms = getRelatedPrograms(studentProgram);
-    for (const related of relatedPrograms) {
-      if (universityPrograms[related]) {
-        return 7;
-      }
-    }
-    return 0;
-  }
-
-  function calculateFinancialFit(
-    studentBudget,
-    universityTuition,
-    scholarships
-  ) {
-    let score = 0;
-    const budgetRanges = {
-      "Less than $10,000": 10000,
-      "up to $20,000": 20000,
-      "up to $30,000": 30000,
-      "up to $40,000": 40000,
-      "$40,000 or higher": 50000,
-    };
-
-    const maxBudget = budgetRanges[studentBudget];
-    if (universityTuition <= maxBudget) {
-      score += 15;
-    } else {
-      score += Math.max(0, 15 * (maxBudget / universityTuition));
-    }
-
-    if (scholarships && scholarships.length > 0) {
-      score +=
-        10 *
-        (scholarships.reduce((acc, s) => acc + s.amount, 0) /
-          universityTuition);
-    }
-
+    
     return Math.min(25, score);
-  }
+  };
 
-  function calculatePreferencesMatch(studentPreferences, university) {
-    let score = 0;
-
-    for (const pref of studentPreferences) {
-      switch (pref) {
-        case "Quality of Teaching":
-          score += (university.scores.qualityOfTeaching / 100) * 5;
-          break;
-        case "Safety":
-          score += (university.scores.safety / 100) * 5;
-          break;
-        case "Employability":
-          score += (university.scores.employment / 100) * 5;
-          break;
-        case "Diversity":
-          score += (university.scores.diversity / 100) * 5;
-          break;
-        case "School Ranking":
-          const rankingScore = university.rankings.world
-            ? Math.max(0, 5 - university.rankings.world / 200)
-            : 0;
-          score += rankingScore;
-          break;
+  // Calculate Preferences Match
+  const calculatePreferencesMatch = (studentPreferences, university) => {
+    return studentPreferences.reduce((score, pref) => {
+      switch(pref) {
+        case 'School Ranking':
+          return score + (university.rankings?.world ? 5 - (university.rankings.world / 200) : 0);
+        case 'Quality of Teaching':
+          return score + (university.scores.qualityOfTeaching / 20);
+        case 'Diversity':
+          return score + (university.scores.diversity / 20);
+        case 'Safety':
+          return score + (university.scores.safety / 20);
+        case 'City Size':
+          return score + (university.location.citysize === studentProfile.citySizePreference ? 5 : 0);
+        default:
+          return score;
       }
+    }, 0);
+  };
+
+  // Main calculation
+  try {
+    const studyLevel = studentProfile.studyLevel;
+    const admissionReqs = university.admissionRequirements[studyLevel];
+    const programs = university[`${studyLevel}Programs`].programs;
+
+    const academicScore = 
+      calculateGPAMatch(studentProfile.gpa, admissionReqs.GPA) +
+      calculateEnglishScoreMatch(
+        studentProfile.englishTest.score,
+        admissionReqs[studentProfile.englishTest.type],
+        studentProfile.englishTest.type
+      ) +
+      calculateProgramMatch(studentProfile.fieldOfStudy, programs);
+
+    const financialScore = calculateFinancialFit(
+      studentProfile.budgetRange,
+      university.feeStructure[studyLevel].tuitionFee,
+      university.scholarships
+    );
+
+    const preferenceScore = calculatePreferencesMatch(
+      studentProfile.priorities,
+      university
+    );
+
+    const totalScore = academicScore + financialScore + preferenceScore;
+
+    return {
+      universityId: university._id,
+      universityName: university.name,
+      totalScore: Math.round(totalScore),
+      matchPercentage: Math.round((totalScore / 100) * 100),
+      breakdown: {
+        academic: Math.round(academicScore),
+        financial: Math.round(financialScore),
+        preferences: Math.round(preferenceScore)
+      },
+      requirements: {
+        missingRequirements: [],
+        recommendations: []
+      }
+    };
+  } catch (error) {
+    console.error('Error calculating match:', error);
+    return {
+      universityId: university._id,
+      error: 'Error calculating match score'
+    };
+  }
+};
+
+export const getUniversityMatches = async (req, res) => {
+  try {
+    // Validate request body
+    const requiredFields = ['studyLevel', 'fieldOfStudy', 'gpa', 'englishTest', 'priorities', 'budgetRange'];
+    const missingFields = requiredFields.filter(field => !req.body.academic[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: `Missing required fields: ${missingFields.join(', ')}`
+      });
     }
 
-    return Math.min(20, score);
-  }
+    // Save search profile
+    const searchProfile = new SearchProfile({
+      academic: req.body.academic,
+      contact: req.body.contact
+    });
+    await searchProfile.save();
 
-  let matchScore = {
-    total: 0,
-    breakdown: {
-      academic:
-        calculateGPAMatch(
-          studentProfile.gpa,
-          university.admissionRequirements[studentProfile.studyLevel].GPA
-        ) +
-        calculateEnglishScoreMatch(
-          studentProfile.englishTest.score,
-          university.admissionRequirements[studentProfile.studyLevel][
-            studentProfile.englishTest.type
-          ],
-          studentProfile.englishTest.type
-        ) +
-        calculateProgramMatch(
-          studentProfile.fieldOfStudy,
-          university[`${studentProfile.studyLevel}Programs`].programs
-        ),
-      financial: calculateFinancialFit(
-        studentProfile.preferences.budgetRange,
-        university.feeStructure[studentProfile.studyLevel].tuitionFee,
-        university.scholarships
-      ),
-      preferences: calculatePreferencesMatch(
-        studentProfile.preferences.priorities,
+    // Get all universities
+    const universities = await University.find().lean();
+
+    // Calculate matches
+    const matches = universities
+      .map(university => ({
+        ...calculateUniversityMatch(req.body.academic, university),
         university
-      ),
-    },
-  };
+      }))
+      .filter(match => !match.error)
+      .sort((a, b) => b.totalScore - a.totalScore)
+      .slice(0, 50); // Return top 50 matches
 
-  matchScore.total =
-    matchScore.breakdown.academic +
-    matchScore.breakdown.financial +
-    matchScore.breakdown.preferences;
+    res.status(200).json({
+      success: true,
+      count: matches.length,
+      matches
+    });
 
-  return {
-    universityId: university._id,
-    universityName: university.name,
-    totalScore: Math.round(matchScore.total),
-    matchPercentage: Math.round((matchScore.total / 100) * 100),
-    breakdown: {
-      academic: Math.round(matchScore.breakdown.academic),
-      financial: Math.round(matchScore.breakdown.financial),
-      preferences: Math.round(matchScore.breakdown.preferences),
-    },
-    requirements: {
-      missingRequirements: [],
-      recommendations: [],
-    },
-  };
-}
-
-// Function to sort and rank universities based on match scores
-export function rankUniversities(studentProfile, universities) {
-  const matches = universities.map((university) => ({
-    ...calculateUniversityMatch(studentProfile, university),
-    university,
-  }));
-
-  // Sort by total score in descending order
-  return matches
-    .sort((a, b) => b.totalScore - a.totalScore)
-    .map((match, index) => ({
-      ...match,
-      rank: index + 1,
-    }));
-}
+  } catch (error) {
+    console.error('Error in university matching:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+};
