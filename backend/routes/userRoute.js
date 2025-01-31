@@ -51,6 +51,16 @@ userRouter.post(
     { name: "student_id_card", maxCount: 1 },
     { name: "transcript", maxCount: 1 },
     { name: "employment_proof", maxCount: 1 },
+    { name: "professional_certification", maxCount: 1 },
+    { name: "experience_letter", maxCount: 1 },
+    { name: "license_document", maxCount: 1 },
+    { name: "professional_id", maxCount: 1 },
+    { name: "resume", maxCount: 1 },
+    { name: "accreditation_certificate", maxCount: 1 },
+    { name: "institution_license", maxCount: 1 },
+    { name: "registration_document", maxCount: 1 },
+    { name: "tax_registration", maxCount: 1 },
+    { name: "authorization_letter", maxCount: 1 },
     // Add other fields as necessary
   ]),
   async (req, res) => {

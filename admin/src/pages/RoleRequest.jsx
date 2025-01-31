@@ -103,12 +103,36 @@ const RoleRequest = () => {
     switch (role) {
       case "alumni":
         if (request.alumniInfo?.documents) {
-          const { academicCertificate, otherDocuments } =
-            request.alumniInfo.documents;
+          const {
+            academicCertificate,
+            studentIdCard,
+            transcript,
+            employmentProof,
+            otherDocuments,
+          } = request.alumniInfo.documents;
+
           if (academicCertificate?.url) {
             documents.push({
               label: "Academic Certificate",
               url: academicCertificate.url,
+            });
+          }
+          if (studentIdCard?.url) {
+            documents.push({
+              label: "Student ID Card",
+              url: studentIdCard.url,
+            });
+          }
+          if (transcript?.url) {
+            documents.push({
+              label: "Transcript",
+              url: transcript.url,
+            });
+          }
+          if (employmentProof?.url) {
+            documents.push({
+              label: "Employment Proof",
+              url: employmentProof.url,
             });
           }
           if (otherDocuments && otherDocuments.length > 0) {
@@ -124,12 +148,43 @@ const RoleRequest = () => {
 
       case "counselor":
         if (request.counselorInfo?.documents) {
-          const { professionalCertificate, otherDocuments } =
-            request.counselorInfo.documents;
-          if (professionalCertificate?.url) {
+          const {
+            professionalCertification,
+            experienceLetter,
+            licenseDocument,
+            professionalId,
+            resume,
+            otherDocuments,
+          } = request.counselorInfo.documents;
+
+          if (professionalCertification?.url) {
             documents.push({
-              label: "Professional Certificate",
-              url: professionalCertificate.url,
+              label: "Professional Certification",
+              url: professionalCertification.url,
+            });
+          }
+          if (experienceLetter?.url) {
+            documents.push({
+              label: "Experience Letter",
+              url: experienceLetter.url,
+            });
+          }
+          if (licenseDocument?.url) {
+            documents.push({
+              label: "License Document",
+              url: licenseDocument.url,
+            });
+          }
+          if (professionalId?.url) {
+            documents.push({
+              label: "Professional ID",
+              url: professionalId.url,
+            });
+          }
+          if (resume?.url) {
+            documents.push({
+              label: "Resume",
+              url: resume.url,
             });
           }
           if (otherDocuments && otherDocuments.length > 0) {
@@ -145,12 +200,43 @@ const RoleRequest = () => {
 
       case "university":
         if (request.universityInfo?.documents) {
-          const { institutionDocument, otherDocuments } =
-            request.universityInfo.documents;
-          if (institutionDocument?.url) {
+          const {
+            accreditationCertificate,
+            institutionLicense,
+            registrationDocument,
+            taxRegistration,
+            authorizationLetter,
+            otherDocuments,
+          } = request.universityInfo.documents;
+
+          if (accreditationCertificate?.url) {
             documents.push({
-              label: "Institution Document",
-              url: institutionDocument.url,
+              label: "Accreditation Certificate",
+              url: accreditationCertificate.url,
+            });
+          }
+          if (institutionLicense?.url) {
+            documents.push({
+              label: "Institution License",
+              url: institutionLicense.url,
+            });
+          }
+          if (registrationDocument?.url) {
+            documents.push({
+              label: "Registration Document",
+              url: registrationDocument.url,
+            });
+          }
+          if (taxRegistration?.url) {
+            documents.push({
+              label: "Tax Registration",
+              url: taxRegistration.url,
+            });
+          }
+          if (authorizationLetter?.url) {
+            documents.push({
+              label: "Authorization Letter",
+              url: authorizationLetter.url,
             });
           }
           if (otherDocuments && otherDocuments.length > 0) {
