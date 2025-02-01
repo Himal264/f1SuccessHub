@@ -137,45 +137,149 @@ export const calculateUniversityMatch = (studentProfile, university) => {
 
 export const getUniversityMatches = async (req, res) => {
   try {
+    console.log('Received payload:', req.body);
+
     // Validate request body
-    const requiredFields = ['studyLevel', 'fieldOfStudy', 'gpa', 'englishTest', 'priorities', 'budgetRange'];
-    const missingFields = requiredFields.filter(field => !req.body.academic[field]);
-    
-    if (missingFields.length > 0) {
+    if (!req.body.academic) {
       return res.status(400).json({
         success: false,
-        error: `Missing required fields: ${missingFields.join(', ')}`
+        error: 'Missing academic data in request'
       });
     }
 
-    // Save search profile
-    const searchProfile = new SearchProfile({
-      academic: req.body.academic,
-      contact: req.body.contact
+    // Create search profile
+    try {
+      const searchProfile = new SearchProfile({
+        contact: req.body.contact,
+        academic: {
+          ...req.body.academic,
+          // Ensure test objects are properly structured
+          englishTest: {
+            type: req.body.academic.englishTest.type || '',
+            score: Number(req.body.academic.englishTest.score) || 0
+          },
+          admissionTest: {
+            type: req.body.academic.admissionTest.type || '',
+            score: Number(req.body.academic.admissionTest.score) || 0
+          },
+          // Ensure GPA is a number
+          gpa: Number(req.body.academic.gpa)
+        },
+        preferences: {
+          intake: req.body.academic.intake || '',
+          priorities: req.body.academic.priorities || [],
+          budgetRange: req.body.academic.budgetRange || '',
+          citySizePreference: req.body.academic.citySizePreference || ''
+        }
+      });
+
+      await searchProfile.save();
+      console.log('Search profile saved:', searchProfile._id);
+
+      // Get universities and calculate matches
+      const universities = await University.find().lean();
+      
+      if (!universities || universities.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'No universities found in database'
+        });
+      }
+
+      const matches = universities
+        .map(university => {
+          try {
+            const matchScore = calculateUniversityMatch(searchProfile.academic, university);
+            return {
+              ...matchScore,
+              university: {
+                _id: university._id,
+                name: university.name,
+                location: university.location,
+                rankings: university.rankings,
+                feeStructure: university.feeStructure,
+                logoUrl: university.logoUrl,
+                totalEnrollment: university.totalEnrollment
+              }
+            };
+          } catch (error) {
+            console.error('Error calculating match for university:', university._id, error);
+            return null;
+          }
+        })
+        .filter(match => match && !match.error && match.matchPercentage >= 40)
+        .sort((a, b) => b.matchPercentage - a.matchPercentage)
+        .slice(0, 10);
+
+      return res.status(200).json({
+        success: true,
+        searchProfileId: searchProfile._id,
+        count: matches.length,
+        matches
+      });
+
+    } catch (dbError) {
+      console.error('Database operation error:', dbError);
+      return res.status(500).json({
+        success: false,
+        error: 'Database operation failed',
+        details: process.env.NODE_ENV === 'development' ? dbError.message : undefined
+      });
+    }
+
+  } catch (error) {
+    console.error('Error in university matching:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
-    await searchProfile.save();
+  }
+};
 
-    // Get all universities
+// Add a new endpoint to get matches by search profile ID
+export const getMatchesBySearchProfile = async (req, res) => {
+  try {
+    const { searchProfileId } = req.params;
+    const searchProfile = await SearchProfile.findById(searchProfileId);
+    
+    if (!searchProfile) {
+      return res.status(404).json({
+        success: false,
+        error: 'Search profile not found'
+      });
+    }
+
     const universities = await University.find().lean();
-
-    // Calculate matches
     const matches = universities
-      .map(university => ({
-        ...calculateUniversityMatch(req.body.academic, university),
-        university
-      }))
-      .filter(match => !match.error)
-      .sort((a, b) => b.totalScore - a.totalScore)
-      .slice(0, 50); // Return top 50 matches
+      .map(university => {
+        const matchScore = calculateUniversityMatch(searchProfile.academic, university);
+        return {
+          ...matchScore,
+          university: {
+            _id: university._id,
+            name: university.name,
+            location: university.location,
+            rankings: university.rankings,
+            feeStructure: university.feeStructure,
+            logoUrl: university.logoUrl,
+            totalEnrollment: university.totalEnrollment
+          }
+        };
+      })
+      .filter(match => !match.error && match.matchPercentage >= 40)
+      .sort((a, b) => b.matchPercentage - a.matchPercentage)
+      .slice(0, 10);
 
     res.status(200).json({
       success: true,
+      searchProfile,
       count: matches.length,
       matches
     });
 
   } catch (error) {
-    console.error('Error in university matching:', error);
+    console.error('Error fetching matches by search profile:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'

@@ -63,6 +63,7 @@ import ScholarshipSection from "./components/ScholarshipSection";
 import UniversityForm from "./components/UniversityForm";
 import ContactInformationForm from "./components/ContactInformationForm";
 import SuccessPage from "./pages/SuccessPage";
+import RelatedUniversities from "./components/RelatedUniversities";
 
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -71,11 +72,14 @@ const App = () => {
   return (
    
       <Router>
+
         <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
           <Navbar />
+         
           <ScrollToTop />
 
           <Routes>
+          <Route path="/related-universities" element={<RelatedUniversities />} />
 
           <Route path="/universityform" element={<UniversityForm />} />
     <Route path="/contactform" element={<ContactInformationForm/>}/>

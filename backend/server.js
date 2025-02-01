@@ -13,10 +13,10 @@ import path from "path";
 import fs from "fs";
 import emailRouter from "./routes/emailRoutes.js";
 import cookieParser from "cookie-parser";
-import applicationRouter from "./routes/applicationRoutes.js";
+
 import inquiryRouter from "./routes/advisorinquiriesRoutes.js";
 
-import MatchRouter from "./routes/universityRoutes.js";
+import MatchRouter from "./routes/universityRoute.js";
 
 
 
@@ -74,16 +74,14 @@ app.use("/api/email", emailRoutes);
 
 //university api endpoints
 app.use("/api/university", universityRouter);
-app.use("/api/university/:id", universityRouter);
-app.use('/api/university', MatchRouter);
+app.use("/api/match", MatchRouter);
 
 
 
 //email broadcast
 app.use("/api/email", emailRouter);
 
-//application api endpoints
-app.use("/api/application-submit", applicationRouter);
+
 
 //advisor inquiry form
 app.use("/api/advisor-inquiryform", inquiryRouter);

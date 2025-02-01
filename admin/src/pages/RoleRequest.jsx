@@ -7,19 +7,20 @@ const RoleRequest = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        console.log("Starting request to backend...");
-
+        
         const response = await axios.get(
           "http://localhost:9000/api/user/verification-requests",
           {
             headers: {
               "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}` // Add admin token
             },
-            withCredentials: true, // If you're using cookies
+            withCredentials: true,
           }
         );
 
@@ -58,15 +59,27 @@ const RoleRequest = () => {
   // Handle request approval/rejection
   const handleVerification = async (userId, status, feedback = "") => {
     try {
-      await axios.put(`/api/user/verify-role/${userId}`, {
-        status,
-        adminFeedback: feedback,
-      });
+      const token = localStorage.getItem("token");
+      
+      await axios.put(
+        `http://localhost:9000/api/user/verify-role/${userId}`,
+        {
+          status,
+          adminFeedback: feedback,
+        },
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          },
+          withCredentials: true,
+        }
+      );
 
       // Update the local state to reflect the change
       setRequests(requests.filter((request) => request._id !== userId));
       toast.success(`Request ${status} successfully`);
     } catch (err) {
+      console.error("Verification error:", err);
       setError("Failed to update verification status");
       toast.error("Failed to update verification status");
     }

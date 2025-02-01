@@ -123,16 +123,22 @@ const registerUser = async (req, res) => {
       newUser.counselorInfo = {
         ...parsedAdditionalInfo,
         documents: {
-          professionalCertificate: uploadedDocuments.professionalCertificate,
-          otherDocuments: uploadedDocuments.otherDocuments || [],
+          professionalCertification: uploadedDocuments.professional_certification,
+          experienceLetter: uploadedDocuments.experience_letter,
+          licenseDocument: uploadedDocuments.license_document,
+          professionalId: uploadedDocuments.professional_id,
+          resume: uploadedDocuments.resume,
         },
       };
     } else if (requestedRole === "university") {
       newUser.universityInfo = {
         ...parsedAdditionalInfo,
         documents: {
-          institutionDocument: uploadedDocuments.institutionDocument,
-          otherDocuments: uploadedDocuments.otherDocuments || [],
+          accreditationCertificate: uploadedDocuments.accreditation_certificate,
+          institutionLicense: uploadedDocuments.institution_license,
+          registrationDocument: uploadedDocuments.registration_document,
+          taxRegistration: uploadedDocuments.tax_registration,
+          authorizationLetter: uploadedDocuments.authorization_letter,
         },
       };
     }

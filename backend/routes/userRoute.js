@@ -8,6 +8,7 @@ import {
 } from "../controllers/userController.js";
 import userModel from "../models/userModel.js";
 import sendEmail from "../utils/emailSender.js";
+import adminAuth from "../middlewares/adminAuth.js";
 
 const userRouter = express.Router();
 
@@ -87,7 +88,7 @@ userRouter.post("/login", loginUser);
 userRouter.post("/adminlogin", adminLogin);
 
 // Get all verification requests
-userRouter.get("/verification-requests", async (req, res) => {
+userRouter.get("/verification-requests", adminAuth, async (req, res) => {
   try {
     console.log("Starting to fetch verification requests...");
 
@@ -129,7 +130,7 @@ userRouter.get("/verification-requests", async (req, res) => {
 });
 
 // Update verification status - Add this route for admin
-userRouter.put("/verify-role/:userId", async (req, res) => {
+userRouter.put("/verify-role/:userId", adminAuth, async (req, res) => {
   try {
     const { userId } = req.params;
     const { status, adminFeedback } = req.body;
@@ -191,30 +192,6 @@ The F1 Success Hub Team`;
     });
   }
 });
-
-// Protect admin routes middleware
-const isAdmin = async (req, res, next) => {
-  try {
-    // Get user from token
-    const user = req.user;
-
-    if (user.role !== "admin") {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied. Admin only.",
-      });
-    }
-    next();
-  } catch (error) {
-    res.status(401).json({
-      success: false,
-      message: "Authentication failed",
-    });
-  }
-};
-
-// Apply admin middleware to admin routes
-userRouter.use(["/verification-requests", "/verify-role"], isAdmin);
 
 // Test route
 userRouter.get("/test", (req, res) => {

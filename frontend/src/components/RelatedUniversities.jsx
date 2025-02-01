@@ -2,26 +2,40 @@ import React, { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const RelatedUniversities = ({ currentUniversity }) => {
+const RelatedUniversities = ({ currentUniversity, searchProfileId }) => {
   const [relatedUniversities, setRelatedUniversities] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchRelatedUniversities = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:9000/api/university/list"
-        );
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-
-        // Filter and sort related universities
-        const filtered = getRelatedUniversities(
-          currentUniversity,
-          data.universities || []
-        );
-        setRelatedUniversities(filtered);
+        let universities;
+        
+        if (searchProfileId) {
+          // If we have a search profile ID, use it to get personalized matches
+          const response = await fetch(
+            `http://localhost:9000/api/match/${searchProfileId}`
+          );
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+          universities = data.matches.map(match => ({
+            ...match.university,
+            matchPercentage: match.matchPercentage
+          }));
+        } else {
+          // Fall back to regular related universities logic
+          const response = await fetch(
+            "http://localhost:9000/api/university/list"
+          );
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const data = await response.json();
+          universities = getRelatedUniversities(
+            currentUniversity,
+            data.universities || []
+          );
+        }
+        
+        setRelatedUniversities(universities);
       } catch (error) {
         console.error("Error fetching universities:", error);
       } finally {
@@ -30,7 +44,7 @@ const RelatedUniversities = ({ currentUniversity }) => {
     };
 
     fetchRelatedUniversities();
-  }, [currentUniversity]);
+  }, [currentUniversity, searchProfileId]);
 
   const getRelatedUniversities = (current, allUniversities) => {
     if (!current || !allUniversities?.length) return [];
@@ -88,9 +102,8 @@ const RelatedUniversities = ({ currentUniversity }) => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 bg-gray-400">
-      <p></p>
       <h2 className="text-3xl font-serif text-center mb-12">
-        More Related Universities
+        {searchProfileId ? "Best Matching Universities" : "More Related Universities"}
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -162,6 +175,13 @@ const RelatedUniversities = ({ currentUniversity }) => {
                 <span>Learn more</span>
                 <ChevronRight className="w-4 h-4" />
               </div>
+
+              {/* Add match percentage if available */}
+              {university.matchPercentage && (
+                <div className="absolute top-4 right-4 bg-blue-500 text-white px-2 py-1 rounded-full text-sm">
+                  {university.matchPercentage}% Match
+                </div>
+              )}
             </div>
           </Link>
         ))}
