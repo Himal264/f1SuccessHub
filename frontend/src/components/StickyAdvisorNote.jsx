@@ -1,7 +1,9 @@
 import React from "react";
 import assets from "../assets/assets";
+import { useNavigate } from "react-router-dom";
 
 const StickyAdvisorNote = () => {
+  const navigate = useNavigate();
   return (
     <>
       {/* Advisor Section - Desktop */}
@@ -101,9 +103,12 @@ const StickyAdvisorNote = () => {
               Our free advising helps you step by step
             </p>
           </div>
-          <button className="bg-[#F37021] hover:bg-[#e26417] text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap">
-            Ask an Advisor
-          </button>
+          <button
+      className="bg-[#F37021] hover:bg-[#e26417] text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap"
+      onClick={() => navigate("/advisor-inquiriesform")}
+    >
+      Ask an Advisor
+    </button>
         </div>
       </div>
     </>
