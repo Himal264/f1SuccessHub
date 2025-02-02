@@ -1,21 +1,23 @@
 import jwt from 'jsonwebtoken';
+import userModel from '../models/userModel.js';
 
-
-const adminAuth = (req, res, next) => {
-  // Extract token from the Authorization header
-  const token = req.headers['authorization']?.split(' ')[1]; // Splitting "Bearer <token>"
-
-  if (!token) {
-    return res.status(403).json({ message: "Authorization token is missing. Please log in." });
-  }
-
+const adminAuth = async (req, res, next) => {
   try {
-    // Verify the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;  // Attach the decoded user info to the request
-    next();  // Proceed to the next middleware or route handler
+    // Check if user has permission to create events
+    const allowedRoles = ['admin', 'counselor', 'alumni', 'university'];
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "You don't have permission to perform this action"
+      });
+    }
+    next();
   } catch (error) {
-    return res.status(401).json({ message: "Invalid or expired token." });
+    console.error("Admin Auth Error:", error);
+    res.status(401).json({
+      success: false,
+      message: "Authentication failed",
+    });
   }
 };
 

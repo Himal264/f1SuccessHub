@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { backendUrl } from '../App';
+import { useNavigate } from 'react-router-dom';
 
 const EventAdd = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -16,6 +18,15 @@ const EventAdd = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [previewImages, setPreviewImages] = useState([]);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Please login first');
+      navigate('/login');
+    }
+  }, [navigate]);
 
   const categories = [
     { id: 'undergraduate', label: 'Undergraduate' },
@@ -62,6 +73,13 @@ const EventAdd = () => {
     setIsLoading(true);
 
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please login first');
+        navigate('/login');
+        return;
+      }
+
       const formPayload = new FormData();
       Object.keys(formData).forEach(key => {
         if (key === 'images') {
@@ -74,13 +92,14 @@ const EventAdd = () => {
       });
 
       const response = await axios.post(
-        `${backendUrl}/api/events/create`,
+        `${backendUrl}/api/event/create`,
         formPayload,
         {
           headers: {
             'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+            'Authorization': `Bearer ${token}`
+          },
+          withCredentials: true
         }
       );
 
@@ -100,8 +119,17 @@ const EventAdd = () => {
         setPreviewImages([]);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Error creating event');
       console.error('Error:', error);
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again');
+        localStorage.removeItem('token');
+        navigate('/login');
+      } else {
+        toast.error(
+          error.response?.data?.message || 
+          'Error creating event. Please try again.'
+        );
+      }
     } finally {
       setIsLoading(false);
     }
