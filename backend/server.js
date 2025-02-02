@@ -17,7 +17,7 @@ import cookieParser from "cookie-parser";
 import inquiryRouter from "./routes/advisorinquiriesRoutes.js";
 
 import MatchRouter from "./routes/universityRoute.js";
-
+import eventRouter from "./routes/eventRoute.js";
 
 
 
@@ -80,6 +80,11 @@ app.use("/api/match", MatchRouter);
 
 //email broadcast
 app.use("/api/email", emailRouter);
+
+//event api endpoints
+app.use("/api/event", eventRouter);
+
+
 
 
 
