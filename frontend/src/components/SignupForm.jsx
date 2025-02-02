@@ -425,17 +425,51 @@ const SignupForm = ({ onClose }) => {
     );
   };
 
+  // Function to generate default profile picture URL
+  const getDefaultProfilePicture = (name) => {
+    const formattedName = encodeURIComponent(name);
+    const randomColor = Math.floor(Math.random()*16777215).toString(16);
+    return `https://ui-avatars.com/api/?name=${formattedName}&background=${randomColor}&color=ffffff`;
+  };
+
+  // Preview profile icon when name is entered
+  const [previewProfileUrl, setPreviewProfileUrl] = useState('');
+
+  // Update preview when name changes
+  const handleNameChange = (e) => {
+    const name = e.target.value;
+    setSignupData(prev => ({ ...prev, name }));
+    if (name) {
+      setPreviewProfileUrl(getDefaultProfilePicture(name));
+    } else {
+      setPreviewProfileUrl('');
+    }
+  };
+
   return (
     <form onSubmit={handleSignupSubmit} className="space-y-4">
       {signupStep === 1 ? (
         <>
+          {/* Profile Preview */}
+          {previewProfileUrl && (
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-full overflow-hidden">
+                <img 
+                  src={previewProfileUrl} 
+                  alt="Profile Preview" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700">Full Name</label>
             <input
               type="text"
               name="name"
               value={signupData.name}
-              onChange={handleChange}
+              onChange={handleNameChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
               required
             />

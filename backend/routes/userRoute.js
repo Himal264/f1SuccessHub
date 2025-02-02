@@ -1,44 +1,79 @@
 import express from "express";
 import multer from "multer";
 import path from "path";
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import {
   loginUser,
   registerUser,
   adminLogin,
+  updateProfilePicture,
+  updateProfile
 } from "../controllers/userController.js";
 import userModel from "../models/userModel.js";
 import sendEmail from "../utils/emailSender.js";
 import adminAuth from "../middlewares/adminAuth.js";
+import { auth } from '../middlewares/auth.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Create uploads directory if it doesn't exist
+const uploadDir = path.join(__dirname, '../uploads/profiles');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 const userRouter = express.Router();
 
 // Configure multer for file upload
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/");
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
-    );
-  },
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
+  }
 });
 
-// Update fileFilter to only allow images
 const fileFilter = (req, file, cb) => {
-  // Accept only image files
-  if (file.mimetype.startsWith("image/")) {
+  if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new Error("Only image files are allowed!"), false);
+    cb(new Error('Not an image! Please upload an image.'), false);
   }
 };
 
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
+  limits: {
+    fileSize: 2 * 1024 * 1024 // 2MB limit
+  }
+});
+
+// Configure multer for profile pictures
+const profileStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/profiles/");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, "profile-" + uniqueSuffix + path.extname(file.originalname));
+  },
+});
+
+const profileUpload = multer({
+  storage: profileStorage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed!"), false);
+    }
+  },
   limits: {
     fileSize: 2 * 1024 * 1024, // 2MB limit
   },
@@ -192,6 +227,10 @@ The F1 Success Hub Team`;
     });
   }
 });
+
+// Update profile routes
+userRouter.put("/update-profile", auth, updateProfile);
+userRouter.put("/update-profile-picture", auth, upload.single('profilePicture'), updateProfilePicture);
 
 // Test route
 userRouter.get("/test", (req, res) => {

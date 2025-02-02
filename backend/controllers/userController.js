@@ -19,19 +19,44 @@ const loginUser = async (req, res) => {
 
     const user = await userModel.findOne({ email });
     if (!user) {
-      return res.json({ success: false, message: "User doesn't exists" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "User doesn't exist" 
+      });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (isMatch) {
-      const token = createToken(user._id);
-      res.json({ success: true, token });
-    } else {
-      res.json({ success: false, message: "invalid credential" });
+    if (!isMatch) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid credentials" 
+      });
     }
+
+    const token = createToken(user._id);
+    
+    // Send user data with profile picture
+    res.status(200).json({ 
+      success: true, 
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profilePicture: user.profilePicture || {
+          url: '',
+          public_id: ''
+        },
+        verificationRequest: user.verificationRequest
+      }
+    });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error("Login error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "An error occurred during login" 
+    });
   }
 };
 
@@ -188,7 +213,137 @@ const registerUser = async (req, res) => {
   }
 };
 
-export { loginUser, registerUser, adminLogin };
+// Add this controller for profile picture update
+const updateProfilePicture = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded"
+      });
+    }
+
+    const user = await userModel.findById(req.user._id);
+    if (!user) {
+      // Clean up uploaded file
+      if (req.file) {
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.error('Error deleting file:', err);
+        });
+      }
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    try {
+      // Delete old profile picture from Cloudinary if it exists
+      if (user.profilePicture?.public_id) {
+        await cloudinary.uploader.destroy(user.profilePicture.public_id);
+      }
+
+      // Upload new image to Cloudinary
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "profile-pictures",
+        width: 300,
+        height: 300,
+        crop: "fill",
+        gravity: "face"
+      });
+
+      // Update user profile picture
+      user.profilePicture = {
+        url: result.secure_url,
+        public_id: result.public_id
+      };
+
+      await user.save();
+
+      // Clean up uploaded file
+      fs.unlink(req.file.path, (err) => {
+        if (err) console.error('Error deleting file:', err);
+      });
+
+      res.status(200).json({
+        success: true,
+        message: "Profile picture updated successfully",
+        profilePicture: user.profilePicture
+      });
+    } catch (error) {
+      // Clean up uploaded file on error
+      if (req.file) {
+        fs.unlink(req.file.path, (err) => {
+          if (err) console.error('Error deleting file:', err);
+        });
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error("Error updating profile picture:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating profile picture",
+      error: error.message
+    });
+  }
+};
+
+// Add this to your existing controller file
+const updateProfile = async (req, res) => {
+  try {
+    const { name, currentPassword, newPassword } = req.body;
+    const userId = req.user._id;
+
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Update name if provided
+    if (name && name !== user.name) {
+      user.name = name;
+    }
+
+    // Update password if provided
+    if (currentPassword && newPassword) {
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({
+          success: false,
+          message: "Current password is incorrect"
+        });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(newPassword, salt);
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        name: user.name,
+        email: user.email,
+        profilePicture: user.profilePicture
+      }
+    });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating profile",
+      error: error.message
+    });
+  }
+};
+
+export { loginUser, registerUser, adminLogin, updateProfilePicture, updateProfile };
 
 // Route for admin login
 const adminLogin = (req, res) => {

@@ -11,6 +11,21 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
 
+    profilePicture: {
+      url: { 
+        type: String,
+        default: function() {
+          const name = encodeURIComponent(this.name);
+          const randomColor = Math.floor(Math.random()*16777215).toString(16);
+          return `https://ui-avatars.com/api/?name=${name}&background=${randomColor}&color=ffffff`;
+        }
+      },
+      public_id: { 
+        type: String,
+        default: '' 
+      }
+    },
+
     // Role-based additional fields
     counselorInfo: {
       certifiedCompany: { type: String, default: "" },
@@ -130,6 +145,17 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Add any pre-save hooks if needed
+userSchema.pre('save', function(next) {
+  // If profile picture is not set, set default
+  if (!this.profilePicture.url) {
+    const name = encodeURIComponent(this.name);
+    const randomColor = Math.floor(Math.random()*16777215).toString(16);
+    this.profilePicture.url = `https://ui-avatars.com/api/?name=${name}&background=${randomColor}&color=ffffff`;
+  }
+  next();
+});
 
 const userModel = mongoose.models.user || mongoose.model("user", userSchema);
 export default userModel;

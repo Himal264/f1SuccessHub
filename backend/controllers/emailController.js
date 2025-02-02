@@ -11,23 +11,46 @@ const transporter = nodemailer.createTransport({
 });
 
 export const broadcastEmail = async (req, res) => {
-  const { subject, body } = req.body;
-  const file = req.file; // Handle file if using multer
+  const { subject, body, targetRoles } = req.body;
+  const file = req.file;
+  let parsedTargetRoles;
 
-  if (!subject || !body) {
+  try {
+    parsedTargetRoles = JSON.parse(targetRoles);
+  } catch (error) {
     return res.status(400).json({
       success: false,
-      message: "Subject and body are required.",
+      message: "Invalid target roles format",
+    });
+  }
+
+  if (!subject || !body || !parsedTargetRoles) {
+    return res.status(400).json({
+      success: false,
+      message: "Subject, body, and target roles are required.",
     });
   }
 
   try {
-    console.log("Fetching registered users...");
+    console.log("Fetching targeted users...");
 
-    // Simple query to get all users
-    const users = await userModel.find({}, "email");
+    // Build query based on target roles
+    let query = {};
+    if (!parsedTargetRoles.includes('all')) {
+      query.role = { $in: parsedTargetRoles };
+    }
 
-    console.log(`Found ${users.length} registered users`);
+    // Get users based on query
+    const users = await userModel.find(query, "email");
+    
+    if (users.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No users found for the selected roles.",
+      });
+    }
+
+    console.log(`Found ${users.length} targeted users`);
 
     // Extract emails
     const emailList = users.map((user) => user.email);
@@ -56,7 +79,10 @@ export const broadcastEmail = async (req, res) => {
 
     res.json({
       success: true,
-      message: `Emails sent successfully to ${emailList.length} users!`,
+      message: `Emails sent successfully to ${emailList.length} ${
+        parsedTargetRoles.includes('all') ? 'users' : 
+        parsedTargetRoles.map(role => role + 's').join(', ')
+      }!`,
     });
   } catch (error) {
     console.error("Error broadcasting email:", error);

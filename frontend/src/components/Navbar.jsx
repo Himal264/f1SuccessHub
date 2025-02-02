@@ -21,19 +21,42 @@ const Navbar = () => {
     confirmPassword: "",
     requestedRole: "user",
   });
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileData, setProfileData] = useState({
+    name: '',
+    email: '',
+    profilePicture: null,
+    previewUrl: ''
+  });
+
+  // Function to generate default profile picture URL
+  const getDefaultProfilePicture = (name) => {
+    if (!name) return '';
+    const formattedName = encodeURIComponent(name);
+    const randomColor = Math.floor(Math.random()*16777215).toString(16);
+    return `https://ui-avatars.com/api/?name=${formattedName}&background=${randomColor}&color=ffffff`;
+  };
 
   useEffect(() => {
-    // Check for token in localStorage on component mount
     const token = localStorage.getItem('token');
     if (token) {
-      // Check if userInfo exists and is not undefined/null before parsing
       const userInfo = localStorage.getItem('userInfo');
       if (userInfo && userInfo !== 'undefined') {
         try {
-          setUser(JSON.parse(userInfo));
+          const parsedUser = JSON.parse(userInfo);
+          // Add default profile picture if none exists
+          if (!parsedUser.profilePicture?.url) {
+            parsedUser.profilePicture = {
+              url: getDefaultProfilePicture(parsedUser.name),
+              public_id: ''
+            };
+            // Update localStorage with default profile picture
+            localStorage.setItem('userInfo', JSON.stringify(parsedUser));
+          }
+          setUser(parsedUser);
         } catch (error) {
           console.error('Error parsing user info:', error);
-          localStorage.removeItem('userInfo'); // Clear invalid data
+          localStorage.removeItem('userInfo');
         }
       }
     }
@@ -159,6 +182,110 @@ const Navbar = () => {
     }
   };
 
+  // Initialize profile data when user is loaded
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.name,
+        email: user.email,
+        profilePicture: null,
+        previewUrl: user.profilePicture?.url || getDefaultProfilePicture(user.name)
+      });
+    }
+  }, [user]);
+
+  // Handle profile update
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    
+    try {
+      if (profileData.profilePicture) {
+        const formData = new FormData();
+        formData.append('profilePicture', profileData.profilePicture);
+
+        const pictureResponse = await fetch('/api/user/update-profile-picture', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: formData
+        });
+
+        if (!pictureResponse.ok) {
+          const errorData = await pictureResponse.json();
+          throw new Error(errorData.message || 'Failed to update profile picture');
+        }
+
+        const pictureData = await pictureResponse.json();
+        if (pictureData.success) {
+          // Update profile picture in state
+          const updatedUser = {
+            ...user,
+            profilePicture: pictureData.profilePicture
+          };
+          setUser(updatedUser);
+          localStorage.setItem('userInfo', JSON.stringify(updatedUser));
+        }
+      }
+
+      // Update name
+      const nameResponse = await fetch('/api/user/update-profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: profileData.name
+        })
+      });
+
+      if (!nameResponse.ok) {
+        const errorData = await nameResponse.json();
+        throw new Error(errorData.message || 'Failed to update profile');
+      }
+
+      const nameData = await nameResponse.json();
+      if (nameData.success) {
+        const updatedUser = {
+          ...user,
+          name: profileData.name
+        };
+        setUser(updatedUser);
+        localStorage.setItem('userInfo', JSON.stringify(updatedUser));
+        toast.success('Profile updated successfully');
+        setIsEditingProfile(false);
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error(error.message || 'Error updating profile');
+    }
+  };
+
+  const handleProfilePictureChange = (file) => {
+    if (!file) return;
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    // Check file size (2MB limit)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image size should be less than 2MB');
+      return;
+    }
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setProfileData(prev => ({
+      ...prev,
+      profilePicture: file,
+      previewUrl
+    }));
+  };
+
   return (
     <>
       <div className="flex items-center justify-between font-medium py-5 w-full">
@@ -220,8 +347,12 @@ const Navbar = () => {
               className="flex flex-col items-center gap-1 cursor-pointer"
             >
               {user ? (
-                <div className="w-8 h-8 rounded-full bg-[#F37021] text-white flex items-center justify-center font-medium">
-                  {getInitialsAvatar(user.name)}
+                <div className="w-8 h-8 rounded-full overflow-hidden">
+                  <img 
+                    src={user.profilePicture?.url || getDefaultProfilePicture(user.name)}
+                    alt={user.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               ) : (
                 <img
@@ -234,24 +365,162 @@ const Navbar = () => {
 
             {/* Profile Dropdown */}
             {showProfileDropdown && user && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                <div className="px-4 py-2 border-b">
-                  <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                  <p className="text-sm text-gray-500">{user.email}</p>
+              <div className="absolute right-0 mt-2 w-96 bg-white rounded-md shadow-lg py-1 z-50">
+                {!isEditingProfile ? (
+                  // Regular profile view
+                  <>
+                    <div className="px-4 py-3 border-b">
+                      <div className="flex items-center space-x-4">
+                        <img 
+                          src={user.profilePicture?.url || getDefaultProfilePicture(user.name)}
+                          alt={user.name}
+                          className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                        />
+                        <div className="flex-1">
+                          <p className="text-lg font-medium text-gray-900">{user.name}</p>
+                          <p className="text-sm text-gray-500">{user.email}</p>
+                          <p className="text-sm font-medium text-gray-700 capitalize mt-1">
+                            {user.role === 'user' ? 'Standard User' : user.role}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="px-4 py-2 space-y-1">
+                      <button
+                        onClick={() => setIsEditingProfile(true)}
+                        className="block w-full text-left px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center">
+                          <svg className="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Edit Profile Settings
+                        </div>
+                      </button>
+                      
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <div className="flex items-center">
+                          <svg className="mr-3 h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
+                          Logout
+                        </div>
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  // Edit profile form
+                  <div className="p-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-medium">Edit Profile</h3>
+                      <button
+                        onClick={() => setIsEditingProfile(false)}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    
+                    <form onSubmit={handleProfileUpdate} className="space-y-4">
+                      {/* Profile Picture Upload */}
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className="relative group">
+                          <img 
+                            src={profileData.previewUrl}
+                            alt={profileData.name}
+                            className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                          />
+                          <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={(e) => handleProfilePictureChange(e.target.files[0])}
+                            />
+                            <div className="text-white text-xs flex flex-col items-center">
+                              <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              <span>Change Photo</span>
+                            </div>
+                          </label>
+                        </div>
+                        <p className="text-xs text-gray-500">Click to change profile picture</p>
+                      </div>
+
+                      {/* Name Input */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Name
+                        </label>
+                        <input
+                          type="text"
+                          value={profileData.name}
+                          onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                        />
+                      </div>
+
+                      {/* Email (Read-only) */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Email
+                        </label>
+                        <input
+                          type="email"
+                          value={profileData.email}
+                          disabled
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+                        />
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex justify-end space-x-3 pt-4">
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingProfile(false)}
+                          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600"
+                        >
+                          Save Changes
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {/* Platform Rules */}
+                <div className="px-4 py-3 mt-2 border-t bg-gray-50">
+                  <p className="text-xs font-medium text-gray-500 mb-2">Platform Rules:</p>
+                  <ul className="text-xs text-gray-500 space-y-1">
+                    <li className="flex items-center">
+                      <span className="mr-2">•</span>
+                      Maintain professional conduct
+                    </li>
+                    <li className="flex items-center">
+                      <span className="mr-2">•</span>
+                      Respect community guidelines
+                    </li>
+                    <li className="flex items-center">
+                      <span className="mr-2">•</span>
+                      Keep information accurate and updated
+                    </li>
+                    <li className="flex items-center">
+                      <span className="mr-2">•</span>
+                      Report any suspicious activity
+                    </li>
+                  </ul>
                 </div>
-                <Link
-                  to="/profile"
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  onClick={() => setShowProfileDropdown(false)}
-                >
-                  Profile
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Logout
-                </button>
               </div>
             )}
           </div>
