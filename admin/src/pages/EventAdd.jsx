@@ -19,12 +19,13 @@ const EventAdd = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [previewImages, setPreviewImages] = useState([]);
 
-  // Check authentication on component mount
+  // Only check for token, not role
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       toast.error('Please login first');
       navigate('/login');
+      return;
     }
   }, [navigate]);
 
@@ -92,7 +93,7 @@ const EventAdd = () => {
       });
 
       const response = await axios.post(
-        `${backendUrl}/api/event/create`,
+        `${backendUrl}/api/event/admin/create`,
         formPayload,
         {
           headers: {
@@ -127,6 +128,7 @@ const EventAdd = () => {
       } else {
         toast.error(
           error.response?.data?.message || 
+          error.message ||
           'Error creating event. Please try again.'
         );
       }

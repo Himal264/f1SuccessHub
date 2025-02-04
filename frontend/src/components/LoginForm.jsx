@@ -63,6 +63,7 @@ const LoginForm = ({ onClose }) => {
         
         localStorage.setItem("token", data.token);
         localStorage.setItem("userInfo", JSON.stringify(userInfo));
+        localStorage.setItem("userRole", data.user.role);
         
         toast.success("Login successful!");
         

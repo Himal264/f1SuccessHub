@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import UniPageHero from "../components/UniPageHero";
 import LocationSection from "../components/LocationSection";
 import FeeStructureSection from "../components/FeeStructureSection";
@@ -17,6 +17,7 @@ const UniversityDetail = () => {
   const [universityData, setUniversityData] = useState(null);
   const [activeSection, setActiveSection] = useState("aboutuni"); // Set default section
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUniversity = async () => {
@@ -49,6 +50,10 @@ const UniversityDetail = () => {
   const handleNavClick = (sectionId) => {
     setActiveSection(sectionId);
     setIsNavOpen(false); // Close mobile menu after selection
+  };
+
+  const handleApplyNow = () => {
+    navigate(`/applynow/${id}`);
   };
 
   const renderActiveSection = () => {
@@ -144,6 +149,12 @@ const UniversityDetail = () => {
             <RelatedUniversities currentUniversity={universityData.university} />
           )}
 
+          <button 
+            onClick={handleApplyNow}
+            className="bg-blue-600 text-white px-6 py-2 rounded-md"
+          >
+            Apply Now
+          </button>
 
           <FAQpage/>
         </>

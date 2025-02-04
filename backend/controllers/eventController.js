@@ -2,46 +2,73 @@ import eventModel from '../models/eventModel.js';
 import cloudinary from '../config/cloudinary.js';
 import fs from 'fs';
 import util from 'util';
+import userModel from '../models/userModel.js';
 const unlinkFile = util.promisify(fs.unlink);
 
 // Create Event
 export const createEvent = async (req, res) => {
   try {
-    const { title, description, category, startDate, endDate, location, type } = req.body;
-    
-    // Check if user has permission to create events
-    const allowedRoles = ['admin', 'counselor', 'alumni', 'university'];
-    if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        message: "You don't have permission to create events"
-      });
+    const { 
+      title, 
+      description, 
+      categories, 
+      startDate, 
+      endDate, 
+      location, 
+      type,
+      tags,
+      maxParticipants 
+    } = req.body;
+
+    // Parse categories if it's a string
+    let parsedCategories = categories;
+    if (typeof categories === 'string') {
+      try {
+        parsedCategories = JSON.parse(categories);
+      } catch (e) {
+        parsedCategories = [categories];
+      }
     }
 
-    // Upload images to cloudinary
-    const imageUploadPromises = req.files.map(file => 
-      cloudinary.uploader.upload(file.path, {
-        folder: 'events',
-        width: 1200,
-        height: 800,
-        crop: "fill"
-      })
-    );
+    // Parse tags if it's a string
+    let parsedTags = tags;
+    if (typeof tags === 'string') {
+      try {
+        parsedTags = JSON.parse(tags);
+      } catch (e) {
+        parsedTags = tags.split(',').map(tag => tag.trim());
+      }
+    }
 
-    const uploadedImages = await Promise.all(imageUploadPromises);
+    // Upload images to cloudinary if files exist
+    let uploadedImages = [];
+    if (req.files && req.files.length > 0) {
+      const imageUploadPromises = req.files.map(file => 
+        cloudinary.uploader.upload(file.path, {
+          folder: 'events',
+          width: 1200,
+          height: 800,
+          crop: "fill"
+        })
+      );
 
-    // Clean up local files
-    await Promise.all(req.files.map(file => unlinkFile(file.path)));
+      uploadedImages = await Promise.all(imageUploadPromises);
 
-    // Create event
+      // Clean up local files
+      await Promise.all(req.files.map(file => unlinkFile(file.path)));
+    }
+
+    // Create event with all fields
     const event = await eventModel.create({
       title,
       description,
-      category,
+      categories: parsedCategories,
       startDate,
       endDate,
       location,
       type,
+      tags: parsedTags,
+      maxParticipants: parseInt(maxParticipants) || undefined,
       images: uploadedImages.map(img => ({
         url: img.secure_url,
         public_id: img.public_id
@@ -68,15 +95,36 @@ export const createEvent = async (req, res) => {
 // Get All Events
 export const getAllEvents = async (req, res) => {
   try {
-    const events = await eventModel.find()
-      .populate('createdBy', 'name email role')
-      .sort({ createdAt: -1 });
+    // Basic query without population first
+    const events = await eventModel.find().sort({ createdAt: -1 });
+
+    // Map the events to include only necessary information
+    const formattedEvents = events.map(event => ({
+      _id: event._id,
+      title: event.title,
+      description: event.description,
+      categories: event.categories,
+      type: event.type,
+      startDate: event.startDate,
+      endDate: event.endDate,
+      location: event.location,
+      images: event.images,
+      tags: event.tags,
+      maxParticipants: event.maxParticipants,
+      participants: event.participants || [],
+      createdBy: event.createdBy,
+      creatorRole: event.creatorRole,
+      status: event.status,
+      createdAt: event.createdAt,
+      updatedAt: event.updatedAt
+    }));
 
     res.json({
       success: true,
-      events
+      events: formattedEvents
     });
   } catch (error) {
+    console.error('Error fetching events:', error);
     res.status(500).json({
       success: false,
       message: "Error fetching events",
@@ -85,12 +133,10 @@ export const getAllEvents = async (req, res) => {
   }
 };
 
-// Get Event by ID
+// Get Single Event
 export const getEventById = async (req, res) => {
   try {
-    const event = await eventModel.findById(req.params.id)
-      .populate('createdBy', 'name email role');
-
+    const event = await eventModel.findById(req.params.id);
     if (!event) {
       return res.status(404).json({
         success: false,
@@ -103,6 +149,7 @@ export const getEventById = async (req, res) => {
       event
     });
   } catch (error) {
+    console.error('Error fetching event:', error);
     res.status(500).json({
       success: false,
       message: "Error fetching event",
@@ -214,6 +261,62 @@ export const deleteEvent = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error deleting event",
+      error: error.message
+    });
+  }
+};
+
+// Create Event
+export const createEventadmin = async (req, res) => {
+  try {
+    const { title, description, category, startDate, endDate, location, type } = req.body;
+    
+    // Upload images to cloudinary
+    const imageUploadPromises = req.files.map(file => 
+      cloudinary.uploader.upload(file.path, {
+        folder: 'events',
+        width: 1200,
+        height: 800,
+        crop: "fill"
+      })
+    );
+
+    const uploadedImages = await Promise.all(imageUploadPromises);
+
+    // Clean up local files
+    await Promise.all(req.files.map(file => unlinkFile(file.path)));
+
+    // For admin routes, set default values
+    
+    
+    // Create event with appropriate creator role
+    const event = await eventModel.create({
+      title,
+      description,
+      category,
+      startDate,
+      endDate,
+      location,
+      type,
+      images: uploadedImages.map(img => ({
+        url: img.secure_url,
+        public_id: img.public_id
+      })),
+      createdBy: req.user._id,
+      // Set creatorRole to 'admin' for admin routes
+      creatorRole: isAdminRoute ? 'admin' : req.user.role
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Event created successfully",
+      event
+    });
+  } catch (error) {
+    console.error("Error creating event:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error creating event",
       error: error.message
     });
   }

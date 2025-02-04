@@ -64,6 +64,10 @@ import UniversityForm from "./components/UniversityForm";
 import ContactInformationForm from "./components/ContactInformationForm";
 import SuccessPage from "./pages/SuccessPage";
 import RelatedUniversities from "./components/RelatedUniversities";
+import EventAdd from "./pages/EventAdd";
+import Event from "./pages/Event";
+import Results from "./components/Results";
+import ApplyNow from "./components/ApplyNow";
 
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -79,13 +83,17 @@ const App = () => {
           <ScrollToTop />
 
           <Routes>
-          <Route path="/related-universities" element={<RelatedUniversities />} />
+            <Route path="/applynow/:id" element={<ApplyNow />} />
+            <Route path="/results" element={<Results />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/event" element={<Event />} />
+            <Route path="/event/add" element={<EventAdd />} />
+            <Route path="/related-universities" element={<RelatedUniversities />} />
 
-          <Route path="/universityform" element={<UniversityForm />} />
-    <Route path="/contactform" element={<ContactInformationForm/>}/>
-        <Route path="/success" element={<SuccessPage />} />
+            <Route path="/universityform" element={<UniversityForm />} />
+            <Route path="/contactform" element={<ContactInformationForm/>}/>
+            <Route path="/success" element={<SuccessPage />} />
 
-          
             <Route
               path="/programs/:level/:subject"
               element={<ProgramSearchResults />}
@@ -100,18 +108,7 @@ const App = () => {
               element={<SubjectProgramPage />}
             />
 
-          
-
-           
-            <Route path="/" element={<Home />} />
-            <Route
-              path="/programs/:level/:subject"
-              element={<SubjectProgramPage />}
-            />
-            <Route
-              path="/f1questionsandanswers"
-              element={<F1QestionsandAnswer />}
-            />
+            <Route path="/f1questionsandanswers" element={<F1QestionsandAnswer />} />
             <Route path="/university/:id" element={<UniversityDetail />} />
             <Route path="/aboutus" element={<About />} />
             <Route

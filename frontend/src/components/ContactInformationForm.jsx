@@ -56,7 +56,7 @@ const ContactInformationForm = () => {
     try {
       const result = await submitApplication();
       if (result.success) {
-        navigate('/results', { state: { matches: result.matches } });
+        navigate('/results', { state: { searchProfileId: result.searchProfileId } });
       }
     } catch (error) {
       setErrors({ form: 'Submission failed. Please try again.' });

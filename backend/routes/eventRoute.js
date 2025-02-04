@@ -34,7 +34,7 @@ const upload = multer({
   storage: storage,
   limits: {
     files: 6, // Maximum 6 files
-    fileSize: 5 * 1024 * 1024 // 5MB limit per file
+    fileSize: 25 * 1024 * 1024 // 5MB limit per file
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -45,11 +45,44 @@ const upload = multer({
   }
 });
 
-// Event routes
-eventRouter.post('/create', auth, adminAuth, upload.array('images', 6), createEvent);
+// Middleware to check if user has required role
+const checkRole = (allowedRoles) => (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+
+  if (allowedRoles.includes(req.user.role)) {
+    next();
+  } else {
+    return res.status(403).json({
+      success: false,
+      message: "You don't have permission to perform this action"
+    });
+  }
+};
+
+// Public routes
 eventRouter.get('/all', getAllEvents);
 eventRouter.get('/:id', getEventById);
-eventRouter.put('/update/:id', auth, adminAuth, upload.array('images', 6), updateEvent);
-eventRouter.delete('/delete/:id', auth, adminAuth, deleteEvent);
+
+// Admin routes
+eventRouter.post('/admin/create', adminAuth, upload.array('images', 6), createEvent);
+eventRouter.put('/admin/update/:id', adminAuth, upload.array('images', 6), updateEvent);
+eventRouter.delete('/admin/delete/:id', adminAuth, deleteEvent);
+
+// Counselor routes
+eventRouter.post('/counselor/create', auth, checkRole(['counselor']), upload.array('images', 6), createEvent);
+eventRouter.put('/counselor/update/:id', auth, checkRole(['counselor']), upload.array('images', 6), updateEvent);
+eventRouter.delete('/counselor/delete/:id', auth, checkRole(['counselor']), deleteEvent);
+
+// Alumni routes
+eventRouter.post('/alumni/create', auth, checkRole(['alumni']), upload.array('images', 6), createEvent);
+eventRouter.put('/alumni/update/:id', auth, checkRole(['alumni']), upload.array('images', 6), updateEvent);
+eventRouter.delete('/alumni/delete/:id', auth, checkRole(['alumni']), deleteEvent);
+
+// University routes
+eventRouter.post('/university/create', auth, checkRole(['university']), upload.array('images', 6), createEvent);
+eventRouter.put('/university/update/:id', auth, checkRole(['university']), upload.array('images', 6), updateEvent);
+eventRouter.delete('/university/delete/:id', auth, checkRole(['university']), deleteEvent);
 
 export default eventRouter;

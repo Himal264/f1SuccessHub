@@ -313,9 +313,18 @@ const UniPageHero = ({ university }) => {
 
               {/* Right Side - Action Buttons */}
               <div className="flex-1 flex flex-col justify-between h-auto lg:h-full">
-                <button className="w-full bg-blue-900 text-white py-2 px-3 rounded-md hover:bg-blue-800 transition-colors font-medium text-sm mb-2 lg:mb-0">
-                  Apply Now
-                </button>
+                <Link 
+                  to={`/applynow/${university?._id}`}
+                  state={{ 
+                    university: university,
+                    level: level
+                  }}
+                  className="w-full"
+                >
+                  <button className="w-full bg-blue-900 text-white py-2 px-3 rounded-md hover:bg-blue-800 transition-colors font-medium text-sm mb-2 lg:mb-0">
+                    Apply Now
+                  </button>
+                </Link>
                 <Link to="/advisor-inquiriesform" className="w-full">
                   <button className="w-full bg-white border-2 border-blue-900 text-blue-900 py-2 px-3 rounded-md hover:bg-blue-50 transition-colors font-medium text-sm">
                     Ask an Advisor

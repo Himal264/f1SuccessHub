@@ -316,10 +316,10 @@ const Navbar = () => {
           </NavLink>
 
           <NavLink
-            to="/aboutus"
+            to="/event"
             className="flex flex-col items-center gap-1 mr-4"
           >
-            <p className="text-sm">About Us</p>
+            <p className="text-sm">Events</p>
             <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
           </NavLink>
 

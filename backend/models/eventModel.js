@@ -3,25 +3,29 @@ import mongoose from 'mongoose';
 const eventSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: [true, 'Event title is required'],
+    required: [true, 'Title is required'],
     trim: true
   },
   description: {
     type: String,
-    required: [true, 'Event description is required'],
+    required: [true, 'Description is required'],
     trim: true
   },
-  category: {
-    type: String,
-    required: true,
-    enum: ['undergraduate', 'graduate', 'phd', 'research', 'workshop', 'seminar'],
-    default: 'undergraduate'
+  categories: {
+    type: [String],
+    required: [true, 'At least one category is required'],
+    validate: {
+      validator: function(array) {
+        const validCategories = ['undergraduate', 'graduate', 'phd', 'research', 'workshop', 'seminar'];
+        return array.every(category => validCategories.includes(category));
+      },
+      message: 'Invalid category selected'
+    }
   },
   type: {
     type: String,
-    required: true,
-    enum: ['in-person', 'online', 'hybrid'],
-    default: 'in-person'
+    required: [true, 'Event type is required'],
+    enum: ['in-person', 'online', 'hybrid']
   },
   startDate: {
     type: Date,
@@ -29,13 +33,7 @@ const eventSchema = new mongoose.Schema({
   },
   endDate: {
     type: Date,
-    required: [true, 'End date is required'],
-    validate: {
-      validator: function(value) {
-        return value >= this.startDate;
-      },
-      message: 'End date must be after or equal to start date'
-    }
+    required: [true, 'End date is required']
   },
   location: {
     type: String,
@@ -43,109 +41,52 @@ const eventSchema = new mongoose.Schema({
     trim: true
   },
   images: [{
-    url: {
-      type: String,
-      required: true
-    },
-    public_id: {
-      type: String,
-      required: true
-    }
+    url: String,
+    public_id: String
   }],
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'user',
-    required: true
-  },
-  creatorRole: {
+  tags: [{
     type: String,
-    enum: ['admin', 'counselor', 'alumni', 'university'],
-    required: true
-  },
-  status: {
-    type: String,
-    enum: ['upcoming', 'ongoing', 'completed', 'cancelled'],
-    default: 'upcoming'
-  },
-  participants: [{
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'user'
-    },
-    registeredAt: {
-      type: Date,
-      default: Date.now
-    },
-    status: {
-      type: String,
-      enum: ['registered', 'attended', 'cancelled'],
-      default: 'registered'
-    }
+    trim: true
   }],
   maxParticipants: {
     type: Number,
     min: [1, 'Maximum participants must be at least 1']
   },
-  registrationDeadline: {
-    type: Date
-  },
-  tags: [{
-    type: String,
-    trim: true
+  participants: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }],
-  additionalInfo: {
-    type: Map,
-    of: String
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  creatorRole: {
+    type: String,
+    required: true,
+    enum: ['admin', 'counselor', 'alumni', 'university']
+  },
+  status: {
+    type: String,
+    enum: ['upcoming', 'ongoing', 'completed'],
+    default: 'upcoming'
   }
 }, {
   timestamps: true
 });
 
-// Add index for better query performance
-eventSchema.index({ startDate: 1, status: 1 });
-eventSchema.index({ category: 1 });
-eventSchema.index({ createdBy: 1 });
-
-// Pre-save middleware to update status based on dates
+// Add a pre-save hook to calculate status
 eventSchema.pre('save', function(next) {
   const now = new Date();
-  
   if (this.endDate < now) {
     this.status = 'completed';
   } else if (this.startDate <= now && this.endDate >= now) {
     this.status = 'ongoing';
-  } else if (this.startDate > now) {
+  } else {
     this.status = 'upcoming';
   }
-  
   next();
 });
 
-// Virtual for checking if registration is open
-eventSchema.virtual('isRegistrationOpen').get(function() {
-  const now = new Date();
-  return (!this.registrationDeadline || this.registrationDeadline > now) 
-         && this.status === 'upcoming'
-         && (!this.maxParticipants || this.participants.length < this.maxParticipants);
-});
-
-// Method to check if event is full
-eventSchema.methods.isFull = function() {
-  return this.maxParticipants && this.participants.length >= this.maxParticipants;
-};
-
-// Static method to find upcoming events
-eventSchema.statics.findUpcoming = function() {
-  return this.find({
-    startDate: { $gt: new Date() },
-    status: 'upcoming'
-  }).sort('startDate');
-};
-
-// Static method to find events by category
-eventSchema.statics.findByCategory = function(category) {
-  return this.find({ category }).sort('-startDate');
-};
-
-const eventModel = mongoose.models.event || mongoose.model('event', eventSchema);
+const eventModel = mongoose.model('Event', eventSchema);
 export default eventModel;
