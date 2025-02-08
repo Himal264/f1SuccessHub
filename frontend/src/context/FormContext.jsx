@@ -104,6 +104,30 @@ export function FormProvider({ children }) {
       showToast('Application submitted successfully!', 'success');
       
       // Clear form data after successful submission
+      const defaultData = {
+        academic: {
+          studyLevel: 'undergraduate',
+          fieldOfStudy: '',
+          gpa: 3.0,
+          englishTest: { type: '', score: '' },
+          admissionTest: { type: '', score: '' },
+          intake: '',
+          priorities: [],
+          citySizePreference: '',
+          budgetRange: '',
+          termsAccepted: false
+        },
+        contact: {
+          firstName: '',
+          lastName: '',
+          email: '',
+          country: 'US',
+          phone: '',
+          message: ''
+        }
+      };
+      
+      setFormData(defaultData);
       localStorage.removeItem('universityFormData');
       
       return response.data;

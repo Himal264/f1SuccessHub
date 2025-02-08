@@ -9,6 +9,25 @@ const ApplyNow = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     personalInfo: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      gender: '',
+      birthDate: {
+        day: '',
+        month: '',
+        year: ''
+      },
+      birthCity: '',
+      birthCountry: '',
+      citizenshipCountry: '',
+      studyArea: '',
+      entranceTerm: '',
+      referralSource: '',
+      hasUsVisa: false,
+      hasVisaDenial: false,
+      i20Transfer: 'no',
+      fundingSource: '',
       homeAddress: {
         street1: '',
         street2: '',
@@ -38,6 +57,28 @@ const ApplyNow = () => {
           number: '',
         },
         sameAsHome: false,
+        address: {
+          street1: '',
+          street2: '',
+          city: '',
+          state: '',
+          postalCode: '',
+          country: '',
+        },
+      },
+      visaTypes: '',
+      i20EndDate: {
+        day: '',
+        month: '',
+        year: ''
+      },
+      sponsorshipBody: '',
+      usAddress: {
+        street1: '',
+        street2: '',
+        city: '',
+        state: '',
+        zipCode: '',
       },
     },
     contactInfo: {
@@ -86,11 +127,148 @@ const ApplyNow = () => {
           year: '',
         },
         advancedStandingCredits: false,
+        creditTypes: {
+          aice: false,
+          ap: false,
+          asLevel: false,
+          ib: false,
+          other: false
+        },
+        postSecondary: false,
+        postSecondarySchools: [{
+          name: '',
+          city: '',
+          country: '',
+          major: '',
+          startDate: {
+            month: '',
+            year: ''
+          },
+          graduationDate: {
+            month: '',
+            year: ''
+          }
+        }],
+        satAct: false,
+        academicGaps: false,
+        examDetails: {
+          type: '',
+          totalScore: '',
+          date: {
+            day: '',
+            month: '',
+            year: ''
+          }
+        },
+        gapDetails: {
+          studyingEnglish: {
+            selected: false,
+            startDate: {
+              month: '',
+              year: ''
+            },
+            endDate: {
+              month: '',
+              year: ''
+            }
+          },
+          working: {
+            selected: false,
+            startDate: {
+              month: '',
+              year: ''
+            },
+            endDate: {
+              month: '',
+              year: ''
+            }
+          },
+          other: {
+            selected: false,
+            description: '',
+            startDate: {
+              month: '',
+              year: ''
+            },
+            endDate: {
+              month: '',
+              year: ''
+            }
+          }
+        },
+        satAct: false,
+        examType: '',
+        examScore: '',
+        examDate: {
+          day: '',
+          month: '',
+          year: ''
+        },
       },
+      additionalSchools: [], // Array to store additional schools
       otherSchools: false,
       postSecondary: false,
+      postSecondarySchools: [{
+        name: '',
+        city: '',
+        country: '',
+        major: '',
+        startDate: {
+          month: '',
+          year: ''
+        },
+        graduationDate: {
+          month: '',
+          year: ''
+        }
+      }],
       satAct: false,
       academicGaps: false,
+      examDetails: {
+        type: '',
+        totalScore: '',
+        date: {
+          day: '',
+          month: '',
+          year: ''
+        }
+      },
+      gapDetails: {
+        studyingEnglish: {
+          selected: false,
+          startDate: {
+            month: '',
+            year: ''
+          },
+          endDate: {
+            month: '',
+            year: ''
+          }
+        },
+        working: {
+          selected: false,
+          startDate: {
+            month: '',
+            year: ''
+          },
+          endDate: {
+            month: '',
+            year: ''
+          }
+        },
+        other: {
+          selected: false,
+          description: '',
+          startDate: {
+            month: '',
+            year: ''
+          },
+          endDate: {
+            month: '',
+            year: ''
+          }
+        }
+      }
     },
     documents: {
       hasDocuments: false,
@@ -117,6 +295,118 @@ const ApplyNow = () => {
   const [showForm, setShowForm] = useState(false);
   const [universityData, setUniversityData] = useState(null);
   const [level, setLevel] = useState(location.state?.level || "Graduate");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
+
+  const COUNTRY_CODES = {
+    'Nepal': '+977',
+    'US': '+1',
+    'UK': '+44',
+    'India': '+91',
+    // Add more countries and their codes as needed
+  };
+
+  const US_STATES = [
+    { code: 'AL', name: 'Alabama' },
+    { code: 'AK', name: 'Alaska' },
+    { code: 'AZ', name: 'Arizona' },
+    { code: 'AR', name: 'Arkansas' },
+    { code: 'CA', name: 'California' },
+    { code: 'CO', name: 'Colorado' },
+    { code: 'CT', name: 'Connecticut' },
+    { code: 'DE', name: 'Delaware' },
+    { code: 'FL', name: 'Florida' },
+    { code: 'GA', name: 'Georgia' },
+    { code: 'HI', name: 'Hawaii' },
+    { code: 'ID', name: 'Idaho' },
+    { code: 'IL', name: 'Illinois' },
+    { code: 'IN', name: 'Indiana' },
+    { code: 'IA', name: 'Iowa' },
+    { code: 'KS', name: 'Kansas' },
+    { code: 'KY', name: 'Kentucky' },
+    { code: 'LA', name: 'Louisiana' },
+    { code: 'ME', name: 'Maine' },
+    { code: 'MD', name: 'Maryland' },
+    { code: 'MA', name: 'Massachusetts' },
+    { code: 'MI', name: 'Michigan' },
+    { code: 'MN', name: 'Minnesota' },
+    { code: 'MS', name: 'Mississippi' },
+    { code: 'MO', name: 'Missouri' },
+    { code: 'MT', name: 'Montana' },
+    { code: 'NE', name: 'Nebraska' },
+    { code: 'NV', name: 'Nevada' },
+    { code: 'NH', name: 'New Hampshire' },
+    { code: 'NJ', name: 'New Jersey' },
+    { code: 'NM', name: 'New Mexico' },
+    { code: 'NY', name: 'New York' },
+    { code: 'NC', name: 'North Carolina' },
+    { code: 'ND', name: 'North Dakota' },
+    { code: 'OH', name: 'Ohio' },
+    { code: 'OK', name: 'Oklahoma' },
+    { code: 'OR', name: 'Oregon' },
+    { code: 'PA', name: 'Pennsylvania' },
+    { code: 'RI', name: 'Rhode Island' },
+    { code: 'SC', name: 'South Carolina' },
+    { code: 'SD', name: 'South Dakota' },
+    { code: 'TN', name: 'Tennessee' },
+    { code: 'TX', name: 'Texas' },
+    { code: 'UT', name: 'Utah' },
+    { code: 'VT', name: 'Vermont' },
+    { code: 'VA', name: 'Virginia' },
+    { code: 'WA', name: 'Washington' },
+    { code: 'WV', name: 'West Virginia' },
+    { code: 'WI', name: 'Wisconsin' },
+    { code: 'WY', name: 'Wyoming' },
+  ];
+
+  const COUNTRIES = [
+    'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria', 'Azerbaijan',
+    'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan', 'Bolivia', 'Bosnia and Herzegovina',
+    'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cambodia', 'Cameroon', 'Canada', 'Cape Verde', 'Central African Republic',
+    'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica', 'Croatia', 'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti',
+    'Dominica', 'Dominican Republic', 'East Timor', 'Ecuador', 'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Ethiopia',
+    'Fiji', 'Finland', 'France', 'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau',
+    'Guyana', 'Haiti', 'Honduras', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq', 'Ireland', 'Israel', 'Italy', 'Ivory Coast',
+    'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati', 'Korea, North', 'Korea, South', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia',
+    'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein', 'Lithuania', 'Luxembourg', 'Macedonia', 'Madagascar', 'Malawi', 'Malaysia',
+    'Maldives', 'Mali', 'Malta', 'Marshall Islands', 'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia',
+    'Montenegro', 'Morocco', 'Mozambique', 'Myanmar', 'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger',
+    'Nigeria', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru', 'Philippines', 'Poland', 'Portugal',
+    'Qatar', 'Romania', 'Russia', 'Rwanda', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent', 'Samoa', 'San Marino', 'Sao Tome and Principe',
+    'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia',
+    'South Africa', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Swaziland', 'Sweden', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan',
+    'Tanzania', 'Thailand', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine',
+    'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay', 'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam',
+    'Yemen', 'Zambia', 'Zimbabwe'
+  ];
+
+  const updatePhoneCountryCode = (country) => {
+    const countryCode = COUNTRY_CODES[country] || '';
+    setFormData(prev => ({
+      ...prev,
+      personalInfo: {
+        ...prev.personalInfo,
+        phone: {
+          ...prev.personalInfo.phone,
+          mobile: {
+            ...prev.personalInfo.phone.mobile,
+            countryCode: countryCode
+          },
+          home: {
+            ...prev.personalInfo.phone.home,
+            countryCode: countryCode
+          }
+        },
+        emergencyContact: {
+          ...prev.personalInfo.emergencyContact,
+          phone: {
+            ...prev.personalInfo.emergencyContact.phone,
+            countryCode: countryCode
+          }
+        }
+      }
+    }));
+  };
 
   useEffect(() => {
     // If we have university data in state, use that
@@ -191,7 +481,9 @@ const ApplyNow = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
+        
       });
+      console.log(formData);
 
       if (!response.ok) throw new Error('Submission failed');
 
@@ -207,6 +499,11 @@ const ApplyNow = () => {
 
   const handleEmailSubmit = (e) => {
     e.preventDefault();
+    // Check if both checkboxes are checked
+    if (!termsAccepted || !marketingConsent) {
+      alert('Please accept both the Terms of Use and marketing consent to continue');
+      return;
+    }
     setShowForm(true);
   };
 
@@ -219,7 +516,7 @@ const ApplyNow = () => {
           <div className="flex items-center gap-4 mb-8">
             <img 
               src={universityData?.university?.logoUrl || "/api/placeholder/48/48"}
-              alt="University of Georgia Logo"
+              alt="University Logo"
               className="h-10"
             />
             <div>
@@ -242,7 +539,7 @@ const ApplyNow = () => {
                 </svg>
               </div>
               <p className="text-gray-600">
-                It will take approximately 15-20 minutes to complete the application.
+                It will take approximately 5-10 minutes to complete the application.
               </p>
             </div>
 
@@ -264,7 +561,7 @@ const ApplyNow = () => {
                 </svg>
               </div>
               <p className="text-gray-600">
-                You can exit and resume the application at a later time by entering your email address.
+                You can exit and resume the application at a later time, by entering your email address below and submitting the verification code when prompted.
               </p>
             </div>
 
@@ -275,8 +572,41 @@ const ApplyNow = () => {
                 </svg>
               </div>
               <p className="text-gray-600">
-                We understand the importance of trust and security, so your personal information is always safeguarded to industry-best practices.
+                We understand the importance of trust and security, so your personal information is always safeguarded to industry best practices.
               </p>
+            </div>
+          </div>
+
+          <div className="mt-8 space-y-4">
+            {/* Terms and Privacy Policy Checkbox */}
+            <div className="flex items-start space-x-3">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300"
+              />
+              <label htmlFor="terms" className="text-sm text-gray-600">
+                To learn how we protect your information, please review our{' '}
+                <a href="#" className="text-blue-600 hover:underline">Terms of Use</a> and{' '}
+                <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
+              </label>
+            </div>
+
+            {/* Marketing Consent Checkbox */}
+            <div className="flex items-start space-x-3">
+              <input
+                type="checkbox"
+                id="marketing"
+                checked={marketingConsent}
+                onChange={(e) => setMarketingConsent(e.target.checked)}
+                className="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300"
+              />
+              <label htmlFor="marketing" className="text-sm text-gray-600">
+                Stay on Course for US University Success! Get Personalized Support from Shorelight (with Your Privacy in Mind):
+                Yes, I would like to receive commercial electronic information and offers from Shorelight (including emails, texts, and push notifications, which may be subject to fees charged by my wireless carrier), including information about Shorelight programs at other universities. You may unsubscribe at any time.
+              </label>
             </div>
           </div>
 
@@ -319,24 +649,29 @@ const ApplyNow = () => {
       case 1:
         return (
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold">Personal Information</h2>
-            
-            {/* Permanent Address Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Permanent Home Address (outside of United States)</h3>
+            <div>
+              <h2 className="text-2xl font-bold">Personal Information</h2>
+              <p className="mt-2 text-gray-600">
+                We will capture your contact information once you begin this form. We may reach out to best serve you through the application process.
+              </p>
+              <p className="mt-2 text-gray-600">
+                Please enter all information so that it matches your passport, birth certificate or other legal government documentation.
+              </p>
+            </div>
+
+            {/* Name & Email Address Section */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold">Name & Email Address</h3>
               
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Home street address <span className="text-red-500">*</span>
+                    First (Given) Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    value={formData.personalInfo.homeAddress.street1}
-                    onChange={(e) => handleInputChange('personalInfo', 'homeAddress', {
-                      ...formData.personalInfo.homeAddress,
-                      street1: e.target.value
-                    })}
+                    value={formData.personalInfo.firstName || ''}
+                    onChange={(e) => handleInputChange('personalInfo', 'firstName', e.target.value)}
                     className="w-full p-2 border rounded"
                     required
                   />
@@ -344,30 +679,558 @@ const ApplyNow = () => {
 
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Home street address line 2 (optional)
+                    Last (Family) Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    value={formData.personalInfo.homeAddress.street2}
-                    onChange={(e) => handleInputChange('personalInfo', 'homeAddress', {
-                      ...formData.personalInfo.homeAddress,
-                      street2: e.target.value
-                    })}
+                    value={formData.personalInfo.lastName || ''}
+                    onChange={(e) => handleInputChange('personalInfo', 'lastName', e.target.value)}
                     className="w-full p-2 border rounded"
+                    required
                   />
                 </div>
+              </div>
 
-                <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Email Address <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={formData.personalInfo.email || ''}
+                  onChange={(e) => handleInputChange('personalInfo', 'email', e.target.value)}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+                <p className="mt-2 text-sm text-gray-600">
+                  We must collect your email address in order to properly support you as you transition to on-campus, or enroll in a Live program. This email address may be used to complete important activities prior to program start.
+                </p>
+              </div>
+            </div>
+
+            {/* Birth & Citizenship Information */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold">Birth & Citizenship Information</h3>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Gender <span className="text-red-500">*</span></label>
+                <div className="space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value="male"
+                      checked={formData.personalInfo.gender === 'male'}
+                      onChange={(e) => handleInputChange('personalInfo', 'gender', e.target.value)}
+                      className="mr-2"
+                      required
+                    />
+                    Male
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value="female"
+                      checked={formData.personalInfo.gender === 'female'}
+                      onChange={(e) => handleInputChange('personalInfo', 'gender', e.target.value)}
+                      className="mr-2"
+                    />
+                    Female
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Day <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.personalInfo.birthDate?.day || ''}
+                    onChange={(e) => handleInputChange('personalInfo', 'birthDate', {
+                      ...formData.personalInfo.birthDate,
+                      day: e.target.value
+                    })}
+                    className="w-full p-2 border rounded"
+                    required
+                  >
+                    <option value="">Select Day</option>
+                    {[...Array(31)].map((_, i) => (
+                      <option key={i + 1} value={i + 1}>{i + 1}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Month <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.personalInfo.birthDate?.month || ''}
+                    onChange={(e) => handleInputChange('personalInfo', 'birthDate', {
+                      ...formData.personalInfo.birthDate,
+                      month: e.target.value
+                    })}
+                    className="w-full p-2 border rounded"
+                    required
+                  >
+                    <option value="">Select Month</option>
+                    {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                      'August', 'September', 'October', 'November', 'December'].map((month) => (
+                      <option key={month} value={month}>{month}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Year <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.personalInfo.birthDate?.year || ''}
+                    onChange={(e) => handleInputChange('personalInfo', 'birthDate', {
+                      ...formData.personalInfo.birthDate,
+                      year: e.target.value
+                    })}
+                    className="w-full p-2 border rounded"
+                    required
+                  >
+                    <option value="">Select Year</option>
+                    {[...Array(30)].map((_, i) => {
+                      const year = new Date().getFullYear() - 30 + i;
+                      return <option key={year} value={year}>{year}</option>;
+                    })}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Birth City, Town, or Village <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.personalInfo.birthCity || ''}
+                  onChange={(e) => handleInputChange('personalInfo', 'birthCity', e.target.value)}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Country of Birth / Nationality <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.personalInfo.birthCountry || ''}
+                    onChange={(e) => handleInputChange('personalInfo', 'birthCountry', e.target.value)}
+                    className="w-full p-2 border rounded"
+                    required
+                  >
+                    <option value="">Select Country</option>
+                    <option value="Nepal">Nepal</option>
+                    {/* Add more countries as needed */}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Country of Citizenship <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.personalInfo.citizenshipCountry || ''}
+                    onChange={(e) => handleInputChange('personalInfo', 'citizenshipCountry', e.target.value)}
+                    className="w-full p-2 border rounded"
+                    required
+                  >
+                    <option value="">Select Country</option>
+                    <option value="Nepal">Nepal</option>
+                    {/* Add more countries as needed */}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Start Term / Area of Interest */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold">Start Term / Area of Interest</h3>
+              <p className="text-sm text-gray-600">Please note that some starting terms may not be available for each major.</p>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  What would you like to study? <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.personalInfo.studyArea || ''}
+                  onChange={(e) => handleInputChange('personalInfo', 'studyArea', e.target.value)}
+                  className="w-full p-2 border rounded"
+                  required
+                >
+                  <option value="">Select Area of Study</option>
+                  {/* Add study areas */}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Intended Entrance Term <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.personalInfo.entranceTerm || ''}
+                  onChange={(e) => handleInputChange('personalInfo', 'entranceTerm', e.target.value)}
+                  className="w-full p-2 border rounded"
+                  required
+                >
+                  <option value="">Select Term</option>
+                  {/* Add terms */}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  How did you hear about us? <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.personalInfo.referralSource || ''}
+                  onChange={(e) => handleInputChange('personalInfo', 'referralSource', e.target.value)}
+                  className="w-full p-2 border rounded"
+                  required
+                >
+                  <option value="">Select Source</option>
+                  {/* Add referral sources */}
+                </select>
+              </div>
+            </div>
+
+            {/* Visa Processing and Financials */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold">Visa Processing and Financials</h3>
+
+              {/* US Visa History */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Has your applicant ever held a US visa (e.g. for tourism or previous studies)?
+                </label>
+                <div className="space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="hasUsVisa"
+                      value="no"
+                      checked={formData.personalInfo.hasUsVisa === false}
+                      onChange={(e) => handleInputChange('personalInfo', 'hasUsVisa', e.target.value === 'yes')}
+                      className="mr-2"
+                    />
+                    No
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="hasUsVisa"
+                      value="yes"
+                      checked={formData.personalInfo.hasUsVisa === true}
+                      onChange={(e) => handleInputChange('personalInfo', 'hasUsVisa', e.target.value === 'yes')}
+                      className="mr-2"
+                    />
+                    Yes
+                  </label>
+                </div>
+
+                {/* Conditional Visa Types Field */}
+                {formData.personalInfo.hasUsVisa && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium mb-2">
+                      What type(s) of visas has your applicant been issued in the past? <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.personalInfo.visaTypes || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'visaTypes', e.target.value)}
+                      className="w-full p-2 border rounded"
+                      required
+                    >
+                      <option value="">Select Visa Type</option>
+                      <option value="B1/B2">B1/B2</option>
+                      <option value="Student (F, J, M)">Student (F, J, M)</option>
+                      <option value="Other">Other visa including dependent (A, E, G, H, I, K, L, N, O, P, R, S, T, TN, U, V)</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* Visa Denial History */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Have you had a previous visa denial in the last 3 years, including non-student visa types? <span className="text-red-500">*</span>
+                </label>
+                <div className="space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="hasVisaDenial"
+                      value="yes"
+                      checked={formData.personalInfo.hasVisaDenial === true}
+                      onChange={(e) => handleInputChange('personalInfo', 'hasVisaDenial', e.target.value === 'yes')}
+                      className="mr-2"
+                      required
+                    />
+                    Yes
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="hasVisaDenial"
+                      value="no"
+                      checked={formData.personalInfo.hasVisaDenial === false}
+                      onChange={(e) => handleInputChange('personalInfo', 'hasVisaDenial', e.target.value === 'yes')}
+                      className="mr-2"
+                    />
+                    No
+                  </label>
+                </div>
+              </div>
+
+              {/* I-20 Transfer */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Will you be transferring an I-20?</label>
+                <div className="space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="i20Transfer"
+                      value="no"
+                      checked={formData.personalInfo.i20Transfer === 'no'}
+                      onChange={(e) => handleInputChange('personalInfo', 'i20Transfer', e.target.value)}
+                      className="mr-2"
+                    />
+                    No
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="i20Transfer"
+                      value="yes"
+                      checked={formData.personalInfo.i20Transfer === 'yes'}
+                      onChange={(e) => handleInputChange('personalInfo', 'i20Transfer', e.target.value)}
+                      className="mr-2"
+                    />
+                    Yes
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="i20Transfer"
+                      value="yes-expired"
+                      checked={formData.personalInfo.i20Transfer === 'yes-expired'}
+                      onChange={(e) => handleInputChange('personalInfo', 'i20Transfer', e.target.value)}
+                      className="mr-2"
+                    />
+                    Yes - Expired
+                  </label>
+                </div>
+                <p className="mt-2 text-sm text-gray-600">
+                  Select "Yes" only if you are currently studying on an F1 student visa in the United States and have been issued an I-20 document from your current institution within the United States. If Yes or Yes - Expired, please provide a copy with your application materials.
+                </p>
+
+                {/* Conditional I-20 End Date Fields */}
+                {(formData.personalInfo.i20Transfer === 'yes' || formData.personalInfo.i20Transfer === 'yes-expired') && (
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        I-20 End Date - Day <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={formData.personalInfo.i20EndDate?.day || ''}
+                        onChange={(e) => handleInputChange('personalInfo', 'i20EndDate', {
+                          ...formData.personalInfo.i20EndDate,
+                          day: e.target.value
+                        })}
+                        className="w-full p-2 border rounded"
+                        required
+                      >
+                        <option value="">Select Day</option>
+                        {[...Array(31)].map((_, i) => (
+                          <option key={i + 1} value={i + 1}>{i + 1}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Month <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={formData.personalInfo.i20EndDate?.month || ''}
+                        onChange={(e) => handleInputChange('personalInfo', 'i20EndDate', {
+                          ...formData.personalInfo.i20EndDate,
+                          month: e.target.value
+                        })}
+                        className="w-full p-2 border rounded"
+                        required
+                      >
+                        <option value="">Select Month</option>
+                        {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                          'August', 'September', 'October', 'November', 'December'].map((month) => (
+                          <option key={month} value={month}>{month}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Year <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={formData.personalInfo.i20EndDate?.year || ''}
+                        onChange={(e) => handleInputChange('personalInfo', 'i20EndDate', {
+                          ...formData.personalInfo.i20EndDate,
+                          year: e.target.value
+                        })}
+                        className="w-full p-2 border rounded"
+                        required
+                      >
+                        <option value="">Select Year</option>
+                        {[...Array(5)].map((_, i) => {
+                          const year = new Date().getFullYear() + i;
+                          return <option key={year} value={year}>{year}</option>;
+                        })}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Funding Source */}
+              <div>
+                <label className="block text-sm font-medium mb-2">How do you plan to pay for your studies?</label>
+                <div className="space-y-2">
+                  {['Personal Funds', 'Family Funds', 'Government Sponsorship', 'Other Method of Funding', "Don't Know Yet"].map((option) => (
+                    <label key={option} className="flex items-center">
+                      <input
+                        type="radio"
+                        name="fundingSource"
+                        value={option}
+                        checked={formData.personalInfo.fundingSource === option}
+                        onChange={(e) => handleInputChange('personalInfo', 'fundingSource', e.target.value)}
+                        className="mr-2"
+                      />
+                      {option}
+                    </label>
+                  ))}
+                </div>
+
+                {/* Conditional Sponsorship Body Field */}
+                {formData.personalInfo.fundingSource === 'Government Sponsorship' && (
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium mb-1">
+                      Name of sponsorship body <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.sponsorshipBody || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'sponsorshipBody', e.target.value)}
+                      className="w-full p-2 border rounded"
+                      required
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Emergency Contact Information */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold">Emergency Contact Information</h3>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Is the emergency contact's address the same as your home address?
+                </label>
+                <div className="space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="sameAsHome"
+                      value="yes"
+                      checked={formData.personalInfo.emergencyContact.sameAsHome === true}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
+                        sameAsHome: e.target.value === 'yes'
+                      })}
+                      className="mr-2"
+                    />
+                    Yes
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="sameAsHome"
+                      value="no"
+                      checked={formData.personalInfo.emergencyContact.sameAsHome === false}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
+                        sameAsHome: e.target.value === 'yes'
+                      })}
+                      className="mr-2"
+                    />
+                    No
+                  </label>
+                </div>
+              </div>
+
+              {/* Conditional Address Fields */}
+              {formData.personalInfo.emergencyContact.sameAsHome === false && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Street address <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.emergencyContact.address?.street1 || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
+                        address: {
+                          ...formData.personalInfo.emergencyContact.address,
+                          street1: e.target.value
+                        }
+                      })}
+                      className="w-full p-2 border rounded"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Street address line 2 (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.emergencyContact.address?.street2 || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
+                        address: {
+                          ...formData.personalInfo.emergencyContact.address,
+                          street2: e.target.value
+                        }
+                      })}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium mb-1">
                       City <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
-                      value={formData.personalInfo.homeAddress.city}
-                      onChange={(e) => handleInputChange('personalInfo', 'homeAddress', {
-                        ...formData.personalInfo.homeAddress,
-                        city: e.target.value
+                      value={formData.personalInfo.emergencyContact.address?.city || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
+                        address: {
+                          ...formData.personalInfo.emergencyContact.address,
+                          city: e.target.value
+                        }
                       })}
                       className="w-full p-2 border rounded"
                       required
@@ -380,116 +1243,97 @@ const ApplyNow = () => {
                     </label>
                     <input
                       type="text"
-                      value={formData.personalInfo.homeAddress.state}
-                      onChange={(e) => handleInputChange('personalInfo', 'homeAddress', {
-                        ...formData.personalInfo.homeAddress,
-                        state: e.target.value
+                      value={formData.personalInfo.emergencyContact.address?.state || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
+                        address: {
+                          ...formData.personalInfo.emergencyContact.address,
+                          state: e.target.value
+                        }
                       })}
                       className="w-full p-2 border rounded"
                       required
                     />
                   </div>
-                </div>
 
-                {/* Continue with more fields... */}
-              </div>
-            </div>
-
-            {/* Living in US Question */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Are you currently living in the United States?</h3>
-              <div className="space-x-4">
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="livingInUS"
-                    value="yes"
-                    checked={formData.personalInfo.livingInUS}
-                    onChange={(e) => handleInputChange('personalInfo', 'livingInUS', e.target.value === 'yes')}
-                    className="mr-2"
-                  />
-                  Yes
-                </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="livingInUS"
-                    value="no"
-                    checked={!formData.personalInfo.livingInUS}
-                    onChange={(e) => handleInputChange('personalInfo', 'livingInUS', e.target.value === 'yes')}
-                    className="mr-2"
-                  />
-                  No
-                </label>
-              </div>
-            </div>
-
-            {/* Phone Numbers Section */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold">Phone Number</h3>
-              
-              {/* Mobile Phone */}
-              <div>
-                <label className="block text-sm font-medium mb-1">Mobile phone</label>
-                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-600">Country code</label>
-                    <select
-                      value={formData.personalInfo.phone.mobile.countryCode}
-                      onChange={(e) => handleInputChange('personalInfo', 'phone', {
-                        ...formData.personalInfo.phone,
-                        mobile: { ...formData.personalInfo.phone.mobile, countryCode: e.target.value }
-                      })}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="+977">+977</option>
-                      {/* Add more country codes */}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600">
-                      Phone number <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium mb-1">
+                      Postal code (optional)
                     </label>
                     <input
-                      type="tel"
-                      value={formData.personalInfo.phone.mobile.number}
-                      onChange={(e) => handleInputChange('personalInfo', 'phone', {
-                        ...formData.personalInfo.phone,
-                        mobile: { ...formData.personalInfo.phone.mobile, number: e.target.value }
+                      type="text"
+                      value={formData.personalInfo.emergencyContact.address?.postalCode || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
+                        address: {
+                          ...formData.personalInfo.emergencyContact.address,
+                          postalCode: e.target.value
+                        }
                       })}
                       className="w-full p-2 border rounded"
-                      required
                     />
                   </div>
-                </div>
-              </div>
 
-              {/* Emergency Contact Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Emergency Contact Details</h3>
-                
-                <div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Country <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.personalInfo.emergencyContact.address?.country || ''}
+                      onChange={(e) => {
+                        const country = e.target.value;
+                        handleInputChange('personalInfo', 'emergencyContact', {
+                          ...formData.personalInfo.emergencyContact,
+                          address: {
+                            ...formData.personalInfo.emergencyContact.address,
+                            country: country
+                          }
+                        });
+                        updatePhoneCountryCode(country);
+                      }}
+                      className="w-full p-2 border rounded"
+                      required
+                    >
+                      <option value="">Select Country</option>
+                      {Object.keys(COUNTRY_CODES).map(country => (
+                        <option key={country} value={country}>{country}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Phone Input with Auto Country Code */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-1">
                   <label className="block text-sm font-medium mb-1">
-                    Relationship <span className="text-red-500">*</span>
+                    Country Code
                   </label>
-                  <select
-                    value={formData.personalInfo.emergencyContact.relationship}
+                  <input
+                    type="text"
+                    value={formData.personalInfo.emergencyContact.phone.countryCode}
+                    className="w-full p-2 border rounded bg-gray-100"
+                    disabled
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium mb-1">
+                    Phone Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.personalInfo.emergencyContact.phone.number || ''}
                     onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
                       ...formData.personalInfo.emergencyContact,
-                      relationship: e.target.value
+                      phone: {
+                        ...formData.personalInfo.emergencyContact.phone,
+                        number: e.target.value
+                      }
                     })}
                     className="w-full p-2 border rounded"
                     required
-                  >
-                    <option value="">Select relationship</option>
-                    <option value="Father">Father</option>
-                    <option value="Mother">Mother</option>
-                    <option value="Guardian">Guardian</option>
-                    {/* Add more options */}
-                  </select>
+                  />
                 </div>
-
-                {/* Continue with emergency contact fields */}
               </div>
             </div>
           </div>
@@ -497,10 +1341,13 @@ const ApplyNow = () => {
       case 2:
         return (
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold">Contact Information</h2>
-            
-            {/* Permanent Address Section */}
-            <div className="space-y-4">
+            {/* Header */}
+            <div>
+              <h2 className="text-2xl font-bold">Contact Information</h2>
+            </div>
+
+            {/* Permanent Home Address Section */}
+            <div className="space-y-6">
               <h3 className="text-lg font-semibold">Permanent Home Address (outside of United States)</h3>
               
               <div>
@@ -509,9 +1356,9 @@ const ApplyNow = () => {
                 </label>
                 <input
                   type="text"
-                  value={formData.contactInfo.homeAddress.street1}
-                  onChange={(e) => handleInputChange('contactInfo', 'homeAddress', {
-                    ...formData.contactInfo.homeAddress,
+                  value={formData.personalInfo.homeAddress.street1 || ''}
+                  onChange={(e) => handleInputChange('personalInfo', 'homeAddress', {
+                    ...formData.personalInfo.homeAddress,
                     street1: e.target.value
                   })}
                   className="w-full p-2 border rounded"
@@ -525,47 +1372,45 @@ const ApplyNow = () => {
                 </label>
                 <input
                   type="text"
-                  value={formData.contactInfo.homeAddress.street2}
-                  onChange={(e) => handleInputChange('contactInfo', 'homeAddress', {
-                    ...formData.contactInfo.homeAddress,
+                  value={formData.personalInfo.homeAddress.street2 || ''}
+                  onChange={(e) => handleInputChange('personalInfo', 'homeAddress', {
+                    ...formData.personalInfo.homeAddress,
                     street2: e.target.value
                   })}
                   className="w-full p-2 border rounded"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    City <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.contactInfo.homeAddress.city}
-                    onChange={(e) => handleInputChange('contactInfo', 'homeAddress', {
-                      ...formData.contactInfo.homeAddress,
-                      city: e.target.value
-                    })}
-                    className="w-full p-2 border rounded"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  City <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.personalInfo.homeAddress.city || ''}
+                  onChange={(e) => handleInputChange('personalInfo', 'homeAddress', {
+                    ...formData.personalInfo.homeAddress,
+                    city: e.target.value
+                  })}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Province / State <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.contactInfo.homeAddress.state}
-                    onChange={(e) => handleInputChange('contactInfo', 'homeAddress', {
-                      ...formData.contactInfo.homeAddress,
-                      state: e.target.value
-                    })}
-                    className="w-full p-2 border rounded"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Province / State <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.personalInfo.homeAddress.state || ''}
+                  onChange={(e) => handleInputChange('personalInfo', 'homeAddress', {
+                    ...formData.personalInfo.homeAddress,
+                    state: e.target.value
+                  })}
+                  className="w-full p-2 border rounded"
+                  required
+                />
               </div>
 
               <div>
@@ -574,9 +1419,9 @@ const ApplyNow = () => {
                 </label>
                 <input
                   type="text"
-                  value={formData.contactInfo.homeAddress.postalCode}
-                  onChange={(e) => handleInputChange('contactInfo', 'homeAddress', {
-                    ...formData.contactInfo.homeAddress,
+                  value={formData.personalInfo.homeAddress.postalCode || ''}
+                  onChange={(e) => handleInputChange('personalInfo', 'homeAddress', {
+                    ...formData.personalInfo.homeAddress,
                     postalCode: e.target.value
                   })}
                   className="w-full p-2 border rounded"
@@ -584,48 +1429,152 @@ const ApplyNow = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Country</label>
+                <label className="block text-sm font-medium mb-1">
+                  Country <span className="text-red-500">*</span>
+                </label>
                 <select
-                  value={formData.contactInfo.homeAddress.country}
-                  onChange={(e) => handleInputChange('contactInfo', 'homeAddress', {
-                    ...formData.contactInfo.homeAddress,
-                    country: e.target.value
-                  })}
+                  value={formData.personalInfo.homeAddress.country || ''}
+                  onChange={(e) => {
+                    const country = e.target.value;
+                    handleInputChange('personalInfo', 'homeAddress', {
+                      ...formData.personalInfo.homeAddress,
+                      country: country
+                    });
+                    updatePhoneCountryCode(country);
+                  }}
                   className="w-full p-2 border rounded"
-                  disabled
+                  required
                 >
-                  <option value="Nepal">Nepal</option>
+                  <option value="">Select Country</option>
+                  {Object.keys(COUNTRY_CODES).map(country => (
+                    <option key={country} value={country}>{country}</option>
+                  ))}
                 </select>
               </div>
             </div>
 
             {/* Living in US Question */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Are you currently living in the United States?</h3>
-              <div className="space-x-4">
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="contactLivingInUS"
-                    value="yes"
-                    checked={formData.contactInfo.livingInUS}
-                    onChange={(e) => handleInputChange('contactInfo', 'livingInUS', e.target.value === 'yes')}
-                    className="mr-2"
-                  />
-                  Yes
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Are you currently living in the United States?
                 </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="contactLivingInUS"
-                    value="no"
-                    checked={!formData.contactInfo.livingInUS}
-                    onChange={(e) => handleInputChange('contactInfo', 'livingInUS', e.target.value === 'yes')}
-                    className="mr-2"
-                  />
-                  No
-                </label>
+                <div className="space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="livingInUS"
+                      value="yes"
+                      checked={formData.personalInfo.livingInUS === true}
+                      onChange={(e) => handleInputChange('personalInfo', 'livingInUS', e.target.value === 'yes')}
+                      className="mr-2"
+                    />
+                    Yes
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="livingInUS"
+                      value="no"
+                      checked={formData.personalInfo.livingInUS === false}
+                      onChange={(e) => handleInputChange('personalInfo', 'livingInUS', e.target.value === 'yes')}
+                      className="mr-2"
+                    />
+                    No
+                  </label>
+                </div>
               </div>
+
+              {/* Conditional US Address Fields */}
+              {formData.personalInfo.livingInUS && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Address in United States <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.usAddress?.street1 || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'usAddress', {
+                        ...formData.personalInfo.usAddress,
+                        street1: e.target.value
+                      })}
+                      className="w-full p-2 border rounded"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Address in United States line 2 (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.usAddress?.street2 || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'usAddress', {
+                        ...formData.personalInfo.usAddress,
+                        street2: e.target.value
+                      })}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      City <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.usAddress?.city || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'usAddress', {
+                        ...formData.personalInfo.usAddress,
+                        city: e.target.value
+                      })}
+                      className="w-full p-2 border rounded"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      State <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.personalInfo.usAddress?.state || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'usAddress', {
+                        ...formData.personalInfo.usAddress,
+                        state: e.target.value
+                      })}
+                      className="w-full p-2 border rounded"
+                      required
+                    >
+                      <option value="">Select State</option>
+                      {US_STATES.map(state => (
+                        <option key={state.code} value={state.code}>{state.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      ZIP Code <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.usAddress?.zipCode || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'usAddress', {
+                        ...formData.personalInfo.usAddress,
+                        zipCode: e.target.value
+                      })}
+                      className="w-full p-2 border rounded"
+                      required
+                      pattern="[0-9]{5}"
+                      maxLength="5"
+                      placeholder="12345"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Phone Numbers Section */}
@@ -634,32 +1583,32 @@ const ApplyNow = () => {
               
               {/* Mobile Phone */}
               <div>
-                <label className="block text-sm font-medium mb-1">Mobile phone</label>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-gray-600">Country code</label>
-                    <select
-                      value={formData.contactInfo.phone.mobile.countryCode}
-                      onChange={(e) => handleInputChange('contactInfo', 'phone', {
-                        ...formData.contactInfo.phone,
-                        mobile: { ...formData.contactInfo.phone.mobile, countryCode: e.target.value }
-                      })}
-                      className="w-full p-2 border rounded"
+                <label className="block text-sm font-medium mb-2">Mobile phone</label>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-1">
+                    <label className="block text-sm font-medium mb-1">
+                      Country code
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.phone.mobile.countryCode}
+                      className="w-full p-2 border rounded bg-gray-100"
                       disabled
-                    >
-                      <option value="+977">+977</option>
-                    </select>
+                    />
                   </div>
-                  <div>
-                    <label className="block text-sm text-gray-600">
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium mb-1">
                       Phone number <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="tel"
-                      value={formData.contactInfo.phone.mobile.number}
-                      onChange={(e) => handleInputChange('contactInfo', 'phone', {
-                        ...formData.contactInfo.phone,
-                        mobile: { ...formData.contactInfo.phone.mobile, number: e.target.value }
+                      value={formData.personalInfo.phone.mobile.number}
+                      onChange={(e) => handleInputChange('personalInfo', 'phone', {
+                        ...formData.personalInfo.phone,
+                        mobile: {
+                          ...formData.personalInfo.phone.mobile,
+                          number: e.target.value
+                        }
                       })}
                       className="w-full p-2 border rounded"
                       required
@@ -670,30 +1619,32 @@ const ApplyNow = () => {
 
               {/* Home Phone */}
               <div>
-                <label className="block text-sm font-medium mb-1">Home phone (optional)</label>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-gray-600">Country code</label>
-                    <select
-                      value={formData.contactInfo.phone.home.countryCode}
-                      onChange={(e) => handleInputChange('contactInfo', 'phone', {
-                        ...formData.contactInfo.phone,
-                        home: { ...formData.contactInfo.phone.home, countryCode: e.target.value }
-                      })}
-                      className="w-full p-2 border rounded"
+                <label className="block text-sm font-medium mb-2">Home phone (optional)</label>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-1">
+                    <label className="block text-sm font-medium mb-1">
+                      Country code (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.phone.home.countryCode}
+                      className="w-full p-2 border rounded bg-gray-100"
                       disabled
-                    >
-                      <option value="+977">+977</option>
-                    </select>
+                    />
                   </div>
-                  <div>
-                    <label className="block text-sm text-gray-600">Phone number</label>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium mb-1">
+                      Phone number (optional)
+                    </label>
                     <input
                       type="tel"
-                      value={formData.contactInfo.phone.home.number}
-                      onChange={(e) => handleInputChange('contactInfo', 'phone', {
-                        ...formData.contactInfo.phone,
-                        home: { ...formData.contactInfo.phone.home, number: e.target.value }
+                      value={formData.personalInfo.phone.home.number}
+                      onChange={(e) => handleInputChange('personalInfo', 'phone', {
+                        ...formData.personalInfo.phone,
+                        home: {
+                          ...formData.personalInfo.phone.home,
+                          number: e.target.value
+                        }
                       })}
                       className="w-full p-2 border rounded"
                     />
@@ -703,60 +1654,65 @@ const ApplyNow = () => {
             </div>
 
             {/* Emergency Contact Section */}
-            <div className="space-y-4">
+            <div className="space-y-6">
               <h3 className="text-lg font-semibold">Emergency Contact Details</h3>
               
+              {/* Emergency Contact Relationship Dropdown */}
               <div>
                 <label className="block text-sm font-medium mb-1">
                   Relationship <span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={formData.contactInfo.emergencyContact.relationship}
-                  onChange={(e) => handleInputChange('contactInfo', 'emergencyContact', {
-                    ...formData.contactInfo.emergencyContact,
+                  value={formData.personalInfo.emergencyContact.relationship || ''}
+                  onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                    ...formData.personalInfo.emergencyContact,
                     relationship: e.target.value
                   })}
                   className="w-full p-2 border rounded"
                   required
                 >
-                  <option value="">Select relationship</option>
+                  <option value="">Select Relationship</option>
                   <option value="Father">Father</option>
                   <option value="Mother">Mother</option>
+                  <option value="Brother">Brother</option>
+                  <option value="Sister">Sister</option>
+                  <option value="Grandfather">Grandfather</option>
+                  <option value="Grandmother">Grandmother</option>
                   <option value="Guardian">Guardian</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    First name of emergency contact <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.contactInfo.emergencyContact.firstName}
-                    onChange={(e) => handleInputChange('contactInfo', 'emergencyContact', {
-                      ...formData.contactInfo.emergencyContact,
-                      firstName: e.target.value
-                    })}
-                    className="w-full p-2 border rounded"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Last name of emergency contact <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.contactInfo.emergencyContact.lastName}
-                    onChange={(e) => handleInputChange('contactInfo', 'emergencyContact', {
-                      ...formData.contactInfo.emergencyContact,
-                      lastName: e.target.value
-                    })}
-                    className="w-full p-2 border rounded"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  First name of emergency contact <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.personalInfo.emergencyContact.firstName || ''}
+                  onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                    ...formData.personalInfo.emergencyContact,
+                    firstName: e.target.value
+                  })}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Last name of emergency contact <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.personalInfo.emergencyContact.lastName || ''}
+                  onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                    ...formData.personalInfo.emergencyContact,
+                    lastName: e.target.value
+                  })}
+                  className="w-full p-2 border rounded"
+                  required
+                />
               </div>
 
               <div>
@@ -765,9 +1721,9 @@ const ApplyNow = () => {
                 </label>
                 <input
                   type="email"
-                  value={formData.contactInfo.emergencyContact.email}
-                  onChange={(e) => handleInputChange('contactInfo', 'emergencyContact', {
-                    ...formData.contactInfo.emergencyContact,
+                  value={formData.personalInfo.emergencyContact.email || ''}
+                  onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                    ...formData.personalInfo.emergencyContact,
                     email: e.target.value
                   })}
                   className="w-full p-2 border rounded"
@@ -777,36 +1733,32 @@ const ApplyNow = () => {
 
               {/* Emergency Contact Phone */}
               <div>
-                <label className="block text-sm font-medium mb-1">Emergency contact phone</label>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-gray-600">
-                      Country code <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium mb-2">Emergency contact phone</label>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-1">
+                    <label className="block text-sm font-medium mb-1">
+                      Country code
                     </label>
-                    <select
-                      value={formData.contactInfo.emergencyContact.phone.countryCode}
-                      onChange={(e) => handleInputChange('contactInfo', 'emergencyContact', {
-                        ...formData.contactInfo.emergencyContact,
-                        phone: { ...formData.contactInfo.emergencyContact.phone, countryCode: e.target.value }
-                      })}
-                      className="w-full p-2 border rounded"
-                      required
-                    >
-                      <option value="">Select country code</option>
-                      <option value="+977">+977</option>
-                      {/* Add more country codes as needed */}
-                    </select>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.emergencyContact.phone.countryCode}
+                      className="w-full p-2 border rounded bg-gray-100"
+                      disabled
+                    />
                   </div>
-                  <div>
-                    <label className="block text-sm text-gray-600">
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium mb-1">
                       Phone number <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="tel"
-                      value={formData.contactInfo.emergencyContact.phone.number}
-                      onChange={(e) => handleInputChange('contactInfo', 'emergencyContact', {
-                        ...formData.contactInfo.emergencyContact,
-                        phone: { ...formData.contactInfo.emergencyContact.phone, number: e.target.value }
+                      value={formData.personalInfo.emergencyContact.phone.number}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
+                        phone: {
+                          ...formData.personalInfo.emergencyContact.phone,
+                          number: e.target.value
+                        }
                       })}
                       className="w-full p-2 border rounded"
                       required
@@ -817,18 +1769,18 @@ const ApplyNow = () => {
 
               {/* Same as Home Address Question */}
               <div>
-                <h3 className="text-lg font-semibold mb-2">
+                <label className="block text-sm font-medium mb-2">
                   Is the emergency contact's address the same as your home address?
-                </h3>
+                </label>
                 <div className="space-x-4">
                   <label className="inline-flex items-center">
                     <input
                       type="radio"
                       name="sameAsHome"
                       value="yes"
-                      checked={formData.contactInfo.emergencyContact.sameAsHome}
-                      onChange={(e) => handleInputChange('contactInfo', 'emergencyContact', {
-                        ...formData.contactInfo.emergencyContact,
+                      checked={formData.personalInfo.emergencyContact.sameAsHome === true}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
                         sameAsHome: e.target.value === 'yes'
                       })}
                       className="mr-2"
@@ -840,9 +1792,9 @@ const ApplyNow = () => {
                       type="radio"
                       name="sameAsHome"
                       value="no"
-                      checked={!formData.contactInfo.emergencyContact.sameAsHome}
-                      onChange={(e) => handleInputChange('contactInfo', 'emergencyContact', {
-                        ...formData.contactInfo.emergencyContact,
+                      checked={formData.personalInfo.emergencyContact.sameAsHome === false}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
                         sameAsHome: e.target.value === 'yes'
                       })}
                       className="mr-2"
@@ -851,25 +1803,153 @@ const ApplyNow = () => {
                   </label>
                 </div>
               </div>
+
+              {/* Conditional Emergency Contact Address */}
+              {formData.personalInfo.emergencyContact.sameAsHome === false && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Street address <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.emergencyContact.address?.street1 || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
+                        address: {
+                          ...formData.personalInfo.emergencyContact.address,
+                          street1: e.target.value
+                        }
+                      })}
+                      className="w-full p-2 border rounded"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Street address line 2 (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.emergencyContact.address?.street2 || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
+                        address: {
+                          ...formData.personalInfo.emergencyContact.address,
+                          street2: e.target.value
+                        }
+                      })}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      City <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.emergencyContact.address?.city || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
+                        address: {
+                          ...formData.personalInfo.emergencyContact.address,
+                          city: e.target.value
+                        }
+                      })}
+                      className="w-full p-2 border rounded"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Province / State <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.emergencyContact.address?.state || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
+                        address: {
+                          ...formData.personalInfo.emergencyContact.address,
+                          state: e.target.value
+                        }
+                      })}
+                      className="w-full p-2 border rounded"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Postal code (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.personalInfo.emergencyContact.address?.postalCode || ''}
+                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
+                        ...formData.personalInfo.emergencyContact,
+                        address: {
+                          ...formData.personalInfo.emergencyContact.address,
+                          postalCode: e.target.value
+                        }
+                      })}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Country <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.personalInfo.emergencyContact.address?.country || ''}
+                      onChange={(e) => {
+                        const country = e.target.value;
+                        handleInputChange('personalInfo', 'emergencyContact', {
+                          ...formData.personalInfo.emergencyContact,
+                          address: {
+                            ...formData.personalInfo.emergencyContact.address,
+                            country: country
+                          }
+                        });
+                      }}
+                      className="w-full p-2 border rounded"
+                      required
+                    >
+                      <option value="">Select Country</option>
+                      {Object.keys(COUNTRY_CODES).map(country => (
+                        <option key={country} value={country}>{country}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
       case 3:
         return (
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold">Education History</h2>
-            
-            {/* Secondary School Details */}
+            {/* Header */}
+            <div>
+              <h2 className="text-2xl font-bold">Education History</h2>
+            </div>
+
+            {/* Primary School Section */}
             <div className="space-y-6">
               <h3 className="text-lg font-semibold">Secondary / High School Details</h3>
-              
+
+              {/* School Name */}
               <div>
                 <label className="block text-sm font-medium mb-1">
                   Name of School <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  value={formData.educationHistory.secondarySchool.name}
+                  value={formData.educationHistory.secondarySchool.name || ''}
                   onChange={(e) => handleInputChange('educationHistory', 'secondarySchool', {
                     ...formData.educationHistory.secondarySchool,
                     name: e.target.value
@@ -879,47 +1959,54 @@ const ApplyNow = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    City <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.educationHistory.secondarySchool.city}
-                    onChange={(e) => handleInputChange('educationHistory', 'secondarySchool', {
-                      ...formData.educationHistory.secondarySchool,
-                      city: e.target.value
-                    })}
-                    className="w-full p-2 border rounded"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Country <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.educationHistory.secondarySchool.country}
-                    onChange={(e) => handleInputChange('educationHistory', 'secondarySchool', {
-                      ...formData.educationHistory.secondarySchool,
-                      country: e.target.value
-                    })}
-                    className="w-full p-2 border rounded"
-                    required
-                  />
-                </div>
+              {/* City */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  City <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.educationHistory.secondarySchool.city || ''}
+                  onChange={(e) => handleInputChange('educationHistory', 'secondarySchool', {
+                    ...formData.educationHistory.secondarySchool,
+                    city: e.target.value
+                  })}
+                  className="w-full p-2 border rounded"
+                  required
+                />
+              </div>
+
+              {/* Country */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Country <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.educationHistory.secondarySchool.country || ''}
+                  onChange={(e) => handleInputChange('educationHistory', 'secondarySchool', {
+                    ...formData.educationHistory.secondarySchool,
+                    country: e.target.value
+                  })}
+                  className="w-full p-2 border rounded"
+                  required
+                >
+                  <option value="">Select Country</option>
+                  {COUNTRIES.map(country => (
+                    <option key={country} value={country}>{country}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Start Date */}
               <div>
-                <label className="block text-sm font-medium mb-2">When did you start?</label>
+                <label className="block text-sm font-medium mb-2">
+                  When did you start? <span className="text-red-500">*</span>
+                </label>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-600">Month</label>
+                    <label className="block text-sm font-medium mb-1">Month</label>
                     <select
-                      value={formData.educationHistory.secondarySchool.startDate.month}
+                      value={formData.educationHistory.secondarySchool.startDate?.month || ''}
                       onChange={(e) => handleInputChange('educationHistory', 'secondarySchool', {
                         ...formData.educationHistory.secondarySchool,
                         startDate: {
@@ -931,24 +2018,16 @@ const ApplyNow = () => {
                       required
                     >
                       <option value="">Select Month</option>
-                      <option value="01">January</option>
-                      <option value="02">February</option>
-                      <option value="03">March</option>
-                      <option value="04">April</option>
-                      <option value="05">May</option>
-                      <option value="06">June</option>
-                      <option value="07">July</option>
-                      <option value="08">August</option>
-                      <option value="09">September</option>
-                      <option value="10">October</option>
-                      <option value="11">November</option>
-                      <option value="12">December</option>
+                      {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                        'August', 'September', 'October', 'November', 'December'].map((month) => (
+                        <option key={month} value={month}>{month}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600">Year</label>
+                    <label className="block text-sm font-medium mb-1">Year</label>
                     <select
-                      value={formData.educationHistory.secondarySchool.startDate.year}
+                      value={formData.educationHistory.secondarySchool.startDate?.year || ''}
                       onChange={(e) => handleInputChange('educationHistory', 'secondarySchool', {
                         ...formData.educationHistory.secondarySchool,
                         startDate: {
@@ -960,9 +2039,10 @@ const ApplyNow = () => {
                       required
                     >
                       <option value="">Select Year</option>
-                      {Array.from({ length: 20 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
+                      {[...Array(20)].map((_, i) => {
+                        const year = new Date().getFullYear() - 19 + i;
+                        return <option key={year} value={year}>{year}</option>;
+                      })}
                     </select>
                   </div>
                 </div>
@@ -973,9 +2053,9 @@ const ApplyNow = () => {
                 <label className="block text-sm font-medium mb-2">When did / will you graduate?</label>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-600">Month</label>
+                    <label className="block text-sm font-medium mb-1">Month</label>
                     <select
-                      value={formData.educationHistory.secondarySchool.graduationDate.month}
+                      value={formData.educationHistory.secondarySchool.graduationDate?.month || ''}
                       onChange={(e) => handleInputChange('educationHistory', 'secondarySchool', {
                         ...formData.educationHistory.secondarySchool,
                         graduationDate: {
@@ -984,27 +2064,18 @@ const ApplyNow = () => {
                         }
                       })}
                       className="w-full p-2 border rounded"
-                      required
                     >
                       <option value="">Select Month</option>
-                      <option value="01">January</option>
-                      <option value="02">February</option>
-                      <option value="03">March</option>
-                      <option value="04">April</option>
-                      <option value="05">May</option>
-                      <option value="06">June</option>
-                      <option value="07">July</option>
-                      <option value="08">August</option>
-                      <option value="09">September</option>
-                      <option value="10">October</option>
-                      <option value="11">November</option>
-                      <option value="12">December</option>
+                      {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                        'August', 'September', 'October', 'November', 'December'].map((month) => (
+                        <option key={month} value={month}>{month}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600">Year</label>
+                    <label className="block text-sm font-medium mb-1">Year</label>
                     <select
-                      value={formData.educationHistory.secondarySchool.graduationDate.year}
+                      value={formData.educationHistory.secondarySchool.graduationDate?.year || ''}
                       onChange={(e) => handleInputChange('educationHistory', 'secondarySchool', {
                         ...formData.educationHistory.secondarySchool,
                         graduationDate: {
@@ -1013,33 +2084,105 @@ const ApplyNow = () => {
                         }
                       })}
                       className="w-full p-2 border rounded"
-                      required
                     >
                       <option value="">Select Year</option>
-                      {Array.from({ length: 20 }, (_, i) => new Date().getFullYear() - i).map(year => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
+                      {[...Array(20)].map((_, i) => {
+                        const year = new Date().getFullYear() - 15 + i;
+                        return <option key={year} value={year}>{year}</option>;
+                      })}
                     </select>
                   </div>
                 </div>
               </div>
 
               {/* Advanced Standing Credits */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Did you complete Advanced Standing Credits at this school?
+                  </label>
+                  <div className="space-x-4">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name="primarySchoolAdvancedStandingCredits"
+                        value="yes"
+                        checked={formData.educationHistory.secondarySchool.advancedStandingCredits === true}
+                        onChange={(e) => handleInputChange('educationHistory', 'secondarySchool', {
+                          ...formData.educationHistory.secondarySchool,
+                          advancedStandingCredits: e.target.value === 'yes'
+                        })}
+                        className="mr-2"
+                      />
+                      Yes
+                    </label>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name="primarySchoolAdvancedStandingCredits"
+                        value="no"
+                        checked={formData.educationHistory.secondarySchool.advancedStandingCredits === false}
+                        onChange={(e) => handleInputChange('educationHistory', 'secondarySchool', {
+                          ...formData.educationHistory.secondarySchool,
+                          advancedStandingCredits: e.target.value === 'yes'
+                        })}
+                        className="mr-2"
+                      />
+                      No
+                    </label>
+                  </div>
+                </div>
+
+                {/* Credit Types (shown when Advanced Standing Credits is Yes) */}
+                {formData.educationHistory.secondarySchool.advancedStandingCredits && (
+                  <div className="space-y-4 pl-4 border-l-2 border-gray-200">
+                    <label className="block text-sm font-medium mb-2">
+                      Which Advanced Standing Credits did you complete?
+                    </label>
+                    {['aice', 'ap', 'asLevel', 'ib', 'other'].map((creditType) => (
+                      <label key={creditType} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={formData.educationHistory.secondarySchool.creditTypes?.[creditType] || false}
+                          onChange={(e) => handleInputChange('educationHistory', 'secondarySchool', {
+                            ...formData.educationHistory.secondarySchool,
+                            creditTypes: {
+                              ...formData.educationHistory.secondarySchool.creditTypes,
+                              [creditType]: e.target.checked
+                            }
+                          })}
+                          className="mr-2"
+                        />
+                        {creditType === 'aice' ? 'AICE Credit' :
+                         creditType === 'ap' ? 'AP Credit' :
+                         creditType === 'asLevel' ? 'AS/A Level Credit' :
+                         creditType === 'ib' ? 'IB Credit' : 'Other Credit'}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Other Schools Question */}
+            <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium mb-2">
-                  Did you complete Advanced Standing Credits at this school?
-                </h3>
+                <label className="block text-sm font-medium mb-2">
+                  Have you attended any other schools?
+                </label>
                 <div className="space-x-4">
                   <label className="inline-flex items-center">
                     <input
                       type="radio"
-                      name="advancedStandingCredits"
+                      name="otherSchools"
                       value="yes"
-                      checked={formData.educationHistory.secondarySchool.advancedStandingCredits}
-                      onChange={(e) => handleInputChange('educationHistory', 'secondarySchool', {
-                        ...formData.educationHistory.secondarySchool,
-                        advancedStandingCredits: e.target.value === 'yes'
-                      })}
+                      checked={formData.educationHistory.otherSchools === true}
+                      onChange={(e) => {
+                        handleInputChange('educationHistory', 'otherSchools', e.target.value === 'yes');
+                        if (e.target.value === 'yes' && formData.educationHistory.additionalSchools.length === 0) {
+                          addSchool();
+                        }
+                      }}
                       className="mr-2"
                     />
                     Yes
@@ -1047,137 +2190,1094 @@ const ApplyNow = () => {
                   <label className="inline-flex items-center">
                     <input
                       type="radio"
-                      name="advancedStandingCredits"
+                      name="otherSchools"
                       value="no"
-                      checked={!formData.educationHistory.secondarySchool.advancedStandingCredits}
-                      onChange={(e) => handleInputChange('educationHistory', 'secondarySchool', {
-                        ...formData.educationHistory.secondarySchool,
-                        advancedStandingCredits: e.target.value === 'yes'
-                      })}
+                      checked={formData.educationHistory.otherSchools === false}
+                      onChange={(e) => handleInputChange('educationHistory', 'otherSchools', e.target.value === 'yes')}
                       className="mr-2"
                     />
                     No
                   </label>
                 </div>
               </div>
+
+              {/* Additional Schools */}
+              {formData.educationHistory.otherSchools && formData.educationHistory.additionalSchools.map((school, index) => (
+                <div key={index} className="space-y-6 mt-8 p-6 border rounded-lg bg-gray-50">
+                  <h3 className="text-lg font-semibold">School {index + 2} Details</h3>
+                  
+                  {/* School Name */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Name of School</label>
+                    <input
+                      type="text"
+                      value={school.name}
+                      onChange={(e) => {
+                        const updatedSchools = [...formData.educationHistory.additionalSchools];
+                        updatedSchools[index] = { ...school, name: e.target.value };
+                        handleInputChange('educationHistory', 'additionalSchools', updatedSchools);
+                      }}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+
+                  {/* City */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">City</label>
+                    <input
+                      type="text"
+                      value={school.city}
+                      onChange={(e) => {
+                        const updatedSchools = [...formData.educationHistory.additionalSchools];
+                        updatedSchools[index] = { ...school, city: e.target.value };
+                        handleInputChange('educationHistory', 'additionalSchools', updatedSchools);
+                      }}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+
+                  {/* Country */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Country</label>
+                    <select
+                      value={school.country}
+                      onChange={(e) => {
+                        const updatedSchools = [...formData.educationHistory.additionalSchools];
+                        updatedSchools[index] = { ...school, country: e.target.value };
+                        handleInputChange('educationHistory', 'additionalSchools', updatedSchools);
+                      }}
+                      className="w-full p-2 border rounded"
+                    >
+                      <option value="">Select Country</option>
+                      {COUNTRIES.map(country => (
+                        <option key={country} value={country}>{country}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Start Date */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">When did you start?</label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Month</label>
+                        <select
+                          value={school.startDate?.month}
+                          onChange={(e) => {
+                            const updatedSchools = [...formData.educationHistory.additionalSchools];
+                            updatedSchools[index] = {
+                              ...school,
+                              startDate: { ...school.startDate, month: e.target.value }
+                            };
+                            handleInputChange('educationHistory', 'additionalSchools', updatedSchools);
+                          }}
+                          className="w-full p-2 border rounded"
+                        >
+                          <option value="">Select Month</option>
+                          {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                            'August', 'September', 'October', 'November', 'December'].map((month) => (
+                            <option key={month} value={month}>{month}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Year</label>
+                        <select
+                          value={school.startDate?.year}
+                          onChange={(e) => {
+                            const updatedSchools = [...formData.educationHistory.additionalSchools];
+                            updatedSchools[index] = {
+                              ...school,
+                              startDate: { ...school.startDate, year: e.target.value }
+                            };
+                            handleInputChange('educationHistory', 'additionalSchools', updatedSchools);
+                          }}
+                          className="w-full p-2 border rounded"
+                        >
+                          <option value="">Select Year</option>
+                          {[...Array(20)].map((_, i) => {
+                            const year = new Date().getFullYear() - 19 + i;
+                            return <option key={year} value={year}>{year}</option>;
+                          })}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Graduation Date */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">When did / will you graduate?</label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Month</label>
+                        <select
+                          value={school.graduationDate?.month}
+                          onChange={(e) => {
+                            const updatedSchools = [...formData.educationHistory.additionalSchools];
+                            updatedSchools[index] = {
+                              ...school,
+                              graduationDate: { ...school.graduationDate, month: e.target.value }
+                            };
+                            handleInputChange('educationHistory', 'additionalSchools', updatedSchools);
+                          }}
+                          className="w-full p-2 border rounded"
+                        >
+                          <option value="">Select Month</option>
+                          {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                            'August', 'September', 'October', 'November', 'December'].map((month) => (
+                            <option key={month} value={month}>{month}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Year</label>
+                        <select
+                          value={school.graduationDate?.year}
+                          onChange={(e) => {
+                            const updatedSchools = [...formData.educationHistory.additionalSchools];
+                            updatedSchools[index] = {
+                              ...school,
+                              graduationDate: { ...school.graduationDate, year: e.target.value }
+                            };
+                            handleInputChange('educationHistory', 'additionalSchools', updatedSchools);
+                          }}
+                          className="w-full p-2 border rounded"
+                        >
+                          <option value="">Select Year</option>
+                          {[...Array(20)].map((_, i) => {
+                            const year = new Date().getFullYear() - 19 + i;
+                            return <option key={year} value={year}>{year}</option>;
+                          })}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Advanced Standing Credits */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Did you complete Advanced Standing Credits at this school?
+                    </label>
+                    <div className="space-x-4">
+                      <label className="inline-flex items-center">
+                        <input
+                          type="radio"
+                          name={`advancedStandingCredits${index}`}
+                          value="yes"
+                          checked={school.advancedStandingCredits === true}
+                          onChange={(e) => {
+                            const updatedSchools = [...formData.educationHistory.additionalSchools];
+                            updatedSchools[index] = {
+                              ...school,
+                              advancedStandingCredits: e.target.value === 'yes'
+                            };
+                            handleInputChange('educationHistory', 'additionalSchools', updatedSchools);
+                          }}
+                          className="mr-2"
+                        />
+                        Yes
+                      </label>
+                      <label className="inline-flex items-center">
+                        <input
+                          type="radio"
+                          name={`advancedStandingCredits${index}`}
+                          value="no"
+                          checked={school.advancedStandingCredits === false}
+                          onChange={(e) => {
+                            const updatedSchools = [...formData.educationHistory.additionalSchools];
+                            updatedSchools[index] = {
+                              ...school,
+                              advancedStandingCredits: e.target.value === 'yes'
+                            };
+                            handleInputChange('educationHistory', 'additionalSchools', updatedSchools);
+                          }}
+                          className="mr-2"
+                        />
+                        No
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Credit Types (shown when Advanced Standing Credits is Yes) */}
+                  {school.advancedStandingCredits && (
+                    <div className="space-y-4 pl-4 border-l-2 border-gray-200">
+                      <label className="block text-sm font-medium mb-2">
+                        Which Advanced Standing Credits did you complete?
+                      </label>
+                      {['aice', 'ap', 'asLevel', 'ib', 'other'].map((creditType) => (
+                        <label key={creditType} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={school.creditTypes?.[creditType] || false}
+                            onChange={(e) => {
+                              const updatedSchools = [...formData.educationHistory.additionalSchools];
+                              updatedSchools[index] = {
+                                ...school,
+                                creditTypes: {
+                                  ...school.creditTypes,
+                                  [creditType]: e.target.checked
+                                }
+                              };
+                              handleInputChange('educationHistory', 'additionalSchools', updatedSchools);
+                            }}
+                            className="mr-2"
+                          />
+                          {creditType === 'aice' ? 'AICE Credit' :
+                           creditType === 'ap' ? 'AP Credit' :
+                           creditType === 'asLevel' ? 'AS/A Level Credit' :
+                           creditType === 'ib' ? 'IB Credit' : 'Other Credit'}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Add Another School Button */}
+              {formData.educationHistory.otherSchools && formData.educationHistory.additionalSchools.length > 0 && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium mb-2">
+                    Have you attended any other schools?
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addSchool}
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    Add Another School
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Other Schools Question */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium mb-2">Have you attended any other schools?</h3>
-              <div className="space-x-4">
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="otherSchools"
-                    value="yes"
-                    checked={formData.educationHistory.otherSchools}
-                    onChange={(e) => handleInputChange('educationHistory', 'otherSchools', e.target.value === 'yes')}
-                    className="mr-2"
-                  />
-                  Yes
+            {/* Post-Secondary Schools Section */}
+            <div className="space-y-6 mt-8">
+              <h3 className="text-lg font-semibold">Post-Secondary School Details</h3>
+              
+              {/* Initial Question */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Have you attended any post-secondary schools?
                 </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="otherSchools"
-                    value="no"
-                    checked={!formData.educationHistory.otherSchools}
-                    onChange={(e) => handleInputChange('educationHistory', 'otherSchools', e.target.value === 'yes')}
-                    className="mr-2"
-                  />
-                  No
-                </label>
+                <div className="space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="postSecondary"
+                      value="yes"
+                      checked={formData.educationHistory.postSecondary === true}
+                      onChange={(e) => handleInputChange('educationHistory', 'postSecondary', e.target.value === 'yes')}
+                      className="mr-2"
+                    />
+                    Yes
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="postSecondary"
+                      value="no"
+                      checked={formData.educationHistory.postSecondary === false}
+                      onChange={(e) => handleInputChange('educationHistory', 'postSecondary', e.target.value === 'yes')}
+                      className="mr-2"
+                    />
+                    No
+                  </label>
+                </div>
               </div>
+
+              {/* Post-Secondary School Details Form */}
+              {formData.educationHistory.postSecondary && (
+                <div className="space-y-6">
+                  {formData.educationHistory.postSecondarySchools.map((school, index) => (
+                    <div key={index} className="space-y-6 p-6 border rounded-lg bg-gray-50">
+                      {/* School Name */}
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Name of School</label>
+                        <input
+                          type="text"
+                          value={school.name}
+                          onChange={(e) => {
+                            const updatedSchools = [...formData.educationHistory.postSecondarySchools];
+                            updatedSchools[index] = { ...school, name: e.target.value };
+                            handleInputChange('educationHistory', 'postSecondarySchools', updatedSchools);
+                          }}
+                          className="w-full p-2 border rounded"
+                        />
+                      </div>
+
+                      {/* City */}
+                      <div>
+                        <label className="block text-sm font-medium mb-1">City</label>
+                        <input
+                          type="text"
+                          value={school.city}
+                          onChange={(e) => {
+                            const updatedSchools = [...formData.educationHistory.postSecondarySchools];
+                            updatedSchools[index] = { ...school, city: e.target.value };
+                            handleInputChange('educationHistory', 'postSecondarySchools', updatedSchools);
+                          }}
+                          className="w-full p-2 border rounded"
+                        />
+                      </div>
+
+                      {/* Country */}
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Country</label>
+                        <select
+                          value={school.country}
+                          onChange={(e) => {
+                            const updatedSchools = [...formData.educationHistory.postSecondarySchools];
+                            updatedSchools[index] = { ...school, country: e.target.value };
+                            handleInputChange('educationHistory', 'postSecondarySchools', updatedSchools);
+                          }}
+                          className="w-full p-2 border rounded"
+                        >
+                          <option value="">Select Country</option>
+                          {COUNTRIES.map(country => (
+                            <option key={country} value={country}>{country}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Major */}
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Major</label>
+                        <input
+                          type="text"
+                          value={school.major}
+                          onChange={(e) => {
+                            const updatedSchools = [...formData.educationHistory.postSecondarySchools];
+                            updatedSchools[index] = { ...school, major: e.target.value };
+                            handleInputChange('educationHistory', 'postSecondarySchools', updatedSchools);
+                          }}
+                          className="w-full p-2 border rounded"
+                        />
+                      </div>
+
+                      {/* Start Date */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">When did you start?</label>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Month</label>
+                            <select
+                              value={school.startDate?.month}
+                              onChange={(e) => {
+                                const updatedSchools = [...formData.educationHistory.postSecondarySchools];
+                                updatedSchools[index] = {
+                                  ...school,
+                                  startDate: { ...school.startDate, month: e.target.value }
+                                };
+                                handleInputChange('educationHistory', 'postSecondarySchools', updatedSchools);
+                              }}
+                              className="w-full p-2 border rounded"
+                            >
+                              <option value="">Select Month</option>
+                              {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                                'August', 'September', 'October', 'November', 'December'].map((month) => (
+                                <option key={month} value={month}>{month}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Year</label>
+                            <select
+                              value={school.startDate?.year}
+                              onChange={(e) => {
+                                const updatedSchools = [...formData.educationHistory.postSecondarySchools];
+                                updatedSchools[index] = {
+                                  ...school,
+                                  startDate: { ...school.startDate, year: e.target.value }
+                                };
+                                handleInputChange('educationHistory', 'postSecondarySchools', updatedSchools);
+                              }}
+                              className="w-full p-2 border rounded"
+                            >
+                              <option value="">Select Year</option>
+                              {[...Array(20)].map((_, i) => {
+                                const year = new Date().getFullYear() - 19 + i;
+                                return <option key={year} value={year}>{year}</option>;
+                              })}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Graduation Date */}
+                      <div>
+                        <label className="block text-sm font-medium mb-2">When did / will you graduate?</label>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Month</label>
+                            <select
+                              value={school.graduationDate?.month}
+                              onChange={(e) => {
+                                const updatedSchools = [...formData.educationHistory.postSecondarySchools];
+                                updatedSchools[index] = {
+                                  ...school,
+                                  graduationDate: { ...school.graduationDate, month: e.target.value }
+                                };
+                                handleInputChange('educationHistory', 'postSecondarySchools', updatedSchools);
+                              }}
+                              className="w-full p-2 border rounded"
+                            >
+                              <option value="">Select Month</option>
+                              {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                                'August', 'September', 'October', 'November', 'December'].map((month) => (
+                                <option key={month} value={month}>{month}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium mb-1">Year</label>
+                            <select
+                              value={school.graduationDate?.year}
+                              onChange={(e) => {
+                                const updatedSchools = [...formData.educationHistory.postSecondarySchools];
+                                updatedSchools[index] = {
+                                  ...school,
+                                  graduationDate: { ...school.graduationDate, year: e.target.value }
+                                };
+                                handleInputChange('educationHistory', 'postSecondarySchools', updatedSchools);
+                              }}
+                              className="w-full p-2 border rounded"
+                            >
+                              <option value="">Select Year</option>
+                              {[...Array(20)].map((_, i) => {
+                                const year = new Date().getFullYear() - 19 + i;
+                                return <option key={year} value={year}>{year}</option>;
+                              })}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Additional Schools Question */}
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium mb-2">
+                      Have you attended additional post-secondary schools?
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updatedSchools = [...formData.educationHistory.postSecondarySchools, {
+                          name: '',
+                          city: '',
+                          country: '',
+                          major: '',
+                          startDate: { month: '', year: '' },
+                          graduationDate: { month: '', year: '' }
+                        }];
+                        handleInputChange('educationHistory', 'postSecondarySchools', updatedSchools);
+                      }}
+                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    >
+                      Add Another Post-Secondary School
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Post-Secondary School Question */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium mb-2">Have you attended any post-secondary schools?</h3>
-              <div className="space-x-4">
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="postSecondary"
-                    value="yes"
-                    checked={formData.educationHistory.postSecondary}
-                    onChange={(e) => handleInputChange('educationHistory', 'postSecondary', e.target.value === 'yes')}
-                    className="mr-2"
-                  />
-                  Yes
+            {/* SAT/ACT Section */}
+            <div className="space-y-6 mt-8">
+              <h3 className="text-lg font-semibold">SAT / ACT Exam Results</h3>
+              
+              {/* Initial Question */}
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Have you taken an SAT or ACT Exam?
                 </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="postSecondary"
-                    value="no"
-                    checked={!formData.educationHistory.postSecondary}
-                    onChange={(e) => handleInputChange('educationHistory', 'postSecondary', e.target.value === 'yes')}
-                    className="mr-2"
-                  />
-                  No
-                </label>
+                <div className="space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="satAct"
+                      value="yes"
+                      checked={formData.educationHistory.satAct === true}
+                      onChange={(e) => handleInputChange('educationHistory', 'satAct', e.target.value === 'yes')}
+                      className="mr-2"
+                    />
+                    Yes
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="satAct"
+                      value="no"
+                      checked={formData.educationHistory.satAct === false}
+                      onChange={(e) => handleInputChange('educationHistory', 'satAct', e.target.value === 'yes')}
+                      className="mr-2"
+                    />
+                    No
+                  </label>
+                </div>
               </div>
+
+              {/* Exam Details (shown when Yes is selected) */}
+              {formData.educationHistory.satAct && (
+                <div className="space-y-6 p-6 border rounded-lg bg-gray-50">
+                  {/* Exam Type Selection */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Which exam did you take?
+                    </label>
+                    <div className="space-x-4">
+                      <label className="inline-flex items-center">
+                        <input
+                          type="radio"
+                          name="examType"
+                          value="SAT"
+                          checked={formData.educationHistory.examType === 'SAT'}
+                          onChange={(e) => handleInputChange('educationHistory', 'examType', e.target.value)}
+                          className="mr-2"
+                        />
+                        SAT
+                      </label>
+                      <label className="inline-flex items-center">
+                        <input
+                          type="radio"
+                          name="examType"
+                          value="ACT"
+                          checked={formData.educationHistory.examType === 'ACT'}
+                          onChange={(e) => handleInputChange('educationHistory', 'examType', e.target.value)}
+                          className="mr-2"
+                        />
+                        ACT
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Total Score */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Total Score</label>
+                    <input
+                      type="number"
+                      value={formData.educationHistory.examScore || ''}
+                      onChange={(e) => handleInputChange('educationHistory', 'examScore', e.target.value)}
+                      className="w-full p-2 border rounded"
+                      min={formData.educationHistory.examType === 'SAT' ? 400 : 1}
+                      max={formData.educationHistory.examType === 'SAT' ? 1600 : 36}
+                    />
+                  </div>
+
+                  {/* Exam Date */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Date the exam was taken</label>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Day</label>
+                        <select
+                          value={formData.educationHistory.examDate?.day || ''}
+                          onChange={(e) => handleInputChange('educationHistory', 'examDate', {
+                            ...formData.educationHistory.examDate,
+                            day: e.target.value
+                          })}
+                          className="w-full p-2 border rounded"
+                        >
+                          <option value="">Select Day</option>
+                          {[...Array(31)].map((_, i) => (
+                            <option key={i + 1} value={i + 1}>{i + 1}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Month</label>
+                        <select
+                          value={formData.educationHistory.examDate?.month || ''}
+                          onChange={(e) => handleInputChange('educationHistory', 'examDate', {
+                            ...formData.educationHistory.examDate,
+                            month: e.target.value
+                          })}
+                          className="w-full p-2 border rounded"
+                        >
+                          <option value="">Select Month</option>
+                          {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                            'August', 'September', 'October', 'November', 'December'].map((month) => (
+                            <option key={month} value={month}>{month}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Year</label>
+                        <select
+                          value={formData.educationHistory.examDate?.year || ''}
+                          onChange={(e) => handleInputChange('educationHistory', 'examDate', {
+                            ...formData.educationHistory.examDate,
+                            year: e.target.value
+                          })}
+                          className="w-full p-2 border rounded"
+                        >
+                          <option value="">Select Year</option>
+                          {[...Array(5)].map((_, i) => {
+                            const year = new Date().getFullYear() - 4 + i;
+                            return <option key={year} value={year}>{year}</option>;
+                          })}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* SAT/ACT Question */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium mb-2">Have you taken an SAT or ACT Exam?</h3>
-              <div className="space-x-4">
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="satAct"
-                    value="yes"
-                    checked={formData.educationHistory.satAct}
-                    onChange={(e) => handleInputChange('educationHistory', 'satAct', e.target.value === 'yes')}
-                    className="mr-2"
-                  />
-                  Yes
+            {/* Academic Gaps Section */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold">Gaps in Your Academic Record</h3>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Are there any gaps of 6 months or more in your academic record?
                 </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="satAct"
-                    value="no"
-                    checked={!formData.educationHistory.satAct}
-                    onChange={(e) => handleInputChange('educationHistory', 'satAct', e.target.value === 'yes')}
-                    className="mr-2"
-                  />
-                  No
-                </label>
+                <div className="space-x-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="academicGaps"
+                      value="yes"
+                      checked={formData.educationHistory.academicGaps === true}
+                      onChange={(e) => handleInputChange('educationHistory', 'academicGaps', e.target.value === 'yes')}
+                      className="mr-2"
+                    />
+                    Yes
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="academicGaps"
+                      value="no"
+                      checked={formData.educationHistory.academicGaps === false}
+                      onChange={(e) => handleInputChange('educationHistory', 'academicGaps', e.target.value === 'yes')}
+                      className="mr-2"
+                    />
+                    No
+                  </label>
+                </div>
               </div>
-            </div>
 
-            {/* Academic Gaps Question */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium mb-2">
-                Are there any gaps of 6 months or more in your academic record?
-              </h3>
-              <div className="space-x-4">
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="academicGaps"
-                    value="yes"
-                    checked={formData.educationHistory.academicGaps}
-                    onChange={(e) => handleInputChange('educationHistory', 'academicGaps', e.target.value === 'yes')}
-                    className="mr-2"
-                  />
-                  Yes
-                </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="academicGaps"
-                    value="no"
-                    checked={!formData.educationHistory.academicGaps}
-                    onChange={(e) => handleInputChange('educationHistory', 'academicGaps', e.target.value === 'yes')}
-                    className="mr-2"
-                  />
-                  No
-                </label>
-              </div>
+              {/* Conditional fields when Academic Gaps is Yes */}
+              {formData.educationHistory.academicGaps && (
+                <div className="space-y-6 pl-4 border-l-2 border-gray-200">
+                  <label className="block text-sm font-medium mb-2">
+                    What have you been doing? (Select at least one. Check all that apply.)
+                  </label>
+                  
+                  {/* Studying English Option */}
+                  <div className="space-y-4">
+                    <label className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.educationHistory.gapDetails?.studyingEnglish?.selected || false}
+                        onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                          ...formData.educationHistory.gapDetails,
+                          studyingEnglish: {
+                            ...formData.educationHistory.gapDetails?.studyingEnglish,
+                            selected: e.target.checked
+                          }
+                        })}
+                        className="mt-1"
+                      />
+                      <span>Studying English on my own</span>
+                    </label>
+
+                    {formData.educationHistory.gapDetails?.studyingEnglish?.selected && (
+                      <div className="ml-8 space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">When did you start studying English?</label>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Month</label>
+                              <select
+                                value={formData.educationHistory.gapDetails?.studyingEnglish?.startDate?.month || ''}
+                                onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                                  ...formData.educationHistory.gapDetails,
+                                  studyingEnglish: {
+                                    ...formData.educationHistory.gapDetails?.studyingEnglish,
+                                    startDate: {
+                                      ...formData.educationHistory.gapDetails?.studyingEnglish?.startDate,
+                                      month: e.target.value
+                                    }
+                                  }
+                                })}
+                                className="w-full p-2 border rounded"
+                                required
+                              >
+                                <option value="">Select Month</option>
+                                {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                                  'August', 'September', 'October', 'November', 'December'].map((month) => (
+                                  <option key={month} value={month}>{month}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Year</label>
+                              <select
+                                value={formData.educationHistory.gapDetails?.studyingEnglish?.startDate?.year || ''}
+                                onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                                  ...formData.educationHistory.gapDetails,
+                                  studyingEnglish: {
+                                    ...formData.educationHistory.gapDetails?.studyingEnglish,
+                                    startDate: {
+                                      ...formData.educationHistory.gapDetails?.studyingEnglish?.startDate,
+                                      year: e.target.value
+                                    }
+                                  }
+                                })}
+                                className="w-full p-2 border rounded"
+                                required
+                              >
+                                <option value="">Select Year</option>
+                                {[...Array(10)].map((_, i) => {
+                                  const year = new Date().getFullYear() - i;
+                                  return <option key={year} value={year}>{year}</option>;
+                                })}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            When did you finish studying English? Or, if you are still studying, when will you finish?
+                          </label>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Month</label>
+                              <select
+                                value={formData.educationHistory.gapDetails?.studyingEnglish?.endDate?.month || ''}
+                                onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                                  ...formData.educationHistory.gapDetails,
+                                  studyingEnglish: {
+                                    ...formData.educationHistory.gapDetails?.studyingEnglish,
+                                    endDate: {
+                                      ...formData.educationHistory.gapDetails?.studyingEnglish?.endDate,
+                                      month: e.target.value
+                                    }
+                                  }
+                                })}
+                                className="w-full p-2 border rounded"
+                                required
+                              >
+                                <option value="">Select Month</option>
+                                {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                                  'August', 'September', 'October', 'November', 'December'].map((month) => (
+                                  <option key={month} value={month}>{month}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Year</label>
+                              <select
+                                value={formData.educationHistory.gapDetails?.studyingEnglish?.endDate?.year || ''}
+                                onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                                  ...formData.educationHistory.gapDetails,
+                                  studyingEnglish: {
+                                    ...formData.educationHistory.gapDetails?.studyingEnglish,
+                                    endDate: {
+                                      ...formData.educationHistory.gapDetails?.studyingEnglish?.endDate,
+                                      year: e.target.value
+                                    }
+                                  }
+                                })}
+                                className="w-full p-2 border rounded"
+                                required
+                              >
+                                <option value="">Select Year</option>
+                                {[...Array(10)].map((_, i) => {
+                                  const year = new Date().getFullYear() + i;
+                                  return <option key={year} value={year}>{year}</option>;
+                                })}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Working Option */}
+                  <div className="space-y-4">
+                    <label className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.educationHistory.gapDetails?.working?.selected || false}
+                        onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                          ...formData.educationHistory.gapDetails,
+                          working: {
+                            ...formData.educationHistory.gapDetails?.working,
+                            selected: e.target.checked
+                          }
+                        })}
+                        className="mt-1"
+                      />
+                      <span>Working</span>
+                    </label>
+
+                    {formData.educationHistory.gapDetails?.working?.selected && (
+                      <div className="ml-8 space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">When did you start working?</label>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Month</label>
+                              <select
+                                value={formData.educationHistory.gapDetails?.working?.startDate?.month || ''}
+                                onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                                  ...formData.educationHistory.gapDetails,
+                                  working: {
+                                    ...formData.educationHistory.gapDetails?.working,
+                                    startDate: {
+                                      ...formData.educationHistory.gapDetails?.working?.startDate,
+                                      month: e.target.value
+                                    }
+                                  }
+                                })}
+                                className="w-full p-2 border rounded"
+                                required
+                              >
+                                <option value="">Select Month</option>
+                                {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                                  'August', 'September', 'October', 'November', 'December'].map((month) => (
+                                  <option key={month} value={month}>{month}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Year</label>
+                              <select
+                                value={formData.educationHistory.gapDetails?.working?.startDate?.year || ''}
+                                onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                                  ...formData.educationHistory.gapDetails,
+                                  working: {
+                                    ...formData.educationHistory.gapDetails?.working,
+                                    startDate: {
+                                      ...formData.educationHistory.gapDetails?.working?.startDate,
+                                      year: e.target.value
+                                    }
+                                  }
+                                })}
+                                className="w-full p-2 border rounded"
+                                required
+                              >
+                                <option value="">Select Year</option>
+                                {[...Array(10)].map((_, i) => {
+                                  const year = new Date().getFullYear() - i;
+                                  return <option key={year} value={year}>{year}</option>;
+                                })}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">
+                            When did you finish working? Or, if you are still working, when will your employment end?
+                          </label>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Month</label>
+                              <select
+                                value={formData.educationHistory.gapDetails?.working?.endDate?.month || ''}
+                                onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                                  ...formData.educationHistory.gapDetails,
+                                  working: {
+                                    ...formData.educationHistory.gapDetails?.working,
+                                    endDate: {
+                                      ...formData.educationHistory.gapDetails?.working?.endDate,
+                                      month: e.target.value
+                                    }
+                                  }
+                                })}
+                                className="w-full p-2 border rounded"
+                                required
+                              >
+                                <option value="">Select Month</option>
+                                {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                                  'August', 'September', 'October', 'November', 'December'].map((month) => (
+                                  <option key={month} value={month}>{month}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Year</label>
+                              <select
+                                value={formData.educationHistory.gapDetails?.working?.endDate?.year || ''}
+                                onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                                  ...formData.educationHistory.gapDetails,
+                                  working: {
+                                    ...formData.educationHistory.gapDetails?.working,
+                                    endDate: {
+                                      ...formData.educationHistory.gapDetails?.working?.endDate,
+                                      year: e.target.value
+                                    }
+                                  }
+                                })}
+                                className="w-full p-2 border rounded"
+                                required
+                              >
+                                <option value="">Select Year</option>
+                                {[...Array(10)].map((_, i) => {
+                                  const year = new Date().getFullYear() + i;
+                                  return <option key={year} value={year}>{year}</option>;
+                                })}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Other Option */}
+                  <div className="space-y-4">
+                    <label className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.educationHistory.gapDetails?.other?.selected || false}
+                        onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                          ...formData.educationHistory.gapDetails,
+                          other: {
+                            ...formData.educationHistory.gapDetails?.other,
+                            selected: e.target.checked
+                          }
+                        })}
+                        className="mt-1"
+                      />
+                      <span>Other</span>
+                    </label>
+
+                    {formData.educationHistory.gapDetails?.other?.selected && (
+                      <div className="ml-8 space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">What were you doing during the academic gap?</label>
+                          <textarea
+                            value={formData.educationHistory.gapDetails?.other?.description || ''}
+                            onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                              ...formData.educationHistory.gapDetails,
+                              other: {
+                                ...formData.educationHistory.gapDetails?.other,
+                                description: e.target.value
+                              }
+                            })}
+                            className="w-full p-2 border rounded"
+                            rows={3}
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">When did you start?</label>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Month</label>
+                              <select
+                                value={formData.educationHistory.gapDetails?.other?.startDate?.month || ''}
+                                onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                                  ...formData.educationHistory.gapDetails,
+                                  other: {
+                                    ...formData.educationHistory.gapDetails?.other,
+                                    startDate: {
+                                      ...formData.educationHistory.gapDetails?.other?.startDate,
+                                      month: e.target.value
+                                    }
+                                  }
+                                })}
+                                className="w-full p-2 border rounded"
+                                required
+                              >
+                                <option value="">Select Month</option>
+                                {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                                  'August', 'September', 'October', 'November', 'December'].map((month) => (
+                                  <option key={month} value={month}>{month}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Year</label>
+                              <select
+                                value={formData.educationHistory.gapDetails?.other?.startDate?.year || ''}
+                                onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                                  ...formData.educationHistory.gapDetails,
+                                  other: {
+                                    ...formData.educationHistory.gapDetails?.other,
+                                    startDate: {
+                                      ...formData.educationHistory.gapDetails?.other?.startDate,
+                                      year: e.target.value
+                                    }
+                                  }
+                                })}
+                                className="w-full p-2 border rounded"
+                                required
+                              >
+                                <option value="">Select Year</option>
+                                {[...Array(10)].map((_, i) => {
+                                  const year = new Date().getFullYear() - i;
+                                  return <option key={year} value={year}>{year}</option>;
+                                })}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium mb-2">When did / will you finish?</label>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Month</label>
+                              <select
+                                value={formData.educationHistory.gapDetails?.other?.endDate?.month || ''}
+                                onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                                  ...formData.educationHistory.gapDetails,
+                                  other: {
+                                    ...formData.educationHistory.gapDetails?.other,
+                                    endDate: {
+                                      ...formData.educationHistory.gapDetails?.other?.endDate,
+                                      month: e.target.value
+                                    }
+                                  }
+                                })}
+                                className="w-full p-2 border rounded"
+                                required
+                              >
+                                <option value="">Select Month</option>
+                                {['January', 'February', 'March', 'April', 'May', 'June', 'July', 
+                                  'August', 'September', 'October', 'November', 'December'].map((month) => (
+                                  <option key={month} value={month}>{month}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Year</label>
+                              <select
+                                value={formData.educationHistory.gapDetails?.other?.endDate?.year || ''}
+                                onChange={(e) => handleInputChange('educationHistory', 'gapDetails', {
+                                  ...formData.educationHistory.gapDetails,
+                                  other: {
+                                    ...formData.educationHistory.gapDetails?.other,
+                                    endDate: {
+                                      ...formData.educationHistory.gapDetails?.other?.endDate,
+                                      year: e.target.value
+                                    }
+                                  }
+                                })}
+                                className="w-full p-2 border rounded"
+                                required
+                              >
+                                <option value="">Select Year</option>
+                                {[...Array(10)].map((_, i) => {
+                                  const year = new Date().getFullYear() + i;
+                                  return <option key={year} value={year}>{year}</option>;
+                                })}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -1534,6 +3634,40 @@ const ApplyNow = () => {
       default:
         return null;
     }
+  };
+
+  // Add this function to handle adding new schools
+  const addSchool = () => {
+    setFormData(prev => ({
+      ...prev,
+      educationHistory: {
+        ...prev.educationHistory,
+        additionalSchools: [
+          ...prev.educationHistory.additionalSchools,
+          {
+            name: '',
+            city: '',
+            country: '',
+            startDate: {
+              month: '',
+              year: ''
+            },
+            graduationDate: {
+              month: '',
+              year: ''
+            },
+            advancedStandingCredits: false,
+            creditTypes: {
+              aice: false,
+              ap: false,
+              asLevel: false,
+              ib: false,
+              other: false
+            }
+          }
+        ]
+      }
+    }));
   };
 
   return (

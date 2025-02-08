@@ -219,7 +219,7 @@ const UniversityForm = () => {
           <label className="block text-sm font-medium text-gray-700">GPA (1.0-4.0):</label>
           <input
             type="number"
-            step="0.1"
+            step="0.01"
             min="1.0"
             max="4.0"
             value={formData.academic.gpa || ''}
