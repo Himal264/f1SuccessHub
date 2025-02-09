@@ -53,7 +53,12 @@ const UniversityDetail = () => {
   };
 
   const handleApplyNow = () => {
-    navigate(`/applynow/${id}`);
+    navigate(`/applynow/${id}`, {
+      state: { 
+        university: universityData.university,
+        level: "Graduate" // You can modify this based on your needs
+      }
+    });
   };
 
   const renderActiveSection = () => {

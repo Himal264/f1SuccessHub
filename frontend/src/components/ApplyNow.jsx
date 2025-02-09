@@ -873,6 +873,7 @@ const ApplyNow = () => {
                 </select>
               </div>
 
+              {/* Entrance Term Selection */}
               <div>
                 <label className="block text-sm font-medium mb-1">
                   Intended Entrance Term <span className="text-red-500">*</span>
@@ -884,8 +885,29 @@ const ApplyNow = () => {
                   required
                 >
                   <option value="">Select Term</option>
-                  {/* Add terms */}
+                  {universityData?.university?.intake
+                    ?.filter(intake => {
+                      // Filter out past intakes
+                      const deadlineDate = new Date(intake.deadline);
+                      const currentDate = new Date();
+                      return deadlineDate > currentDate;
+                    })
+                    .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+                    .map((intake, index) => (
+                      <option 
+                        key={index} 
+                        value={`${intake.month} ${intake.year}`}
+                      >
+                        {`${intake.month} ${intake.year}`}
+                      </option>
+                    ))
+                  }
                 </select>
+                {(!universityData?.university?.intake || universityData.university.intake.length === 0) && (
+                  <p className="mt-1 text-sm text-red-500">
+                    No upcoming intakes available for this university
+                  </p>
+                )}
               </div>
 
               <div>
@@ -3331,7 +3353,7 @@ const ApplyNow = () => {
                   
                   <div className="space-y-4">
                     <div className="bg-gray-50 p-4 rounded-md">
-                      <h4 className="font-medium mb-2">All transcripts, education, and advanced standing documents</h4>
+                      <h4 className="font-medium mb-2"> All transcripts, education, and advanced standing documents</h4>
                       <p className="text-sm text-gray-600">
                         Non-English transcripts must be certified and translated into English by a school official.
                         Please upload a transcript for each school attended.
