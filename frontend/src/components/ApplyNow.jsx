@@ -475,15 +475,22 @@ const ApplyNow = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch('http://localhost:9000/api/applications', {
+      const formDataWithFiles = new FormData();
+      
+      // Add the main application data as a JSON string
+      formDataWithFiles.append('application', JSON.stringify(formData));
+      
+      // Add files if they exist
+      if (formData.documents.files.length > 0) {
+        formData.documents.files.forEach(file => {
+          formDataWithFiles.append('documents', file); // 'documents' matches the field name in multer
+        });
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/applications/submit`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-        
+        body: formDataWithFiles, // Don't set Content-Type header - browser will set it with boundary
       });
-      console.log(formData);
 
       if (!response.ok) throw new Error('Submission failed');
 

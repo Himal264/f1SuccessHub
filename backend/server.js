@@ -19,7 +19,7 @@ import inquiryRouter from "./routes/advisorinquiriesRoutes.js";
 import MatchRouter from "./routes/universityRoute.js";
 import eventRouter from "./routes/eventRoute.js";
 
-
+import applicationRouter from './routes/applynowRoute.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -90,6 +90,9 @@ app.use("/api/event", eventRouter);
 
 //advisor inquiry form
 app.use("/api/advisor-inquiryform", inquiryRouter);
+
+// Add this line with other routes
+app.use('/api/applications', applicationRouter);
 
 app.get("/", (req, res) => {
   res.send("API Working");
