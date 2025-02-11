@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
-import { IoChatbubbleEllipsesOutline } from 'react-icons/io5';
+import { IoChatbubbleEllipsesOutline, IoSend } from 'react-icons/io5';
 
 const Navbar = () => {
   const [visible, setVisible] = useState(false); // Track visibility of the sidebar
@@ -29,6 +29,7 @@ const Navbar = () => {
     profilePicture: null,
     previewUrl: ''
   });
+  const [showChatContainer, setShowChatContainer] = useState(false);
 
   // Function to generate default profile picture URL
   const getDefaultProfilePicture = (name) => {
@@ -408,6 +409,17 @@ const Navbar = () => {
                           <svg className="mr-3 h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                           </svg>
+                          Applied Universities
+                        </div>
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <div className="flex items-center">
+                          <svg className="mr-3 h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                          </svg>
                           Logout
                         </div>
                       </button>
@@ -630,13 +642,82 @@ const Navbar = () => {
       {/* Message Icon - Fixed to 20% from right side middle */}
       <div className="fixed right-[10%] top-1/2 transform -translate-y-1/2 z-40">
         <button
-          onClick={() => user ? navigate('/chat') : setShowLogin(true)}
+          onClick={() => user ? setShowChatContainer(!showChatContainer) : setShowLogin(true)}
           className="bg-[#F37021] hover:bg-[#e85d0a] text-white rounded-full p-3 shadow-lg transition-all duration-300 ease-in-out hover:scale-110 flex flex-col items-center"
           title={user ? "Open Messages" : "Login to Message"}
         >
           <IoChatbubbleEllipsesOutline size={24} />
           <span className="text-xs mt-1 font-medium">Chat</span>
         </button>
+
+        {/* Chat Container Dropdown - Adjusted position and height */}
+        {showChatContainer && user && (
+          <div className="absolute right-[120%] top-0 w-96 bg-white rounded-lg shadow-xl py-1 z-50">
+            <div className="px-4 py-3 border-b">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-800">Messages</h3>
+                <button
+                  onClick={() => setShowChatContainer(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 h-[70vh] overflow-y-auto">
+              {/* Chat Content */}
+              <div className="space-y-4">
+                {/* Example message - Replace with actual messages */}
+                <div className="flex gap-3 items-start">
+                  <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">Counselor Name</p>
+                    <p className="text-sm text-gray-600">Message preview goes here...</p>
+                    <p className="text-xs text-gray-400 mt-1">2 hours ago</p>
+                  </div>
+                </div>
+
+                {/* You can map through actual messages here */}
+              </div>
+
+              {/* Message Input */}
+              <div className="mt-4 border-t pt-4">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Type your message..."
+                    className="flex-1 border rounded-full px-4 py-2 focus:outline-none focus:border-[#F37021]"
+                  />
+                  <button
+                    className="bg-[#F37021] text-white rounded-full p-2 hover:bg-[#e85d0a]"
+                  >
+                    <IoSend size={20} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Chat Guidelines */}
+            <div className="px-4 py-3 mt-2 border-t bg-gray-50">
+              <p className="text-xs font-medium text-gray-500 mb-2">Chat Guidelines:</p>
+              <ul className="text-xs text-gray-500 space-y-1">
+                <li className="flex items-center">
+                  <span className="mr-2">•</span>
+                  Be respectful and professional
+                </li>
+                <li className="flex items-center">
+                  <span className="mr-2">•</span>
+                  Response time may vary
+                </li>
+                <li className="flex items-center">
+                  <span className="mr-2">•</span>
+                  Keep conversations relevant to university inquiries
+                </li>
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Login/Signup Dropdown Container */}
@@ -685,13 +766,14 @@ const Navbar = () => {
         </div>
       )}
 
-      {/* Overlay for dropdowns */}
-      {(showLogin || showProfileDropdown) && (
+      {/* Overlay for dropdowns - Chat container excluded from opacity */}
+      {(showLogin || showProfileDropdown || showChatContainer) && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="fixed inset-0 bg-black bg-opacity-50 z-30"
           onClick={() => {
             setShowLogin(false);
             setShowProfileDropdown(false);
+            setShowChatContainer(false);
           }}
         />
       )}
