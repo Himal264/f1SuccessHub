@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
+import { IoChatbubbleEllipsesOutline } from 'react-icons/io5';
 
 const Navbar = () => {
   const [visible, setVisible] = useState(false); // Track visibility of the sidebar
@@ -624,6 +625,18 @@ const Navbar = () => {
             </NavLink>
           </div>
         </div>
+      </div>
+
+      {/* Message Icon - Fixed to 20% from right side middle */}
+      <div className="fixed right-[10%] top-1/2 transform -translate-y-1/2 z-40">
+        <button
+          onClick={() => user ? navigate('/chat') : setShowLogin(true)}
+          className="bg-[#F37021] hover:bg-[#e85d0a] text-white rounded-full p-3 shadow-lg transition-all duration-300 ease-in-out hover:scale-110 flex flex-col items-center"
+          title={user ? "Open Messages" : "Login to Message"}
+        >
+          <IoChatbubbleEllipsesOutline size={24} />
+          <span className="text-xs mt-1 font-medium">Chat</span>
+        </button>
       </div>
 
       {/* Login/Signup Dropdown Container */}

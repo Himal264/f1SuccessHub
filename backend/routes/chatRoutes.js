@@ -5,11 +5,11 @@ import {
   getChats, 
   getChatMessages 
 } from '../controllers/chatController.js';
-import { verifyToken } from '../middlewares/authMiddleware.js';
+import { auth } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-router.use(verifyToken); // Protect all chat routes
+router.use(auth); // Use the auth middleware instead of verifyToken
 
 router.post('/create', createChat);
 router.post('/message', sendMessage);

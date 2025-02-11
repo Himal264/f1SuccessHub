@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { backendUrl } from "../App";
 import UniPageHero from "../components/UniPageHero";
 import LocationSection from "../components/LocationSection";
 import FeeStructureSection from "../components/FeeStructureSection";
@@ -15,7 +16,7 @@ import FAQpage from "./FAQpage"
 const UniversityDetail = () => {
   const { id } = useParams();
   const [universityData, setUniversityData] = useState(null);
-  const [activeSection, setActiveSection] = useState("aboutuni"); // Set default section
+  const [activeSection, setActiveSection] = useState("aboutuni");
   const [isNavOpen, setIsNavOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -23,11 +24,10 @@ const UniversityDetail = () => {
     const fetchUniversity = async () => {
       if (!id) return;
       try {
-        const response = await fetch(
-          `http://localhost:9000/api/university/${id}`
-        );
-        if (!response.ok)
+        const response = await fetch(`${backendUrl}/api/university/${id}`);
+        if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         setUniversityData(data);
       } catch (error) {
@@ -44,19 +44,18 @@ const UniversityDetail = () => {
     { id: "fees", label: "Fees Structure" },
     { id: "scholarships", label: "Scholarships" },
     { id: "programs", label: "Programs" },
-
   ];
 
   const handleNavClick = (sectionId) => {
     setActiveSection(sectionId);
-    setIsNavOpen(false); // Close mobile menu after selection
+    setIsNavOpen(false);
   };
 
   const handleApplyNow = () => {
     navigate(`/applynow/${id}`, {
       state: { 
         university: universityData.university,
-        level: "Graduate" // You can modify this based on your needs
+        level: "Graduate"
       }
     });
   };

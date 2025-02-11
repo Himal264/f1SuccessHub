@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../context/AuthContext'; // You'll need to create this
+import { useAuth } from '../context/AuthContext';
 import { IoMdChatboxes } from 'react-icons/io';
 import { IoClose, IoSend } from 'react-icons/io5';
+import { useNavigate } from 'react-router-dom';
 
 const Chat = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,46 +12,52 @@ const Chat = () => {
   const [hasApplication, setHasApplication] = useState(false);
   const messagesEndRef = useRef(null);
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleChatIconClick = async () => {
+    if (!user) {
+      // Redirect to login if user is not authenticated
+      navigate('/login');
+      return;
+    }
+
+    // Only check application status and fetch chats if user is authenticated
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/applications/check/${user._id}`);
+      const data = await response.json();
+      setHasApplication(data.hasApplication);
+      
+      if (data.hasApplication) {
+        setIsOpen(true);
+        fetchChats();
+      } else {
+        alert('Please submit an application before starting a chat.');
+      }
+    } catch (error) {
+      console.error('Error checking application:', error);
+    }
+  };
+
+  const fetchChats = async () => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/chat/list?userId=${user._id}&role=${user.role}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      const data = await response.json();
+      setChats(data);
+    } catch (error) {
+      console.error('Error fetching chats:', error);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
-  useEffect(() => {
-    // Check if user has submitted application
-    const checkApplication = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/applications/check/${user._id}`);
-        const data = await response.json();
-        setHasApplication(data.hasApplication);
-      } catch (error) {
-        console.error('Error checking application:', error);
-      }
-    };
-
-    if (user) {
-      checkApplication();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    // Fetch chats when component mounts
-    const fetchChats = async () => {
-      try {
-        const response = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/api/chat/list?userId=${user._id}&role=${user.role}`
-        );
-        const data = await response.json();
-        setChats(data);
-      } catch (error) {
-        console.error('Error fetching chats:', error);
-      }
-    };
-
-    if (isOpen && user) {
-      fetchChats();
-    }
-  }, [isOpen, user]);
 
   useEffect(() => {
     scrollToBottom();
@@ -92,7 +99,7 @@ const Chat = () => {
     <div className="fixed bottom-5 right-5 z-50">
       {!isOpen ? (
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={handleChatIconClick}
           className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg"
         >
           <IoMdChatboxes size={24} />

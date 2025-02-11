@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom"; // Import Link for routing
+import { backendUrl } from "../App";
 
 const UniversitySearch = () => {
   const navigate = useNavigate();
@@ -8,6 +9,7 @@ const UniversitySearch = () => {
   const [programLevel, setProgramLevel] = useState("Undergraduate");
   const [subject, setSubject] = useState("Engineering");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const subjects = [
     "Engineering",
@@ -25,25 +27,37 @@ const UniversitySearch = () => {
     navigate(`/subject/${programLevel}/${subject}`);
   };
 
-  useEffect(() => {
-    const fetchUniversities = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:9000/api/university/list"
-        );
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-        setUniversities(data.universities || []);
-      } finally {
-        setLoading(false);
+  const fetchUniversities = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`${backendUrl}/api/university/list`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
+      const data = await response.json();
+      // Extract universities array from the response
+      const universityList = data.universities || [];
+      setUniversities(universityList);
+    } catch (error) {
+      console.error("Error fetching universities:", error);
+      setError(error.message);
+      setUniversities([]); // Set empty array on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchUniversities();
   }, []);
 
-  const firstRow = universities.slice(0, Math.ceil(universities.length / 2));
-  const secondRow = universities.slice(Math.ceil(universities.length / 2));
+  if (loading) return <div>Loading universities...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+  // Only calculate rows if universities is not empty
+  const firstRow = universities.length > 0 ? universities.slice(0, Math.ceil(universities.length / 2)) : [];
+  const secondRow = universities.length > 0 ? universities.slice(Math.ceil(universities.length / 2)) : [];
 
   return (
     <div className="w-full bg-gray-50">
@@ -110,57 +124,64 @@ const UniversitySearch = () => {
         `}
       </style>
 
-      {/* First Row */}
-      <div className="scroll-container">
-        <div className="scroll-content">
-          {[...firstRow, ...firstRow].map((uni, index) => (
-            <div key={`${uni._id}-${index}`} className="university-card p-4">
-              <Link to={`/university/${uni._id}`}>
-                {" "}
-                {/* Wrap with Link */}
-                <div className="bg-white rounded-lg p-6 flex flex-col items-center">
-                  <div className="h-20 w-20 mb-4 flex items-center justify-center">
-                    <img
-                      src={uni.logoUrl || "/api/placeholder/80/80"}
-                      alt={uni.name}
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  </div>
-                  <h3 className="text-center font-medium text-gray-800">
-                    {uni.name}
-                  </h3>
+      {/* Only render university rows if there are universities */}
+      {universities.length > 0 ? (
+        <>
+          {/* First Row */}
+          <div className="scroll-container">
+            <div className="scroll-content">
+              {[...firstRow, ...firstRow].map((uni, index) => (
+                <div key={`${uni._id}-${index}`} className="university-card p-4">
+                  <Link to={`/university/${uni._id}`}>
+                    {" "}
+                    {/* Wrap with Link */}
+                    <div className="bg-white rounded-lg p-6 flex flex-col items-center">
+                      <div className="h-20 w-20 mb-4 flex items-center justify-center">
+                        <img
+                          src={uni.logoUrl || "/api/placeholder/80/80"}
+                          alt={uni.name}
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                      <h3 className="text-center font-medium text-gray-800">
+                        {uni.name}
+                      </h3>
+                    </div>
+                  </Link>
                 </div>
-              </Link>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      {/* Second Row */}
-      <div className="scroll-container">
-        <div className="scroll-content">
-          {[...secondRow, ...secondRow].map((uni, index) => (
-            <div key={`${uni._id}-${index}`} className="university-card p-4">
-              <Link to={`/university/${uni._id}`}>
-                {" "}
-                {/* Wrap with Link */}
-                <div className="bg-white rounded-lg p-6 flex flex-col items-center">
-                  <div className="h-20 w-20 mb-4 flex items-center justify-center">
-                    <img
-                      src={uni.logoUrl || "/api/placeholder/80/80"}
-                      alt={uni.name}
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  </div>
-                  <h3 className="text-center font-medium text-gray-800">
-                    {uni.name}
-                  </h3>
+          {/* Second Row */}
+          <div className="scroll-container">
+            <div className="scroll-content">
+              {[...secondRow, ...secondRow].map((uni, index) => (
+                <div key={`${uni._id}-${index}`} className="university-card p-4">
+                  <Link to={`/university/${uni._id}`}>
+                    {" "}
+                    {/* Wrap with Link */}
+                    <div className="bg-white rounded-lg p-6 flex flex-col items-center">
+                      <div className="h-20 w-20 mb-4 flex items-center justify-center">
+                        <img
+                          src={uni.logoUrl || "/api/placeholder/80/80"}
+                          alt={uni.name}
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                      <h3 className="text-center font-medium text-gray-800">
+                        {uni.name}
+                      </h3>
+                    </div>
+                  </Link>
                 </div>
-              </Link>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        </>
+      ) : (
+        <div className="text-center py-8">No universities found</div>
+      )}
     </div>
   );
 };
