@@ -21,6 +21,7 @@ const ApplyNow = () => {
       birthCity: '',
       birthCountry: '',
       citizenshipCountry: '',
+      studyLevel: '',
       studyArea: '',
       entranceTerm: '',
       referralSource: '',
@@ -149,7 +150,6 @@ const ApplyNow = () => {
             year: ''
           }
         }],
-        satAct: false,
         academicGaps: false,
         examDetails: {
           type: '',
@@ -477,28 +477,38 @@ const ApplyNow = () => {
     try {
       const formDataWithFiles = new FormData();
       
+      // Create a copy of formData without the actual File objects
+      const formDataCopy = { ...formData };
+      if (formDataCopy.documents.files.length > 0) {
+        // Remove the actual File objects from the JSON data
+        formDataCopy.documents.files = formDataCopy.documents.files.map(file => ({
+          name: file.name,
+          type: file.type
+        }));
+      }
+      
       // Add the main application data as a JSON string
-      formDataWithFiles.append('application', JSON.stringify(formData));
+      formDataWithFiles.append('application', JSON.stringify(formDataCopy));
       
       // Add files if they exist
       if (formData.documents.files.length > 0) {
         formData.documents.files.forEach(file => {
-          formDataWithFiles.append('documents', file); // 'documents' matches the field name in multer
+          formDataWithFiles.append('documents', file);
         });
       }
 
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/applications/submit`, {
         method: 'POST',
-        body: formDataWithFiles, // Don't set Content-Type header - browser will set it with boundary
+        body: formDataWithFiles,
       });
 
-      if (!response.ok) throw new Error('Submission failed');
-
       const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Submission failed');
+
       navigate('/application-success', { state: { applicationId: data.id } });
     } catch (error) {
       console.error('Submission error:', error);
-      setErrors({ submit: 'Failed to submit application. Please try again.' });
+      setErrors({ submit: error.message || 'Failed to submit application. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -530,8 +540,24 @@ const ApplyNow = () => {
               <h1 className="text-2xl font-bold text-[#BA0C2F]">
                 {universityData?.university?.name}
               </h1>
-              <div className="text-sm text-gray-600">{level}</div>
+              <div className="text-sm text-gray-600">
+                {formData.personalInfo.studyLevel === 'graduate' ? 'Graduate' : 'Undergraduate'}
+              </div>
             </div>
+          </div>
+
+          {/* Application Type Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-blue-900">
+              {formData.personalInfo.studyLevel === 'graduate' 
+                ? 'GRADUATE APPLICATION' 
+                : 'UNDERGRADUATE APPLICATION'}
+            </h1>
+            <p className="text-gray-600">
+              {formData.personalInfo.studyLevel === 'graduate' 
+                ? 'Graduate Direct Process' 
+                : 'Undergraduate Direct Process'}
+            </p>
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-8">
@@ -865,20 +891,83 @@ const ApplyNow = () => {
               <h3 className="text-lg font-semibold">Start Term / Area of Interest</h3>
               <p className="text-sm text-gray-600">Please note that some starting terms may not be available for each major.</p>
 
+              {/* Level Selection */}
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  What would you like to study? <span className="text-red-500">*</span>
+                  Level of Study <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.personalInfo.studyLevel || ''}
+                  onChange={(e) => {
+                    handleInputChange('personalInfo', 'studyLevel', e.target.value);
+                    // Reset study area and program when level changes
+                    handleInputChange('personalInfo', 'studyArea', '');
+                    handleInputChange('personalInfo', 'program', '');
+                  }}
+                  className="w-full p-2 border rounded"
+                  required
+                >
+                  <option value="">Select Level</option>
+                  <option value="undergraduate">Undergraduate</option>
+                  <option value="graduate">Graduate</option>
+                </select>
+              </div>
+
+              {/* Study Area Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  What Area would you like to study? <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.personalInfo.studyArea || ''}
-                  onChange={(e) => handleInputChange('personalInfo', 'studyArea', e.target.value)}
+                  onChange={(e) => {
+                    handleInputChange('personalInfo', 'studyArea', e.target.value);
+                    // Reset program when area changes
+                    handleInputChange('personalInfo', 'program', '');
+                  }}
                   className="w-full p-2 border rounded"
                   required
                 >
                   <option value="">Select Area of Study</option>
-                  {/* Add study areas */}
+                  {formData.personalInfo.studyLevel && universityData?.university && 
+                    Object.keys(formData.personalInfo.studyLevel === 'undergraduate' 
+                      ? universityData.university.undergraduatePrograms.programs 
+                      : universityData.university.graduatePrograms.programs
+                    ).map((area) => (
+                      <option key={area} value={area}>
+                        {area}
+                      </option>
+                    ))
+                  }
                 </select>
               </div>
+
+              {/* Program Selection */}
+              {formData.personalInfo.studyArea && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    What Program would you like to study? <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.personalInfo.program || ''}
+                    onChange={(e) => handleInputChange('personalInfo', 'program', e.target.value)}
+                    className="w-full p-2 border rounded"
+                    required
+                  >
+                    <option value="">Select Program</option>
+                    {universityData?.university && 
+                      (formData.personalInfo.studyLevel === 'undergraduate' 
+                        ? universityData.university.undergraduatePrograms.programs[formData.personalInfo.studyArea] 
+                        : universityData.university.graduatePrograms.programs[formData.personalInfo.studyArea]
+                      )?.map((program) => (
+                        <option key={program} value={program}>
+                          {program}
+                        </option>
+                      ))
+                    }
+                  </select>
+                </div>
+              )}
 
               {/* Entrance Term Selection */}
               <div>
@@ -917,6 +1006,7 @@ const ApplyNow = () => {
                 )}
               </div>
 
+              {/* How did you hear about us dropdown */}
               <div>
                 <label className="block text-sm font-medium mb-1">
                   How did you hear about us? <span className="text-red-500">*</span>
@@ -928,7 +1018,14 @@ const ApplyNow = () => {
                   required
                 >
                   <option value="">Select Source</option>
-                  {/* Add referral sources */}
+                  <option value="exhibition">Exhibition or Seminar</option>
+                  <option value="newspaper">Newspaper or Magazine</option>
+                  <option value="internet">Internet Search or Advertisement</option>
+                  <option value="recruiter">Recommendation from Recruiter</option>
+                  <option value="university">Recommendation from a University</option>
+                  <option value="friend">Recommendation from Friend or Colleague</option>
+                  <option value="family">Recommendation from Family Member</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
             </div>
@@ -3697,6 +3794,21 @@ const ApplyNow = () => {
         ]
       }
     }));
+  };
+
+  // Function to extract unique study areas from university programs
+  const getUniqueStudyAreas = () => {
+    if (!universityData?.university) return [];
+    
+    // Get all program categories from both graduate and undergraduate programs
+    const graduateFields = Object.keys(universityData.university.graduatePrograms?.programs || {});
+    const undergraduateFields = Object.keys(universityData.university.undergraduatePrograms?.programs || {});
+    
+    // Combine and remove duplicates
+    const allFields = [...new Set([...graduateFields, ...undergraduateFields])];
+    
+    // Sort alphabetically
+    return allFields.sort();
   };
 
   return (

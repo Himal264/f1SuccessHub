@@ -3,6 +3,7 @@ import cloudinary from '../config/cloudinary.js';
 
 export const submitApplication = async (req, res) => {
   try {
+    // Parse the application data
     const applicationData = JSON.parse(req.body.application);
     
     // Handle file uploads if files exist
@@ -15,7 +16,7 @@ export const submitApplication = async (req, res) => {
           // Upload to Cloudinary
           const result = await cloudinary.uploader.upload(file.path, {
             folder: 'applications/documents',
-            resource_type: 'auto' // Automatically detect file type
+            resource_type: 'auto'
           });
 
           uploadedFiles.push({
@@ -26,7 +27,11 @@ export const submitApplication = async (req, res) => {
 
         } catch (uploadError) {
           console.error('Error uploading file to Cloudinary:', uploadError);
-          throw new Error('File upload failed');
+          return res.status(500).json({
+            success: false,
+            message: 'File upload failed',
+            error: uploadError.message
+          });
         }
       }
       
