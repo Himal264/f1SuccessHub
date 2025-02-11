@@ -1,8 +1,11 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from './context/AuthContext';
+import { FormProvider } from './context/FormContext';
+import Chat from './components/chat';
 
 import Home from "./pages/Home";
-import F1QestionsandAnswer from "./pages/F1QestionsandAnswer";
+import F1QestionsandAnswer from "./pages/F1QestionsandAnswer.jsx";
 import About from "./pages/About";
 
 import LoginForm from "./components/LoginForm";
@@ -37,7 +40,7 @@ import StudentfriendlyServices from "./subpages/StudentfriendlyServices";
 import SupportiveStudyEnviroments from "./subpages/SupportiveStudyEnviroments";
 import TransferingAcademicCredits from "./subpages/TransferingAcademicCredits";
 import TransferPlacements from "./subpages/TransferPlacements";
-import Universitydetail from "./subpages/Universitydetail";
+
 import Universitymatch from "./subpages/Universitymatch";
 import UniversitySpecificOnboarding from "./subpages/UniversitySpecificOnboarding";
 import Visaguidancestep from "./subpages/Visaguidancestep";
@@ -74,203 +77,202 @@ export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 const App = () => {
   return (
-   
-      <Router>
+    <FormProvider>
+      <AuthProvider>
+        <Router>
+          <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
+            <Navbar />
+           
+            <ScrollToTop />
 
-        <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
-          <Navbar />
-         
-          <ScrollToTop />
+            <Routes>
+              <Route path="/applynow/:id" element={<ApplyNow />} />
+              <Route path="/results" element={<Results />} />
+              <Route path="/" element={<Home />} />
+              <Route path="/event" element={<Event />} />
+              <Route path="/event/add" element={<EventAdd />} />
+              <Route path="/related-universities" element={<RelatedUniversities />} />
 
-          <Routes>
-            <Route path="/applynow/:id" element={<ApplyNow />} />
-            <Route path="/results" element={<Results />} />
-            <Route path="/" element={<Home />} />
-            <Route path="/event" element={<Event />} />
-            <Route path="/event/add" element={<EventAdd />} />
-            <Route path="/related-universities" element={<RelatedUniversities />} />
+              <Route path="/universityform" element={<UniversityForm />} />
+              <Route path="/contactform" element={<ContactInformationForm/>}/>
+              <Route path="/success" element={<SuccessPage />} />
 
-            <Route path="/universityform" element={<UniversityForm />} />
-            <Route path="/contactform" element={<ContactInformationForm/>}/>
-            <Route path="/success" element={<SuccessPage />} />
+              <Route
+                path="/programs/:level/:subject"
+                element={<ProgramSearchResults />}
+              />
+              <Route
+                path="/scholarships"
+                element={<ScholarshipSection />}
+              />
 
-            <Route
-              path="/programs/:level/:subject"
-              element={<ProgramSearchResults />}
-            />
-            <Route
-              path="/scholarships"
-              element={<ScholarshipSection />}
-            />
+              <Route
+                path="/subject/:level/:subject"
+                element={<SubjectProgramPage />}
+              />
 
-            <Route
-              path="/subject/:level/:subject"
-              element={<SubjectProgramPage />}
-            />
-
-            <Route path="/f1questionsandanswers" element={<F1QestionsandAnswer />} />
-            <Route path="/university/:id" element={<UniversityDetail />} />
-            <Route path="/aboutus" element={<About />} />
-            <Route
-              path="/f1questionsandanswers/:f1questionsandanswersId"
-              element={<F1QestionsandAnswer />}
-            />
-            <Route
-              path="/findbestuniversity-for-you"
-              element={<FindUniversity />}
-            />
-            <Route
-              path="/programs/:level/:subject"
-              element={<ProgramSearchResults />}
-            />
-            <Route path="/loginform" element={<LoginForm />} />
-            <Route path="/termsandconditions" element={<TermsConditions />} />
-            <Route path="/policy" element={<Policy />} />
-            <Route path="/advisor-inquiriesform" element={<AdvisorInquiryForm />} />
-            <Route path="/signupform" element={<SignupForm />} />
-            <Route path="/forf1success" element={<SuccessMatterspage />} />
+              <Route path="/f1questionsandanswers" element={<F1QestionsandAnswer />} />
+              <Route path="/university/:id" element={<UniversityDetail />} />
+              <Route path="/aboutus" element={<About />} />
+              <Route
+                path="/f1questionsandanswers/:f1questionsandanswersId"
+                element={<F1QestionsandAnswer />}
+              />
+              <Route
+                path="/findbestuniversity-for-you"
+                element={<FindUniversity />}
+              />
+              <Route
+                path="/programs/:level/:subject"
+                element={<ProgramSearchResults />}
+              />
+              <Route path="/loginform" element={<LoginForm />} />
+              <Route path="/termsandconditions" element={<TermsConditions />} />
+              <Route path="/policy" element={<Policy />} />
+              <Route path="/advisor-inquiriesform" element={<AdvisorInquiryForm />} />
+              <Route path="/signupform" element={<SignupForm />} />
+              <Route path="/forf1success" element={<SuccessMatterspage />} />
 
 
-            <Route path="/f1successhubfaqs?" element={<FAQpage />} />
-            <Route path="/wearepatner-with" element={<WeArePatnerWith />} />
-            <Route
-              path="/f1interview-remember-things"
-              element={<F1InterviewRememberthings />}
-            />
-            <Route path="/universityhero" element={<UniversityHero />} />
-            <Route path="/f1successhub-ourservices" element={<OurServices />} />
-            <Route path="/f1successhub-ourpatners" element={<Ourpatner />} />
-            <Route path="/f1successfor/academics" element={<Academics />} />
-            <Route path="/f1successfor/admission" element={<Admission />} />
-            <Route
-              path="/f1successfor/academics/assignment-writing-and-support"
-              element={<AssignmentWritingSupport />}
-            />
-            <Route
-              path="/f1successfor/career/career-guidance-and-preparation"
-              element={<CareerGuidance />}
-            />
-            <Route
-              path="/f1successfor/research/connect-with-current-and-past-students-alumni"
-              element={<Connectalmuni />}
-            />
-            <Route
-              path="/f1successfor/on-campus/convenient-airport-transfer-arrangements"
-              element={<ConvenentAirport />}
-            />
-            <Route
-              path="/f1successfor/admission/detailed-applications-review/"
-              element={<Detailapplication />}
-            />
-            <Route path="/f1successfor/enrollment" element={<Enrollement />} />
-            <Route
-              path="/f1successfor/admission/entry-requirements-for-your-region"
-              element={<Entryrequirementlocal />}
-            />
-            <Route
-              path="/f1successfor/research/events-and-workshops-calendar"
-              element={<Eventscalender />}
-            />
-            <Route
-              path="/f1successfor/research/expert-guidance-and-advice"
-              element={<Expertguidance />}
-            />
-            <Route
-              path="/f1successfor/enrollment/f1-visa-interview-preparation"
-              element={<F1VisaInterviewPreparation />}
-            />
-            <Route
-              path="/f1successfor/admission/fast-and-efficient-admissions-processing"
-              element={<Fastadmission />}
-            />
-            <Route
-              path="/f1successfor/admission/support-for-transferring-institutions"
-              element={<Institutionsupport />}
-            />
-            <Route path="/f1successfor/on-campus" element={<OnCampus />} />
-            <Route
-              path="/f1successfor/admission/organized-timelines-to-keep-you-on-track"
-              element={<Organizedtimelines />}
-            />
-            <Route
-              path="/f1successfor/academics/personalized-academic-guidance"
-              element={<PersonalizedAcademicGuidance />}
-            />
-            <Route
-              path="/f1successfor/enrollment/pre-arrival-checklist"
-              element={<PrearrivalChecklist />}
-            />
-            <Route
-              path="/f1successfor/career/referral-for-internship-and-work"
-              element={<Referral />}
-            />
-            <Route path="/f1successfor/research" element={<Research />} />
-            <Route
-              path="/f1successfor/career/skill-development-to-meet-industry-demands"
-              element={<SkillDevelopment />}
-            />
-            <Route
-              path="/f1successfor/enrollment/student-friendly-resources-and-services"
-              element={<StudentfriendlyServices />}
-            />
-            <Route
-              path="/f1successfor/academics/supportive-study-environments"
-              element={<SupportiveStudyEnviroments />}
-            />
-            <Route
-              path="/f1successfor/academics/transferring-academic-credits"
-              element={<TransferingAcademicCredits />}
-            />
-            <Route
-              path="/f1successfor/academics/transfer-placements"
-              element={<TransferPlacements />}
-            />
-            <Route
-              path="/f1successfor/research/detail-university-details"
-              element={<Universitydetail />}
-            />
-            <Route
-              path="/f1successfor/research/university-match-and-compare"
-              element={<Universitymatch />}
-            />
-            <Route
-              path="/f1successfor/enrollment/university-specific-onboarding"
-              element={<UniversitySpecificOnboarding />}
-            />
-            <Route
-              path="/f1successfor/enrollment/step-by-step-visa-guidance"
-              element={<Visaguidancestep />}
-            />
-            <Route
-              path="/f1successfor/on-campus/help-with-dorm-setup-and-essentials"
-              element={<Helpdormandessentailas />}
-            />
-            <Route
-              path="/f1successfor/on-campus/orientation-to-campus-life"
-              element={<OritentationCampus />}
-            />
-            <Route
-              path="/f1successfor/on-campus/opportunities-for-cultural-exploration"
-              element={<OpportunitesOfculuratlex />}
-            />
-            <Route
-              path="/f1successfor/on-campus/student-support"
-              element={<Studentsupport />}
-            />
-            <Route path="/f1successfor/career" element={<Career />} />
-            <Route
-              path="/f1successfor/career/personalized-resume-and-cover-letter-preparation"
-              element={<Resumeletterpre />}
-            />
-            <Route
-              path="/f1successfor/career/professionals-and-alumni-networking"
-              element={<AluminiConnection />}
-            />
-          </Routes>
-          <ScrollToTop />
-        </div>
-      </Router>
-
+              <Route path="/f1successhubfaqs?" element={<FAQpage />} />
+              <Route path="/wearepatner-with" element={<WeArePatnerWith />} />
+              <Route
+                path="/f1interview-remember-things"
+                element={<F1InterviewRememberthings />}
+              />
+              <Route path="/universityhero" element={<UniversityHero />} />
+              <Route path="/f1successhub-ourservices" element={<OurServices />} />
+              <Route path="/f1successhub-ourpatners" element={<Ourpatner />} />
+              <Route path="/f1successfor/academics" element={<Academics />} />
+              <Route path="/f1successfor/admission" element={<Admission />} />
+              <Route
+                path="/f1successfor/academics/assignment-writing-and-support"
+                element={<AssignmentWritingSupport />}
+              />
+              <Route
+                path="/f1successfor/career/career-guidance-and-preparation"
+                element={<CareerGuidance />}
+              />
+              <Route
+                path="/f1successfor/research/connect-with-current-and-past-students-alumni"
+                element={<Connectalmuni />}
+              />
+              <Route
+                path="/f1successfor/on-campus/convenient-airport-transfer-arrangements"
+                element={<ConvenentAirport />}
+              />
+              <Route
+                path="/f1successfor/admission/detailed-applications-review/"
+                element={<Detailapplication />}
+              />
+              <Route path="/f1successfor/enrollment" element={<Enrollement />} />
+              <Route
+                path="/f1successfor/admission/entry-requirements-for-your-region"
+                element={<Entryrequirementlocal />}
+              />
+              <Route
+                path="/f1successfor/research/events-and-workshops-calendar"
+                element={<Eventscalender />}
+              />
+              <Route
+                path="/f1successfor/research/expert-guidance-and-advice"
+                element={<Expertguidance />}
+              />
+              <Route
+                path="/f1successfor/enrollment/f1-visa-interview-preparation"
+                element={<F1VisaInterviewPreparation />}
+              />
+              <Route
+                path="/f1successfor/admission/fast-and-efficient-admissions-processing"
+                element={<Fastadmission />}
+              />
+              <Route
+                path="/f1successfor/admission/support-for-transferring-institutions"
+                element={<Institutionsupport />}
+              />
+              <Route path="/f1successfor/on-campus" element={<OnCampus />} />
+              <Route
+                path="/f1successfor/admission/organized-timelines-to-keep-you-on-track"
+                element={<Organizedtimelines />}
+              />
+              <Route
+                path="/f1successfor/academics/personalized-academic-guidance"
+                element={<PersonalizedAcademicGuidance />}
+              />
+              <Route
+                path="/f1successfor/enrollment/pre-arrival-checklist"
+                element={<PrearrivalChecklist />}
+              />
+              <Route
+                path="/f1successfor/career/referral-for-internship-and-work"
+                element={<Referral />}
+              />
+              <Route path="/f1successfor/research" element={<Research />} />
+              <Route
+                path="/f1successfor/career/skill-development-to-meet-industry-demands"
+                element={<SkillDevelopment />}
+              />
+              <Route
+                path="/f1successfor/enrollment/student-friendly-resources-and-services"
+                element={<StudentfriendlyServices />}
+              />
+              <Route
+                path="/f1successfor/academics/supportive-study-environments"
+                element={<SupportiveStudyEnviroments />}
+              />
+              <Route
+                path="/f1successfor/academics/transferring-academic-credits"
+                element={<TransferingAcademicCredits />}
+              />
+              <Route
+                path="/f1successfor/academics/transfer-placements"
+                element={<TransferPlacements />}
+              />
+             
+              <Route
+                path="/f1successfor/research/university-match-and-compare"
+                element={<Universitymatch />}
+              />
+              <Route
+                path="/f1successfor/enrollment/university-specific-onboarding"
+                element={<UniversitySpecificOnboarding />}
+              />
+              <Route
+                path="/f1successfor/enrollment/step-by-step-visa-guidance"
+                element={<Visaguidancestep />}
+              />
+              <Route
+                path="/f1successfor/on-campus/help-with-dorm-setup-and-essentials"
+                element={<Helpdormandessentailas />}
+              />
+              <Route
+                path="/f1successfor/on-campus/orientation-to-campus-life"
+                element={<OritentationCampus />}
+              />
+              <Route
+                path="/f1successfor/on-campus/opportunities-for-cultural-exploration"
+                element={<OpportunitesOfculuratlex />}
+              />
+              <Route
+                path="/f1successfor/on-campus/student-support"
+                element={<Studentsupport />}
+              />
+              <Route path="/f1successfor/career" element={<Career />} />
+              <Route
+                path="/f1successfor/career/personalized-resume-and-cover-letter-preparation"
+                element={<Resumeletterpre />}
+              />
+              <Route
+                path="/f1successfor/career/professionals-and-alumni-networking"
+                element={<AluminiConnection />}
+              />
+            </Routes>
+            <Chat />
+            <ScrollToTop />
+          </div>
+        </Router>
+      </AuthProvider>
+    </FormProvider>
   );
 };
 

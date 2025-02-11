@@ -479,16 +479,21 @@ const ApplyNow = () => {
       
       // Create a copy of formData without the actual File objects
       const formDataCopy = { ...formData };
-      if (formDataCopy.documents.files.length > 0) {
-        // Remove the actual File objects from the JSON data
-        formDataCopy.documents.files = formDataCopy.documents.files.map(file => ({
-          name: file.name,
-          type: file.type
-        }));
-      }
+      
+      // Clean up the formData to match the backend schema
+      const applicationData = {
+        personalInfo: formDataCopy.personalInfo,
+        educationHistory: formDataCopy.educationHistory,
+        documents: {
+          hasDocuments: formDataCopy.documents.files.length > 0,
+          files: [] // The backend will populate this
+        },
+        agreements: formDataCopy.agreements,
+        programDetails: formDataCopy.programDetails
+      };
       
       // Add the main application data as a JSON string
-      formDataWithFiles.append('application', JSON.stringify(formDataCopy));
+      formDataWithFiles.append('application', JSON.stringify(applicationData));
       
       // Add files if they exist
       if (formData.documents.files.length > 0) {
@@ -500,11 +505,15 @@ const ApplyNow = () => {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/applications/submit`, {
         method: 'POST',
         body: formDataWithFiles,
+        // Remove the headers since FormData sets its own
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Submission failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Submission failed');
+      }
 
+      const data = await response.json();
       navigate('/application-success', { state: { applicationId: data.id } });
     } catch (error) {
       console.error('Submission error:', error);
@@ -521,6 +530,16 @@ const ApplyNow = () => {
       alert('Please accept both the Terms of Use and marketing consent to continue');
       return;
     }
+    
+    // Store the selected level in formData before showing the main form
+    setFormData(prev => ({
+      ...prev,
+      personalInfo: {
+        ...prev.personalInfo,
+        studyLevel: level || 'undergraduate' // Use the level prop or default to undergraduate
+      }
+    }));
+    
     setShowForm(true);
   };
 
@@ -528,43 +547,47 @@ const ApplyNow = () => {
   if (!showForm) {
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <div className="mb-12">
-          {/* University Header */}
-          <div className="flex items-center gap-4 mb-8">
+        {/* Header Section with Flex Layout - Made consistent with other steps */}
+        <div className="flex justify-between items-start mb-8">
+          {/* Left Side - University Info */}
+          <div className="flex items-center gap-2">
             <img 
               src={universityData?.university?.logoUrl || "/api/placeholder/48/48"}
               alt="University Logo"
-              className="h-10"
+              className="h-10 w-10" // Reduced from h-12
             />
             <div>
-              <h1 className="text-2xl font-bold text-[#BA0C2F]">
+              <h1 className="text-xl font-bold text-[#1E3A8A]"> {/* Reduced from text-2xl */}
                 {universityData?.university?.name}
               </h1>
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-[#666666]"> {/* Added text-sm */}
                 {formData.personalInfo.studyLevel === 'graduate' ? 'Graduate' : 'Undergraduate'}
               </div>
             </div>
           </div>
 
-          {/* Application Type Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-blue-900">
+          {/* Right Side - Application Type */}
+          <div className="text-right">
+            <h2 className="text-lg font-bold text-[#1E3A8A]"> {/* Reduced from text-xl */}
               {formData.personalInfo.studyLevel === 'graduate' 
                 ? 'GRADUATE APPLICATION' 
                 : 'UNDERGRADUATE APPLICATION'}
-            </h1>
-            <p className="text-gray-600">
+            </h2>
+            <p className="text-sm text-[#666666]"> {/* Added text-sm */}
               {formData.personalInfo.studyLevel === 'graduate' 
                 ? 'Graduate Direct Process' 
                 : 'Undergraduate Direct Process'}
             </p>
           </div>
+        </div>
 
+        {/* Rest of the welcome page content */}
+        <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">
             A few things before you start:
           </h2>
           
-          <div className="space-y-6">
+          <div className="space-y-6 mb-12">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -610,8 +633,8 @@ const ApplyNow = () => {
             </div>
           </div>
 
-          <div className="mt-8 space-y-4">
-            {/* Terms and Privacy Policy Checkbox */}
+          {/* Terms and Marketing Consent */}
+          <div className="bg-gray-50 p-6 rounded-lg mb-8 space-y-4">
             <div className="flex items-start space-x-3">
               <input
                 type="checkbox"
@@ -627,7 +650,6 @@ const ApplyNow = () => {
               </label>
             </div>
 
-            {/* Marketing Consent Checkbox */}
             <div className="flex items-start space-x-3">
               <input
                 type="checkbox"
@@ -637,17 +659,17 @@ const ApplyNow = () => {
                 className="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300"
               />
               <label htmlFor="marketing" className="text-sm text-gray-600">
-                Stay on Course for US University Success! Get Personalized Support from Shorelight (with Your Privacy in Mind):
-                Yes, I would like to receive commercial electronic information and offers from Shorelight (including emails, texts, and push notifications, which may be subject to fees charged by my wireless carrier), including information about Shorelight programs at other universities. You may unsubscribe at any time.
+                Stay on Course for Success! Get Personalized Support from {universityData?.university?.name} (with Your Privacy in Mind)
               </label>
             </div>
           </div>
 
-          <div className="mt-12 p-6 border rounded-lg bg-gray-50">
-            <h2 className="text-lg font-semibold mb-4">To start or continue an application</h2>
+          {/* Email Form */}
+          <div className="bg-white border rounded-lg p-6 shadow-sm">
+            <h3 className="text-lg font-semibold mb-4">To start or continue an application</h3>
             <form onSubmit={handleEmailSubmit} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Enter Your Email Address
                 </label>
                 <input
@@ -655,20 +677,19 @@ const ApplyNow = () => {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="w-full bg-[#1E3A8A] text-white py-3 px-4 rounded-md hover:bg-blue-800 transition-colors font-medium"
               >
                 Continue
               </button>
             </form>
             <p className="mt-4 text-sm text-gray-500 text-center">
-              If you have trouble accessing the application,
-              <br />
+              If you have trouble accessing the application,<br />
               please contact <a href="#" className="text-blue-600 hover:underline">customer support</a>
             </p>
           </div>
@@ -1261,205 +1282,6 @@ const ApplyNow = () => {
                     />
                   </div>
                 )}
-              </div>
-            </div>
-
-            {/* Emergency Contact Information */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold">Emergency Contact Information</h3>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Is the emergency contact's address the same as your home address?
-                </label>
-                <div className="space-x-4">
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      name="sameAsHome"
-                      value="yes"
-                      checked={formData.personalInfo.emergencyContact.sameAsHome === true}
-                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
-                        ...formData.personalInfo.emergencyContact,
-                        sameAsHome: e.target.value === 'yes'
-                      })}
-                      className="mr-2"
-                    />
-                    Yes
-                  </label>
-                  <label className="inline-flex items-center">
-                    <input
-                      type="radio"
-                      name="sameAsHome"
-                      value="no"
-                      checked={formData.personalInfo.emergencyContact.sameAsHome === false}
-                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
-                        ...formData.personalInfo.emergencyContact,
-                        sameAsHome: e.target.value === 'yes'
-                      })}
-                      className="mr-2"
-                    />
-                    No
-                  </label>
-                </div>
-              </div>
-
-              {/* Conditional Address Fields */}
-              {formData.personalInfo.emergencyContact.sameAsHome === false && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Street address <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.personalInfo.emergencyContact.address?.street1 || ''}
-                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
-                        ...formData.personalInfo.emergencyContact,
-                        address: {
-                          ...formData.personalInfo.emergencyContact.address,
-                          street1: e.target.value
-                        }
-                      })}
-                      className="w-full p-2 border rounded"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Street address line 2 (optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.personalInfo.emergencyContact.address?.street2 || ''}
-                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
-                        ...formData.personalInfo.emergencyContact,
-                        address: {
-                          ...formData.personalInfo.emergencyContact.address,
-                          street2: e.target.value
-                        }
-                      })}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      City <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.personalInfo.emergencyContact.address?.city || ''}
-                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
-                        ...formData.personalInfo.emergencyContact,
-                        address: {
-                          ...formData.personalInfo.emergencyContact.address,
-                          city: e.target.value
-                        }
-                      })}
-                      className="w-full p-2 border rounded"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Province / State <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.personalInfo.emergencyContact.address?.state || ''}
-                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
-                        ...formData.personalInfo.emergencyContact,
-                        address: {
-                          ...formData.personalInfo.emergencyContact.address,
-                          state: e.target.value
-                        }
-                      })}
-                      className="w-full p-2 border rounded"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Postal code (optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.personalInfo.emergencyContact.address?.postalCode || ''}
-                      onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
-                        ...formData.personalInfo.emergencyContact,
-                        address: {
-                          ...formData.personalInfo.emergencyContact.address,
-                          postalCode: e.target.value
-                        }
-                      })}
-                      className="w-full p-2 border rounded"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Country <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={formData.personalInfo.emergencyContact.address?.country || ''}
-                      onChange={(e) => {
-                        const country = e.target.value;
-                        handleInputChange('personalInfo', 'emergencyContact', {
-                          ...formData.personalInfo.emergencyContact,
-                          address: {
-                            ...formData.personalInfo.emergencyContact.address,
-                            country: country
-                          }
-                        });
-                        updatePhoneCountryCode(country);
-                      }}
-                      className="w-full p-2 border rounded"
-                      required
-                    >
-                      <option value="">Select Country</option>
-                      {Object.keys(COUNTRY_CODES).map(country => (
-                        <option key={country} value={country}>{country}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Phone Input with Auto Country Code */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-1">
-                  <label className="block text-sm font-medium mb-1">
-                    Country Code
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.personalInfo.emergencyContact.phone.countryCode}
-                    className="w-full p-2 border rounded bg-gray-100"
-                    disabled
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium mb-1">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.personalInfo.emergencyContact.phone.number || ''}
-                    onChange={(e) => handleInputChange('personalInfo', 'emergencyContact', {
-                      ...formData.personalInfo.emergencyContact,
-                      phone: {
-                        ...formData.personalInfo.emergencyContact.phone,
-                        number: e.target.value
-                      }
-                    })}
-                    className="w-full p-2 border rounded"
-                    required
-                  />
-                </div>
               </div>
             </div>
           </div>
@@ -3826,14 +3648,20 @@ const ApplyNow = () => {
               <h1 className="text-2xl font-bold text-blue-900">
                 {universityData?.university?.name}
               </h1>
-              <div className="text-sm text-gray-600">{level}</div>
+              <div className="text-sm text-gray-600">{formData.personalInfo.studyLevel === 'graduate' ? 'Graduate' : 'Undergraduate'}</div>
             </div>
           </div>
           <div className="text-right">
             <h2 className="text-lg font-semibold text-blue-900">
-              {level?.toUpperCase()} APPLICATION
+              {formData.personalInfo.studyLevel === 'graduate' 
+                ? 'GRADUATE APPLICATION' 
+                : 'UNDERGRADUATE APPLICATION'}
             </h2>
-            <p className="text-sm text-gray-600">{level} Direct Process</p>
+            <p className="text-sm text-gray-600">
+              {formData.personalInfo.studyLevel === 'graduate' 
+                ? 'Graduate Direct Process' 
+                : 'Undergraduate Direct Process'}
+            </p>
           </div>
         </div>
       </div>

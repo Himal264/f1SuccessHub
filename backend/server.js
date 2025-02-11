@@ -20,6 +20,9 @@ import MatchRouter from "./routes/universityRoute.js";
 import eventRouter from "./routes/eventRoute.js";
 
 import applicationRouter from './routes/applynowRoute.js';
+import applynowoRuter from "./routes/applynowRoute.js";
+
+import chatRouter from './routes/chatRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -86,13 +89,17 @@ app.use("/api/event", eventRouter);
 
 
 
-
+//applynow endpoint
+app.use('/api/applications', applynowoRuter);
 
 //advisor inquiry form
 app.use("/api/advisor-inquiryform", inquiryRouter);
 
 // Add this line with other routes
 app.use('/api/applications', applicationRouter);
+
+// Add chat routes
+app.use('/api/chat', chatRouter);
 
 app.get("/", (req, res) => {
   res.send("API Working");
