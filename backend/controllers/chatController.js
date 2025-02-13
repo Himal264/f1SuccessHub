@@ -1,6 +1,7 @@
 import Chat from '../models/chatModel.js';
 import User from '../models/userModel.js';
 import Application from '../models/applynowModel.js';
+import { getIO } from '../services/socket.js';
 
 // Helper function to verify counselor
 const verifyCounselor = async (counselorId) => {
@@ -18,29 +19,18 @@ const verifyUserApplication = async (userId) => {
 
 export const createChat = async (req, res) => {
   try {
-    const { userId, counselorId } = req.body;
+    const { participants } = req.body;
     
-    // Verify counselor is approved
-    const isCounselorValid = await verifyCounselor(counselorId);
-    if (!isCounselorValid) {
-      return res.status(403).json({ 
-        message: 'Selected counselor is not approved or not found' 
+    // Validate participants
+    if (!participants || participants.length < 2) {
+      return res.status(400).json({ 
+        message: 'At least two participants are required' 
       });
     }
 
-    // Verify user has submitted an application
-    const applicationId = await verifyUserApplication(userId);
-    if (!applicationId) {
-      return res.status(403).json({ 
-        message: 'You must submit an application before starting a chat with a counselor' 
-      });
-    }
-
-    // Check if chat already exists
+    // Check if chat already exists with these participants
     const existingChat = await Chat.findOne({
-      user: userId,
-      counselor: counselorId,
-      applicationId
+      'participants.user': { $all: participants.map(p => p.user) }
     });
 
     if (existingChat) {
@@ -48,9 +38,14 @@ export const createChat = async (req, res) => {
     }
 
     const newChat = await Chat.create({
-      user: userId,
-      counselor: counselorId,
-      applicationId
+      participants,
+      applicationId: req.body.applicationId || null
+    });
+
+    // Notify all participants about new chat
+    const io = getIO();
+    participants.forEach(participant => {
+      io.to(participant.user.toString()).emit('new_chat', newChat);
     });
 
     res.status(201).json(newChat);
@@ -68,19 +63,27 @@ export const sendMessage = async (req, res) => {
       return res.status(404).json({ message: 'Chat not found' });
     }
 
-    // Verify sender is either the user or counselor of this chat
-    if (senderId.toString() !== chat.user.toString() && 
-        senderId.toString() !== chat.counselor.toString()) {
+    // Verify sender is a participant
+    if (!chat.participants.some(p => p.user.toString() === senderId)) {
       return res.status(403).json({ message: 'Unauthorized to send message in this chat' });
     }
 
-    chat.messages.push({
+    const newMessage = {
       sender: senderId,
       content,
-    });
+    };
+
+    chat.messages.push(newMessage);
     chat.lastMessage = Date.now();
     
     await chat.save();
+
+    // Emit message to all participants in real-time
+    const io = getIO();
+    io.to(chatId).emit('new_message', {
+      chatId,
+      message: newMessage
+    });
     
     res.status(200).json(chat);
   } catch (error) {

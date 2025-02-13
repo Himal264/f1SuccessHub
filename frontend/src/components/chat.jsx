@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { IoMdChatboxes } from 'react-icons/io';
 import { IoClose, IoSend } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
+import { io } from 'socket.io-client';
 
 const Chat = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,6 +14,7 @@ const Chat = () => {
   const messagesEndRef = useRef(null);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [socket, setSocket] = useState(null);
 
   const handleChatIconClick = async () => {
     if (!user) {
@@ -63,28 +65,53 @@ const Chat = () => {
     scrollToBottom();
   }, [activeChat]);
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!message.trim()) return;
-
-    try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/chat/message`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chatId: activeChat._id,
-          senderId: user._id,
-          content: message,
-        }),
+  useEffect(() => {
+    if (user) {
+      // Initialize socket connection
+      const newSocket = io(import.meta.env.VITE_BACKEND_URL, {
+        auth: {
+          token: localStorage.getItem('token')
+        }
       });
 
-      const updatedChat = await response.json();
-      setChats(chats.map(chat => 
-        chat._id === updatedChat._id ? updatedChat : chat
-      ));
-      setActiveChat(updatedChat);
+      newSocket.on('connect', () => {
+        console.log('Connected to socket server');
+      });
+
+      newSocket.on('new_message', (data) => {
+        if (activeChat && activeChat._id === data.chatId) {
+          setActiveChat(prev => ({
+            ...prev,
+            messages: [...prev.messages, data.message]
+          }));
+        }
+        // Update chat list
+        fetchChats();
+      });
+
+      newSocket.on('user_typing', (data) => {
+        // Handle typing indicator
+      });
+
+      setSocket(newSocket);
+
+      return () => newSocket.close();
+    }
+  }, [user]);
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!message.trim() || !socket) return;
+
+    try {
+      socket.emit('new_message', {
+        chatId: activeChat._id,
+        message: {
+          sender: user._id,
+          content: message,
+        }
+      });
+
       setMessage('');
     } catch (error) {
       console.error('Error sending message:', error);

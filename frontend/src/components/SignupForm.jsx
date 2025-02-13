@@ -22,6 +22,7 @@ const SignupForm = ({ onClose }) => {
       experienceYears: "",
       certifiedCompany: "",
       associatedCompany: "",
+      country: "",
     },
     universityInfo: {
       universityName: "",
@@ -261,6 +262,15 @@ const SignupForm = ({ onClose }) => {
               placeholder="Years of Experience"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg"
               value={signupData.counselorInfo.experienceYears}
+              onChange={handleChange}
+              required
+            />
+            <input
+              type="text"
+              name="counselorInfo.country"
+              placeholder="Country"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              value={signupData.counselorInfo.country}
               onChange={handleChange}
               required
             />

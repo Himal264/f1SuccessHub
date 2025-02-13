@@ -23,6 +23,8 @@ import applicationRouter from './routes/applynowRoute.js';
 import applynowoRuter from "./routes/applynowRoute.js";
 
 import chatRouter from './routes/chatRoutes.js';
+import { createServer } from 'http';
+import { initializeSocket } from './services/socket.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -40,6 +42,8 @@ const verificationDocsDir = path.join(uploadsDir, "verification-documents");
 
 // App Config
 const app = express();
+const httpServer = createServer(app);
+const io = initializeSocket(httpServer);
 const port = process.env.PORT || 9000;
 connectDB();
 connectCloudinary();
@@ -105,4 +109,4 @@ app.get("/", (req, res) => {
   res.send("API Working");
 });
 
-app.listen(port, () => console.log("Server started on PORT : " + port));
+httpServer.listen(port, () => console.log("Server started on PORT : " + port));

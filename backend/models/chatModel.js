@@ -21,20 +21,22 @@ const messageSchema = new mongoose.Schema({
 });
 
 const chatSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  counselor: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
+  participants: [{
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    role: {
+      type: String,
+      required: true,
+      enum: ['user', 'counselor', 'alumni', 'university']
+    }
+  }],
   applicationId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ApplyNow',
-    required: true
+    required: false
   },
   messages: [messageSchema],
   lastMessage: {

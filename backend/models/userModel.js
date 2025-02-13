@@ -31,6 +31,9 @@ const userSchema = new mongoose.Schema(
       certifiedCompany: { type: String, default: "" },
       associatedCompany: { type: String, default: "" },
       startDate: { type: Date, default: null },
+      country: { type: String, required: function() {
+        return this.role === 'counselor';
+      }},
       documents: {
         professionalCertification: {
           url: { type: String },
