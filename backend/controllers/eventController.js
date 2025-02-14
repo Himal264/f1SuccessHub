@@ -15,8 +15,19 @@ export const createEvent = async (req, res) => {
       startDate,
       location, 
       type,
+      language,
       maxParticipants 
     } = req.body;
+
+    // Verify user exists and has proper role
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required"
+      });
+    }
+
+    console.log('Creating event with user:', req.user._id, 'role:', req.user.role);
 
     // Parse level if it's a string
     let parsedLevel = level;
@@ -28,30 +39,39 @@ export const createEvent = async (req, res) => {
       }
     }
 
-    // Create event
-    const event = await eventModel.create({
+    // Create event with explicit role assignment
+    const eventData = {
       title,
       description,
       level: parsedLevel,
       startDate,
       location,
       type,
+      language,
       maxParticipants: parseInt(maxParticipants) || undefined,
       createdBy: req.user._id,
       creatorRole: req.user.role
-    });
+    };
+
+    console.log('Event data:', eventData);
+
+    const event = await eventModel.create(eventData);
+
+    // Populate the createdBy field
+    const populatedEvent = await event.populate('createdBy');
 
     res.status(201).json({
       success: true,
       message: "Event created successfully",
-      event
+      event: populatedEvent
     });
   } catch (error) {
-    console.error("Error creating event:", error);
+    console.error("Detailed error:", error);
     res.status(500).json({
       success: false,
       message: "Error creating event",
-      error: error.message
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

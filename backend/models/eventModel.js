@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import mongooseAutopopulate from 'mongoose-autopopulate';
+import User from './userModel.js';
 
 const eventSchema = new mongoose.Schema({
   title: {
@@ -58,7 +59,7 @@ const eventSchema = new mongoose.Schema({
   creatorRole: {
     type: String,
     required: true,
-    enum: ['admin', 'counselor', 'university']
+    enum: ['admin', 'counselor', 'alumni', 'university']
   },
   status: {
     type: String,
@@ -83,5 +84,5 @@ eventSchema.pre('save', function(next) {
 // Add plugin for autopopulate
 eventSchema.plugin(mongooseAutopopulate);
 
-const eventModel = mongoose.model('Event', eventSchema);
-export default eventModel;
+const Event = mongoose.model('Event', eventSchema);
+export default Event;

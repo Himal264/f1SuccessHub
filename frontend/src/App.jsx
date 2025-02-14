@@ -71,6 +71,8 @@ import EventAdd from "./pages/EventAdd";
 import Event from "./pages/Event";
 import Results from "./components/Results";
 import ApplyNow from "./components/ApplyNow";
+import EventDetails from './pages/EventDetails';
+import WebinarRoom from './pages/WebinarRoom';
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -266,6 +268,9 @@ const App = () => {
                 path="/f1successfor/career/professionals-and-alumni-networking"
                 element={<AluminiConnection />}
               />
+              <Route path="/events" element={<Event />} />
+              <Route path="/event/:id" element={<EventDetails />} />
+              <Route path="/webinar/:id" element={<WebinarRoom />} />
             </Routes>
             <ScrollToTop />
           </div>

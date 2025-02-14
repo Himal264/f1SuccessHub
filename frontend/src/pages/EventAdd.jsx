@@ -108,7 +108,7 @@ const EventAdd = () => {
     title: '',
     description: '',
     level: [], // Array for education levels
-    language: '', // Added language field
+    language: 'English', // Set default language
     type: 'physical', // Changed default to match model
     startDate: '',
     location: ''
@@ -147,6 +147,14 @@ const EventAdd = () => {
     { id: 'physical', label: 'Physical' },
     { id: 'webinar', label: 'Webinar' },
     { id: 'hybrid', label: 'Hybrid' }
+  ];
+
+  const languages = [
+    { id: 'English', label: 'English' },
+    { id: 'Chinese', label: 'Chinese' },
+    { id: 'Spanish', label: 'Spanish' },
+    { id: 'French', label: 'French' },
+    // Add more languages as needed
   ];
 
   const handleChange = (e) => {
@@ -249,19 +257,24 @@ const EventAdd = () => {
             </div>
           </div>
 
-          {/* Language */}
+          {/* Language Dropdown */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Language
             </label>
-            <input
-              type="text"
+            <select
               name="language"
               value={formData.language}
               onChange={handleChange}
               className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               required
-            />
+            >
+              {languages.map(lang => (
+                <option key={lang.id} value={lang.id}>
+                  {lang.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Event Type */}

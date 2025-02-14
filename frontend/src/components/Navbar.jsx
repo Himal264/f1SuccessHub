@@ -374,56 +374,115 @@ const Navbar = () => {
 
             {/* Profile Dropdown */}
             {showProfileDropdown && user && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                {/* Common Profile Header */}
-                <div className="px-4 py-3 border-b">
-                  <div className="flex items-center">
-                    <img 
-                      src={user.profilePicture?.url || getDefaultProfilePicture(user.name)}
-                      alt={user.name}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
-                    />
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                      <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50">
+                {!isEditingProfile ? (
+                  <>
+                    {/* Normal Profile View */}
+                    <div className="px-6 py-4 border-b">
+                      <div className="flex items-center">
+                        <img 
+                          src={user.profilePicture?.url || getDefaultProfilePicture(user.name)}
+                          alt={user.name}
+                          className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                        />
+                        <div className="ml-4">
+                          <p className="text-base font-medium text-gray-900">{user.name}</p>
+                          <p className="text-sm text-gray-500 capitalize">{user.role}</p>
+                        </div>
+                      </div>
                     </div>
+
+                    <button
+                      onClick={() => setIsEditingProfile(true)}
+                      className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Edit Profile Settings
+                    </button>
+
+                    {/* Role-specific Options */}
+                    {user.role === 'user' && (
+                      <button
+                        onClick={() => navigate('/applied-universities')}
+                        className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Applied Universities
+                      </button>
+                    )}
+
+                    {(user.role === 'counselor' || user.role === 'alumni' || user.role === 'university') && (
+                      <button
+                        onClick={() => navigate('/event/add')}
+                        className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Create Event
+                      </button>
+                    )}
+
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-6 py-3 text-sm text-red-600 hover:bg-red-50"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  /* Edit Profile View */
+                  <div className="p-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-semibold">Edit Profile</h3>
+                      <button
+                        onClick={() => setIsEditingProfile(false)}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        ← Back
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleProfileUpdate}>
+                      <div className="mb-4 flex flex-col items-center">
+                        <img
+                          src={profileData.previewUrl}
+                          alt="Profile"
+                          className="w-20 h-20 rounded-full object-cover mb-2"
+                        />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleProfilePictureChange(e.target.files[0])}
+                          className="w-full text-sm"
+                        />
+                      </div>
+
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium mb-1">Name</label>
+                        <input
+                          type="text"
+                          value={profileData.name}
+                          onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-md text-sm"
+                          required
+                        />
+                      </div>
+
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium mb-1">Email</label>
+                        <input
+                          type="email"
+                          value={profileData.email}
+                          className="w-full px-3 py-2 border rounded-md bg-gray-50 text-sm"
+                          readOnly
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="w-full bg-[#F37021] text-white py-2 rounded-md hover:bg-[#e85d0a] text-sm"
+                      >
+                        Save Changes
+                      </button>
+                    </form>
                   </div>
-                </div>
-
-                {/* Common Option - Edit Profile */}
-                <button
-                  onClick={() => setIsEditingProfile(true)}
-                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Edit Profile Settings
-                </button>
-
-                {/* Role-specific Options */}
-                {user.role === 'user' && (
-                  <button
-                    onClick={() => navigate('/applied-universities')}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Applied Universities
-                  </button>
                 )}
-
-                {(user.role === 'counselor' || user.role === 'alumni' || user.role === 'university') && (
-                  <button
-                    onClick={() => navigate('/event/add')}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Create Event
-                  </button>
-                )}
-
-                {/* Common Option - Logout */}
-                <button
-                  onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                >
-                  Logout
-                </button>
               </div>
             )}
           </div>
@@ -606,71 +665,6 @@ const Navbar = () => {
             setShowChatContainer(false);
           }}
         />
-      )}
-
-      {/* Profile Edit Modal */}
-      {isEditingProfile && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <h2 className="text-xl font-semibold mb-4">Edit Profile</h2>
-            <form onSubmit={handleProfileUpdate}>
-              {/* Profile Picture */}
-              <div className="mb-4 flex flex-col items-center">
-                <img
-                  src={profileData.previewUrl}
-                  alt="Profile"
-                  className="w-24 h-24 rounded-full object-cover mb-2"
-                />
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleProfilePictureChange(e.target.files[0])}
-                  className="w-full"
-                />
-              </div>
-
-              {/* Name Input */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Name</label>
-                <input
-                  type="text"
-                  value={profileData.name}
-                  onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 py-2 border rounded-md"
-                  required
-                />
-              </div>
-
-              {/* Email (Read-only) */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Email</label>
-                <input
-                  type="email"
-                  value={profileData.email}
-                  className="w-full px-3 py-2 border rounded-md bg-gray-50"
-                  readOnly
-                />
-              </div>
-
-              {/* Buttons */}
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600"
-                >
-                  Save Changes
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsEditingProfile(false)}
-                  className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
       )}
     </>
   );

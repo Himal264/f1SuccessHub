@@ -26,6 +26,10 @@ import chatRouter from './routes/chatRoutes.js';
 import { createServer } from 'http';
 import { initializeSocket } from './services/socket.js';
 
+import mongoose from 'mongoose';
+import './models/userModel.js';  // Load User model first
+import './models/eventModel.js'; // Then load Event model
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
