@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { backendUrl } from '../App';
 
 const WebinarRoom = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const role = searchParams.get('role');
   const navigate = useNavigate();
   const { user } = useAuth();
   const [event, setEvent] = useState(null);
@@ -17,6 +19,11 @@ const WebinarRoom = () => {
         const response = await axios.get(`${backendUrl}/api/event/${id}`);
         if (response.data.success) {
           setEvent(response.data.event);
+          
+          // Verify if user has permission to host
+          if (role === 'host' && response.data.event.createdBy._id !== user?._id) {
+            navigate(`/webinar/${id}?role=participant`);
+          }
         }
       } catch (error) {
         console.error('Error fetching event details:', error);
@@ -26,7 +33,7 @@ const WebinarRoom = () => {
     };
 
     fetchEventDetails();
-  }, [id]);
+  }, [id, user, role]);
 
   if (loading) {
     return <div>Loading webinar room...</div>;
@@ -57,11 +64,18 @@ const WebinarRoom = () => {
             <h1 className="text-xl font-semibold">{event?.title}</h1>
             <div className="flex items-center gap-4">
               <span className="text-red-500">LIVE</span>
+              {role === 'host' && (
+                <button 
+                  className="bg-red-500 text-white px-4 py-1 rounded-full text-sm"
+                >
+                  End Stream
+                </button>
+              )}
               <button 
                 onClick={() => navigate(`/event/${id}`)}
                 className="text-gray-600 hover:text-gray-900"
               >
-                Exit Webinar
+                {role === 'host' ? 'End Webinar' : 'Exit Webinar'}
               </button>
             </div>
           </div>
@@ -74,14 +88,29 @@ const WebinarRoom = () => {
           {/* Main Video Area */}
           <div className="lg:col-span-2">
             <div className="bg-black aspect-video rounded-lg flex items-center justify-center">
-              {/* Add your video component here */}
-              <p className="text-white">Video Stream Will Appear Here</p>
+              {role === 'host' ? (
+                <div className="text-white text-center">
+                  <p className="mb-2">Host Controls</p>
+                  <button className="bg-[#4B0082] px-4 py-2 rounded-full">
+                    Start Broadcasting
+                  </button>
+                </div>
+              ) : (
+                <p className="text-white">Waiting for host to start the stream...</p>
+              )}
             </div>
           </div>
 
           {/* Chat Area */}
           <div className="bg-white rounded-lg p-4 h-[600px] flex flex-col">
-            <h3 className="font-semibold mb-4">Live Chat</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-semibold">Live Chat</h3>
+              {role === 'host' && (
+                <button className="text-sm text-gray-600">
+                  Manage Chat
+                </button>
+              )}
+            </div>
             <div className="flex-1 overflow-y-auto mb-4">
               {/* Chat messages will appear here */}
             </div>

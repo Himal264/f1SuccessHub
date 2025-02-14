@@ -5,10 +5,12 @@ import { format } from 'date-fns';
 import { FaCalendarAlt, FaMapMarkerAlt, FaLanguage, FaUsers } from 'react-icons/fa';
 import { backendUrl } from '../App';
 import Footer from '../components/Footer';
+import { useAuth } from '../context/AuthContext';
 
 const EventDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,8 +35,14 @@ const EventDetails = () => {
     }
   };
 
-  const handleJoinWebinar = () => {
-    navigate(`/webinar/${id}`);
+  const isEventCreator = user && event?.createdBy?._id === user._id;
+
+  const handleWebinarAction = () => {
+    if (isEventCreator) {
+      navigate(`/webinar/${id}?role=host`);
+    } else {
+      navigate(`/webinar/${id}?role=participant`);
+    }
   };
 
   if (loading) {
@@ -129,10 +137,10 @@ const EventDetails = () => {
                   {format(new Date(event.startDate), 'EEEE MMM d, yyyy \'at\' h:mm a')} - Eastern Time
                 </div>
                 <button 
-                  onClick={handleJoinWebinar}
+                  onClick={handleWebinarAction}
                   className="bg-[#4B0082] text-white px-8 py-2 rounded-full hover:bg-opacity-90 transition-colors"
                 >
-                  Join
+                  {isEventCreator ? 'Host' : 'Join'}
                 </button>
               </div>
             </div>
