@@ -197,7 +197,7 @@ const Navbar = () => {
     }
   }, [user]);
 
-  // Handle profile update
+  // Profile update handler
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     
@@ -221,7 +221,6 @@ const Navbar = () => {
 
         const pictureData = await pictureResponse.json();
         if (pictureData.success) {
-          // Update profile picture in state
           const updatedUser = {
             ...user,
             profilePicture: pictureData.profilePicture
@@ -265,22 +264,20 @@ const Navbar = () => {
     }
   };
 
+  // Profile picture change handler
   const handleProfilePictureChange = (file) => {
     if (!file) return;
 
-    // Check file type
     if (!file.type.startsWith('image/')) {
       toast.error('Please upload an image file');
       return;
     }
 
-    // Check file size (2MB limit)
     if (file.size > 2 * 1024 * 1024) {
       toast.error('Image size should be less than 2MB');
       return;
     }
 
-    // Create preview URL
     const previewUrl = URL.createObjectURL(file);
     setProfileData(prev => ({
       ...prev,
@@ -377,173 +374,56 @@ const Navbar = () => {
 
             {/* Profile Dropdown */}
             {showProfileDropdown && user && (
-              <div className="absolute right-0 mt-2 w-96 bg-white rounded-md shadow-lg py-1 z-50">
-                {!isEditingProfile ? (
-                  // Regular profile view
-                  <>
-                    <div className="px-4 py-3 border-b">
-                      <div className="flex items-center space-x-4">
-                        <img 
-                          src={user.profilePicture?.url || getDefaultProfilePicture(user.name)}
-                          alt={user.name}
-                          className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
-                        />
-                        <div className="flex-1">
-                          <p className="text-lg font-medium text-gray-900">{user.name}</p>
-                          <p className="text-sm text-gray-500">{user.email}</p>
-                          <p className="text-sm font-medium text-gray-700 capitalize mt-1">
-                            {user.role === 'user' ? 'Standard User' : user.role}
-                          </p>
-                        </div>
-                      </div>
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                {/* Common Profile Header */}
+                <div className="px-4 py-3 border-b">
+                  <div className="flex items-center">
+                    <img 
+                      src={user.profilePicture?.url || getDefaultProfilePicture(user.name)}
+                      alt={user.name}
+                      className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                    />
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                      <p className="text-xs text-gray-500 capitalize">{user.role}</p>
                     </div>
-
-                    <div className="px-4 py-2 space-y-1">
-                      <button
-                        onClick={() => setIsEditingProfile(true)}
-                        className="block w-full text-left px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        <div className="flex items-center">
-                          <svg className="mr-3 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                          Edit Profile Settings
-                        </div>
-                      </button>
-                      
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full text-left px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      >
-                        <div className="flex items-center">
-                          <svg className="mr-3 h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                          </svg>
-                          Applied Universities
-                        </div>
-                      </button>
-                      <button
-                        onClick={handleLogout}
-                        className="block w-full text-left px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      >
-                        <div className="flex items-center">
-                          <svg className="mr-3 h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                          </svg>
-                          Logout
-                        </div>
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  // Edit profile form
-                  <div className="p-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-medium">Edit Profile</h3>
-                      <button
-                        onClick={() => setIsEditingProfile(false)}
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    
-                    <form onSubmit={handleProfileUpdate} className="space-y-4">
-                      {/* Profile Picture Upload */}
-                      <div className="flex flex-col items-center space-y-2">
-                        <div className="relative group">
-                          <img 
-                            src={profileData.previewUrl}
-                            alt={profileData.name}
-                            className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
-                          />
-                          <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                            <input
-                              type="file"
-                              className="hidden"
-                              accept="image/*"
-                              onChange={(e) => handleProfilePictureChange(e.target.files[0])}
-                            />
-                            <div className="text-white text-xs flex flex-col items-center">
-                              <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                              </svg>
-                              <span>Change Photo</span>
-                            </div>
-                          </label>
-                        </div>
-                        <p className="text-xs text-gray-500">Click to change profile picture</p>
-                      </div>
-
-                      {/* Name Input */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Name
-                        </label>
-                        <input
-                          type="text"
-                          value={profileData.name}
-                          onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
-                        />
-                      </div>
-
-                      {/* Email (Read-only) */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          value={profileData.email}
-                          disabled
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
-                        />
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex justify-end space-x-3 pt-4">
-                        <button
-                          type="button"
-                          onClick={() => setIsEditingProfile(false)}
-                          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          className="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-md hover:bg-orange-600"
-                        >
-                          Save Changes
-                        </button>
-                      </div>
-                    </form>
                   </div>
+                </div>
+
+                {/* Common Option - Edit Profile */}
+                <button
+                  onClick={() => setIsEditingProfile(true)}
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Edit Profile Settings
+                </button>
+
+                {/* Role-specific Options */}
+                {user.role === 'user' && (
+                  <button
+                    onClick={() => navigate('/applied-universities')}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Applied Universities
+                  </button>
                 )}
 
-                {/* Platform Rules */}
-                <div className="px-4 py-3 mt-2 border-t bg-gray-50">
-                  <p className="text-xs font-medium text-gray-500 mb-2">Platform Rules:</p>
-                  <ul className="text-xs text-gray-500 space-y-1">
-                    <li className="flex items-center">
-                      <span className="mr-2">•</span>
-                      Maintain professional conduct
-                    </li>
-                    <li className="flex items-center">
-                      <span className="mr-2">•</span>
-                      Respect community guidelines
-                    </li>
-                    <li className="flex items-center">
-                      <span className="mr-2">•</span>
-                      Keep information accurate and updated
-                    </li>
-                    <li className="flex items-center">
-                      <span className="mr-2">•</span>
-                      Report any suspicious activity
-                    </li>
-                  </ul>
-                </div>
+                {(user.role === 'counselor' || user.role === 'alumni' || user.role === 'university') && (
+                  <button
+                    onClick={() => navigate('/event/add')}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Create Event
+                  </button>
+                )}
+
+                {/* Common Option - Logout */}
+                <button
+                  onClick={handleLogout}
+                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                >
+                  Logout
+                </button>
               </div>
             )}
           </div>
@@ -726,6 +606,71 @@ const Navbar = () => {
             setShowChatContainer(false);
           }}
         />
+      )}
+
+      {/* Profile Edit Modal */}
+      {isEditingProfile && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg w-96">
+            <h2 className="text-xl font-semibold mb-4">Edit Profile</h2>
+            <form onSubmit={handleProfileUpdate}>
+              {/* Profile Picture */}
+              <div className="mb-4 flex flex-col items-center">
+                <img
+                  src={profileData.previewUrl}
+                  alt="Profile"
+                  className="w-24 h-24 rounded-full object-cover mb-2"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleProfilePictureChange(e.target.files[0])}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Name Input */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Name</label>
+                <input
+                  type="text"
+                  value={profileData.name}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded-md"
+                  required
+                />
+              </div>
+
+              {/* Email (Read-only) */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Email</label>
+                <input
+                  type="email"
+                  value={profileData.email}
+                  className="w-full px-3 py-2 border rounded-md bg-gray-50"
+                  readOnly
+                />
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="flex-1 bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600"
+                >
+                  Save Changes
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingProfile(false)}
+                  className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </>
   );

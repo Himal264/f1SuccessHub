@@ -6,140 +6,95 @@ import { useNavigate } from 'react-router-dom';
 import { format, formatDistanceToNow } from 'date-fns';
 import { FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaRegClock, FaImage, FaGraduationCap, FaUserTie, FaUniversity } from 'react-icons/fa';
 import { RiGraduationCapFill } from 'react-icons/ri';
+import { FaUser } from 'react-icons/fa';
 
-// EventPreview Component
-const EventPreview = ({ formData, userRole }) => {
-  const calculateStatus = () => {
-    const now = new Date();
-    const start = new Date(formData.startDate);
-    const end = new Date(formData.endDate);
-    
-    if (!formData.startDate || !formData.endDate) return 'upcoming';
-    if (end < now) return 'completed';
-    if (start <= now && end >= now) return 'ongoing';
-    return 'upcoming';
+// Internal Preview Component
+const EventPreviewCard = ({ formData, userRole }) => {
+  // Get creator's initials for the profile display
+  const getInitials = () => {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo')) || {};
+    const name = userInfo.name || '';
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Get creator's profile picture
+  const getCreatorProfile = () => {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo')) || {};
+    return userInfo.profilePicture?.url;
   };
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-      {/* Event Header */}
-      <div className="flex items-start mb-3">
-        <div className="bg-gray-200 rounded-full p-2 mr-3">
-          {userRole === 'alumni' ? (
-            <FaGraduationCap className="text-2xl text-blue-500" />
-          ) : userRole === 'counselor' ? (
-            <FaUserTie className="text-2xl text-green-500" />
-          ) : userRole === 'university' ? (
-            <FaUniversity className="text-2xl text-purple-500" />
+    <div className="bg-white rounded-xl overflow-hidden shadow-lg">
+      {/* Header with Logo */}
+      <div className="bg-[#0B1F51] p-6 flex justify-between items-center">
+        <h1 className="text-2xl text-white font-serif">{formData.title || 'Event Title'}</h1>
+        <div className="w-16 h-16 bg-white p-2 rounded-lg overflow-hidden">
+          {getCreatorProfile() ? (
+            <img 
+              src={getCreatorProfile()} 
+              alt="Creator"
+              className="w-full h-full object-cover rounded"
+            />
           ) : (
-            <FaUser className="text-2xl text-gray-500" />
+            <div className="w-full h-full flex items-center justify-center text-[#0B1F51] font-bold text-xl">
+              {getInitials()}
+            </div>
           )}
         </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold">{formData.title || 'Event Title'}</h3>
-            <span className={`px-2 py-1 text-xs rounded-full ${
-              calculateStatus() === 'upcoming' ? 'bg-blue-100 text-blue-800' :
-              calculateStatus() === 'ongoing' ? 'bg-green-100 text-green-800' :
-              'bg-gray-100 text-gray-800'
-            }`}>
-              {calculateStatus()}
-            </span>
-          </div>
-          <div className="text-sm text-gray-600 flex items-center gap-2">
-            <span>@{userRole || 'organizer'}</span>
-            <span>·</span>
-            <span>Now</span>
-          </div>
-        </div>
       </div>
 
-      {/* Event Content */}
-      <p className="mb-4 text-gray-800">{formData.description || 'Event description...'}</p>
+      {/* Education Level Tags */}
+      <div className="px-6 py-4 flex gap-2">
+        {formData.level && formData.level.map((level, index) => (
+          <span
+            key={index}
+            className="inline-block px-4 py-1 rounded-full border border-gray-300 text-sm font-medium"
+          >
+            {level}
+          </span>
+        ))}
+      </div>
 
       {/* Event Details */}
-      <div className="border rounded-lg p-3 mb-4">
-        <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
-          <div className="flex items-center gap-1">
-            <FaCalendarAlt className="text-blue-500" />
-            <span>
+      <div className="px-6 py-4">
+        <div className="space-y-4">
+          {/* Time and Location Section */}
+          <div className="space-y-2">
+            <div className="flex items-center text-gray-700">
+              <span className="font-medium">MY TIMEZONE</span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <select className="border rounded-md px-3 py-2 text-sm w-48">
+                <option>Eastern Time</option>
+                {/* Add other timezone options */}
+              </select>
+            </div>
+            
+            <div className="flex items-center text-gray-700 mt-4">
+              <span className="font-medium">My Event</span>
+            </div>
+            <div className="bg-gray-50 rounded-md p-3 text-sm">
               {formData.startDate ? 
-                format(new Date(formData.startDate), 'MMM dd, yyyy h:mm a') : 
-                'Start date'}
-            </span>
+                format(new Date(formData.startDate), 'EEEE MMM d, yyyy \'at\' h:mm a') + ' - Eastern Time'
+                : 'Select date and time'
+              }
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <FaMapMarkerAlt className="text-red-500" />
-            <span>{formData.location || 'Location'}</span>
+
+          {/* Description */}
+          <div className="mt-6 text-gray-600">
+            <p className="whitespace-pre-wrap">{formData.description || 'This event description will appear here...'}</p>
           </div>
-          <div className="flex items-center gap-1">
-            <FaUsers className="text-purple-500" />
-            <span>
-              0{formData.maxParticipants ? `/${formData.maxParticipants}` : ''}
-            </span>
-          </div>
-        </div>
-      </div>
 
-      {/* Image Previews */}
-      {formData.images && formData.images.filter(Boolean).length > 0 ? (
-        <div className={`grid gap-2 mb-4 ${
-          formData.images.filter(Boolean).length === 1 ? 'grid-cols-1' : 'grid-cols-2'
-        }`}>
-          {formData.images.filter(Boolean).map((preview, index) => (
-            <img
-              key={index}
-              src={preview}
-              alt={`Preview ${index + 1}`}
-              className="rounded-lg object-cover h-48 w-full"
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="border-2 border-dashed rounded-lg p-4 mb-4 text-center text-gray-500">
-          <FaImage className="text-3xl mx-auto mb-2" />
-          <p>Image preview will appear here</p>
-        </div>
-      )}
-
-      {/* Categories */}
-      {formData.categories && formData.categories.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-4">
-          {formData.categories.map((category, index) => (
-            <span key={index} className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-              {category}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Tags */}
-      {formData.tags && formData.tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2">
-          {formData.tags.map((tag, index) => (
-            <span key={index} className="text-sm bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
-              #{tag}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Event Type */}
-      <div className="mt-4">
-        <span className="text-sm bg-gray-100 px-2 py-1 rounded-full">
-          {formData.type || 'event type'}
-        </span>
-      </div>
-
-      {/* Dates */}
-      <div className="mt-4 space-y-2">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <FaCalendarAlt className="text-blue-500" />
-          <span>Starts: {formData.startDate || 'Not set'}</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <FaCalendarAlt className="text-red-500" />
-          <span>Ends: {formData.endDate || 'Not set'}</span>
+          {/* Register Button */}
+          <button className="w-full bg-black text-white py-3 px-6 rounded-md font-medium hover:bg-gray-900 transition-colors">
+            Register
+          </button>
         </div>
       </div>
     </div>
@@ -152,18 +107,13 @@ const EventAdd = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    categories: [],
-    type: 'in-person',
+    level: [], // Array for education levels
+    language: '', // Added language field
+    type: 'physical', // Changed default to match model
     startDate: '',
-    endDate: '',
-    location: '',
-    images: new Array(6).fill(null), // Array of 6 null values for images
-    tags: [],
-    maxParticipants: '',
+    location: ''
   });
-  const [previewImages, setPreviewImages] = useState(new Array(6).fill(null));
   const [isLoading, setIsLoading] = useState(false);
-  const [tagInput, setTagInput] = useState(''); // New state for tag input
 
   // Check for both token and role
   useEffect(() => {
@@ -172,7 +122,7 @@ const EventAdd = () => {
 
     if (!token) {
       toast.error('Please login first');
-      navigate('/'); // Navigate to home instead of /login
+      navigate('/');
       return;
     }
 
@@ -185,18 +135,17 @@ const EventAdd = () => {
     }
   }, [navigate]);
 
-  const categories = [
+  const levels = [
     { id: 'undergraduate', label: 'Undergraduate' },
     { id: 'graduate', label: 'Graduate' },
+    { id: 'master', label: 'Master' },
     { id: 'phd', label: 'PhD' },
-    { id: 'research', label: 'Research' },
-    { id: 'workshop', label: 'Workshop' },
-    { id: 'seminar', label: 'Seminar' }
+    { id: 'language', label: 'Language' }
   ];
 
   const eventTypes = [
-    { id: 'in-person', label: 'In Person' },
-    { id: 'online', label: 'Online' },
+    { id: 'physical', label: 'Physical' },
+    { id: 'webinar', label: 'Webinar' },
     { id: 'hybrid', label: 'Hybrid' }
   ];
 
@@ -205,67 +154,13 @@ const EventAdd = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle category checkbox changes
-  const handleCategoryChange = (categoryId) => {
+  const handleLevelChange = (levelId) => {
     setFormData(prev => {
-      const updatedCategories = prev.categories.includes(categoryId)
-        ? prev.categories.filter(id => id !== categoryId)
-        : [...prev.categories, categoryId];
-      return { ...prev, categories: updatedCategories };
+      const updatedLevels = prev.level.includes(levelId)
+        ? prev.level.filter(id => id !== levelId)
+        : [...prev.level, levelId];
+      return { ...prev, level: updatedLevels };
     });
-  };
-
-  // Handle tag input
-  const handleTagInputKeyDown = (e) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      const newTag = tagInput.trim().replace(/^#/, ''); // Remove # if present
-      if (newTag && !formData.tags.includes(newTag)) {
-        setFormData(prev => ({
-          ...prev,
-          tags: [...prev.tags, newTag]
-        }));
-      }
-      setTagInput('');
-    }
-  };
-
-  // Remove tag
-  const removeTag = (tagToRemove) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
-  };
-
-  // Handle individual image upload
-  const handleImageChange = (e, index) => {
-    const file = e.target.files[0];
-    if (file) {
-      const newImages = [...formData.images];
-      newImages[index] = file;
-      setFormData(prev => ({ ...prev, images: newImages }));
-
-      // Update preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const newPreviews = [...previewImages];
-        newPreviews[index] = reader.result;
-        setPreviewImages(newPreviews);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Remove image
-  const removeImage = (index) => {
-    const newImages = [...formData.images];
-    newImages[index] = null;
-    setFormData(prev => ({ ...prev, images: newImages }));
-
-    const newPreviews = [...previewImages];
-    newPreviews[index] = null;
-    setPreviewImages(newPreviews);
   };
 
   const handleSubmit = async (e) => {
@@ -274,78 +169,40 @@ const EventAdd = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const userRole = localStorage.getItem('userRole');
-
-      if (!token || !userRole) {
-        toast.error('Please login first');
-        navigate('/');
-        return;
-      }
-
-      // Construct the appropriate endpoint based on user role
-      let endpoint;
-      switch(userRole) {
-        case 'admin':
-          endpoint = `${backendUrl}/api/event/admin/create`;
-          break;
-        case 'counselor':
-          endpoint = `${backendUrl}/api/event/counselor/create`;
-          break;
-        case 'alumni':
-          endpoint = `${backendUrl}/api/event/alumni/create`;
-          break;
-        case 'university':
-          endpoint = `${backendUrl}/api/event/university/create`;
-          break;
-        default:
-          throw new Error('Invalid user role');
-      }
-
-      const formPayload = new FormData();
-      Object.keys(formData).forEach(key => {
-        if (key === 'images') {
-          // Only append non-null images
-          formData.images.forEach(image => {
-            if (image) {
-              formPayload.append('images', image);
-            }
-          });
-        } else if (key === 'categories' || key === 'tags') {
-          // Append arrays as JSON strings
-          formPayload.append(key, JSON.stringify(formData[key]));
-        } else {
-          formPayload.append(key, formData[key]);
-        }
-      });
-
-      const response = await axios.post(endpoint, formPayload, {
+      const response = await fetch(`${backendUrl}/api/event/create`, {
+        method: 'POST',
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        }
+        },
+        body: JSON.stringify(formData)
       });
 
-      if (response.data.success) {
+      const data = await response.json();
+
+      if (response.ok) {
         toast.success('Event created successfully!');
         navigate('/event');
+      } else {
+        throw new Error(data.message || 'Failed to create event');
       }
     } catch (error) {
-      console.error('Error:', error);
-      toast.error(error.response?.data?.message || 'Error creating event');
+      console.error('Error creating event:', error);
+      toast.error(error.message || 'Error creating event');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
+    <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
       <div>
-        <h2 className="text-2xl font-semibold mb-6">Create New Event</h2>
+        <h2 className="text-2xl font-bold mb-6">Create New Event</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Event Title
+              Title
             </label>
             <input
               type="text"
@@ -366,111 +223,44 @@ const EventAdd = () => {
               name="description"
               value={formData.description}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 min-h-[150px]"
+              rows={4}
+              className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
-          {/* Categories as Checkboxes */}
+          {/* Education Levels */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Categories
+              Education Levels
             </label>
-            <div className="grid grid-cols-2 gap-2">
-              {categories.map(category => (
-                <label key={category.id} className="flex items-center space-x-2">
+            <div className="space-y-2">
+              {levels.map(level => (
+                <label key={level.id} className="flex items-center">
                   <input
                     type="checkbox"
-                    checked={formData.categories.includes(category.id)}
-                    onChange={() => handleCategoryChange(category.id)}
-                    className="rounded text-blue-500 focus:ring-blue-500"
+                    checked={formData.level.includes(level.id)}
+                    onChange={() => handleLevelChange(level.id)}
+                    className="rounded text-blue-500 mr-2"
                   />
-                  <span className="text-sm text-gray-700">{category.label}</span>
+                  {level.label}
                 </label>
               ))}
             </div>
           </div>
 
-          {/* Tags Input */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tags
-            </label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {formData.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm flex items-center"
-                >
-                  #{tag}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="ml-1 text-blue-600 hover:text-blue-800"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-            <input
-              type="text"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              onKeyDown={handleTagInputKeyDown}
-              placeholder="Type tag and press Enter (e.g., event, nepal)"
-              className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Individual Image Inputs */}
-          <div className="grid grid-cols-2 gap-4">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  Image {index + 1}
-                </label>
-                <div className="relative">
-                  {previewImages[index] ? (
-                    <div className="relative">
-                      <img
-                        src={previewImages[index]}
-                        alt={`Preview ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ) : (
-                    <input
-                      type="file"
-                      onChange={(e) => handleImageChange(e, index)}
-                      accept="image/*"
-                      className="w-full px-3 py-2 border rounded-md"
-                    />
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Max Participants */}
+          {/* Language */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Maximum Participants
+              Language
             </label>
             <input
-              type="number"
-              name="maxParticipants"
-              value={formData.maxParticipants}
+              type="text"
+              name="language"
+              value={formData.language}
               onChange={handleChange}
-              min="1"
               className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
 
@@ -494,35 +284,19 @@ const EventAdd = () => {
             </select>
           </div>
 
-          {/* Date and Time */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Start Date & Time
-              </label>
-              <input
-                type="datetime-local"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                End Date & Time
-              </label>
-              <input
-                type="datetime-local"
-                name="endDate"
-                value={formData.endDate}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
+          {/* Start Date & Time */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Start Date & Time
+            </label>
+            <input
+              type="datetime-local"
+              name="startDate"
+              value={formData.startDate}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+              required
+            />
           </div>
 
           {/* Location */}
@@ -536,7 +310,7 @@ const EventAdd = () => {
               value={formData.location}
               onChange={handleChange}
               className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-              required
+              required={formData.type === 'physical' || formData.type === 'hybrid'}
             />
           </div>
 
@@ -544,7 +318,7 @@ const EventAdd = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
+            className="w-full px-4 py-2 bg-[#F37021] text-white rounded-md hover:bg-[#e26417] disabled:bg-gray-400"
           >
             {isLoading ? 'Creating Event...' : 'Create Event'}
           </button>
@@ -554,11 +328,8 @@ const EventAdd = () => {
       {/* Preview Column */}
       <div className="sticky top-6 h-fit">
         <h3 className="text-xl font-semibold mb-4">Live Preview</h3>
-        <EventPreview 
-          formData={{
-            ...formData,
-            images: previewImages.filter(Boolean)
-          }}
+        <EventPreviewCard 
+          formData={formData}
           userRole={localStorage.getItem('userRole')}
         />
       </div>
