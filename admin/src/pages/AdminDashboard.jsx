@@ -7,10 +7,15 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     universities: [],
     roleRequests: [],
+    questions: [],
     totalUniversities: 0,
     pendingRoleRequests: 0,
+    totalQuestions: 0,
+    recentUpdates: [],
   });
   const [loading, setLoading] = useState(true);
+  const [questionCategories, setQuestionCategories] = useState({});
+  const [universityFeatures, setUniversityFeatures] = useState({});
 
   useEffect(() => {
     fetchDashboardData();
@@ -20,21 +25,58 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem('token');
       
-      // Fetch universities
+      // Fetch universities with features
       const universitiesResponse = await axios.get(`${backendUrl}/api/university/list`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
+      // Calculate university features distribution
+      const features = universitiesResponse.data.universities.reduce((acc, uni) => {
+        if (uni.features) {
+          uni.features.forEach(feature => {
+            acc[feature] = (acc[feature] || 0) + 1;
+          });
+        }
+        return acc;
+      }, {});
+
+      setUniversityFeatures(features);
 
       // Fetch role requests
       const roleRequestsResponse = await axios.get(`${backendUrl}/api/user/verification-requests`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      // Fetch questions
+      const questionsResponse = await axios.get(`${backendUrl}/api/question/list`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Calculate question categories distribution
+      const categories = questionsResponse.data.questions.reduce((acc, question) => {
+        acc[question.type] = (acc[question.type] || 0) + 1;
+        return acc;
+      }, {});
+
+      // Get recent updates (last 5 questions with timestamps)
+      const recentUpdates = questionsResponse.data.questions
+        .slice(0, 5)
+        .map(q => ({
+          ...q,
+          updateType: 'question',
+          timestamp: q.createdAt || new Date()
+        }));
+
+      setQuestionCategories(categories);
+
       setStats({
         universities: universitiesResponse.data.universities || [],
         roleRequests: roleRequestsResponse.data.data || [],
+        questions: questionsResponse.data.questions || [],
         totalUniversities: universitiesResponse.data.universities?.length || 0,
         pendingRoleRequests: roleRequestsResponse.data.data?.length || 0,
+        totalQuestions: questionsResponse.data.questions?.length || 0,
+        recentUpdates,
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -57,7 +99,7 @@ const AdminDashboard = () => {
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {/* Universities Card */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
@@ -65,7 +107,7 @@ const AdminDashboard = () => {
             <span className="text-2xl font-bold text-blue-600">{stats.totalUniversities}</span>
           </div>
           <div className="space-y-2">
-            {stats.universities.slice(0, 5).map((uni) => (
+            {stats.universities.slice(0, 3).map((uni) => (
               <div key={uni._id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                 <div className="flex items-center space-x-3">
                   {uni.logoUrl && (
@@ -77,21 +119,16 @@ const AdminDashboard = () => {
               </div>
             ))}
           </div>
-          {stats.totalUniversities > 5 && (
-            <div className="mt-4 text-center text-sm text-blue-600">
-              +{stats.totalUniversities - 5} more universities
-            </div>
-          )}
         </div>
 
         {/* Role Requests Card */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Pending Role Requests</h2>
+            <h2 className="text-xl font-semibold">Role Requests</h2>
             <span className="text-2xl font-bold text-orange-600">{stats.pendingRoleRequests}</span>
           </div>
           <div className="space-y-2">
-            {stats.roleRequests.slice(0, 5).map((request) => (
+            {stats.roleRequests.slice(0, 3).map((request) => (
               <div key={request._id} className="p-2 bg-gray-50 rounded">
                 <div className="flex justify-between items-center">
                   <div>
@@ -105,73 +142,122 @@ const AdminDashboard = () => {
               </div>
             ))}
           </div>
-          {stats.pendingRoleRequests > 5 && (
-            <div className="mt-4 text-center text-sm text-orange-600">
-              +{stats.pendingRoleRequests - 5} more requests
-            </div>
-          )}
+        </div>
+
+        {/* Questions Card */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Questions</h2>
+            <span className="text-2xl font-bold text-green-600">{stats.totalQuestions}</span>
+          </div>
+          <div className="space-y-2">
+            {stats.questions.slice(0, 3).map((question) => (
+              <div key={question._id} className="p-2 bg-gray-50 rounded">
+                <p className="font-medium truncate">{question.question}</p>
+                <div className="flex justify-between items-center mt-1">
+                  <span className="text-sm text-gray-600">{question.type}</span>
+                  <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800">
+                    Active
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Additional Stats */}
+      {/* Detailed Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* University Stats */}
+        {/* Question Categories Distribution */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">University Distribution</h3>
-          <div className="space-y-2">
-            {Object.entries(
-              stats.universities.reduce((acc, uni) => {
-                const region = uni.location?.region || 'Unknown';
-                acc[region] = (acc[region] || 0) + 1;
-                return acc;
-              }, {})
-            ).map(([region, count]) => (
-              <div key={region} className="flex justify-between items-center">
-                <span>{region}</span>
+          <h3 className="text-lg font-semibold mb-4">Question Categories</h3>
+          <div className="space-y-3">
+            {Object.entries(questionCategories).map(([category, count]) => (
+              <div key={category} className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 rounded-full bg-[#F37021]"></div>
+                  <span className="capitalize">{category}</span>
+                </div>
                 <span className="font-semibold">{count}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Role Request Stats */}
+        {/* University Features */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">Role Request Types</h3>
-          <div className="space-y-2">
-            {Object.entries(
-              stats.roleRequests.reduce((acc, request) => {
-                const role = request.verificationRequest?.requestedRole || 'Unknown';
-                acc[role] = (acc[role] || 0) + 1;
-                return acc;
-              }, {})
-            ).map(([role, count]) => (
-              <div key={role} className="flex justify-between items-center">
-                <span className="capitalize">{role}</span>
+          <h3 className="text-lg font-semibold mb-4">University Features</h3>
+          <div className="space-y-3">
+            {Object.entries(universityFeatures).map(([feature, count]) => (
+              <div key={feature} className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+                  <span className="capitalize">{feature}</span>
+                </div>
                 <span className="font-semibold">{count}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Recent Updates */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+          <h3 className="text-lg font-semibold mb-4">Recent Updates</h3>
+          <div className="space-y-3">
+            {stats.recentUpdates.map((update, index) => (
+              <div key={update._id} className="p-3 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="font-medium text-sm truncate">{update.question}</p>
+                    <div className="flex items-center mt-1 space-x-2">
+                      <span className="text-xs px-2 py-1 bg-[#F37021] text-white rounded-full">
+                        {update.type}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {new Date(update.timestamp).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-xs text-gray-400">#{index + 1}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold mb-4">Question Management</h3>
+          <div className="space-y-3">
+            <button 
+              onClick={() => window.location.href = '/add'}
+              className="w-full px-4 py-2 text-sm bg-[#F37021] text-white rounded hover:bg-[#e85d0a] transition-colors"
+            >
+              Add New Question
+            </button>
+            <button 
+              onClick={() => window.location.href = '/list'}
+              className="w-full px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Manage Questions
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold mb-4">University Management</h3>
           <div className="space-y-3">
             <button 
               onClick={() => window.location.href = '/adduniversity'}
-              className="w-full px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              className="w-full px-4 py-2 text-sm bg-[#F37021] text-white rounded hover:bg-[#e85d0a] transition-colors"
             >
               Add New University
             </button>
             <button 
-              onClick={() => window.location.href = '/rolerequest'}
-              className="w-full px-4 py-2 text-sm bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors"
-            >
-              Review Role Requests
-            </button>
-            <button 
               onClick={() => window.location.href = '/listuniverstiy'}
-              className="w-full px-4 py-2 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+              className="w-full px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
             >
               Manage Universities
             </button>

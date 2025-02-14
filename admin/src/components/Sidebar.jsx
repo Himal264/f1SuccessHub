@@ -42,10 +42,7 @@ const Sidebar = () => {
           <img className='w-5 h-5' src={assets.post_con} alt="" />
           <p className='hidden md:block'>Event Add</p>
         </NavLink>
-        <NavLink className='flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded' to="/chat">
-          <img className='w-5 h-5' src={assets.chat_icon} alt="" />
-          <p className='hidden md:block'>Messages</p>
-        </NavLink>
+        
       </div>
     </div>
   )

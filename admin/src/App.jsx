@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import Add from "./pages/Add";
 import List from "./pages/List";
 import Login from "./components/Login";
@@ -15,16 +15,24 @@ import RoleRequest from "./pages/RoleRequest";
 import EventAdd from "./pages/EventAdd";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminChat from "./pages/AdminChat";
+import { IoChatbubbleEllipsesOutline } from 'react-icons/io5';
+
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL
 
 const App = () => {
 
   const [token, setToken] = useState(localStorage.getItem('token')? localStorage.getItem('token'):'');
+  const navigate = useNavigate();
+  const [showChat, setShowChat] = useState(false);
 
   useEffect(()=>{
     localStorage.setItem('token', token)
   },[token])
+
+  const handleChatClick = () => {
+    setShowChat(!showChat);
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -48,9 +56,22 @@ const App = () => {
                 <Route path="/listuniverstiy" element={<ListUniversity setToken={setToken}/>} />
                 <Route path="/createstory" element={<CreateStory setToken={setToken}/>} />
                 <Route path="/rolerequest" element={<RoleRequest setToken={setToken}/>} />
-                <Route path="/chat" element={<AdminChat />} />
               </Routes>
             </div>
+          </div>
+
+          {/* Chat Button and Container */}
+          <div className="fixed bottom-5 right-[10%] z-40">
+            <button
+              onClick={() => setShowChat(!showChat)}
+              className="bg-[#F37021] hover:bg-[#e85d0a] text-white rounded-full p-3 shadow-lg transition-all duration-300 ease-in-out hover:scale-110 flex flex-col items-center"
+              title="Open Messages"
+            >
+              <IoChatbubbleEllipsesOutline size={24} />
+              <span className="text-xs mt-1 font-medium">Chat</span>
+            </button>
+
+            {showChat && <AdminChat onClose={() => setShowChat(false)} />}
           </div>
         </>
       )}
