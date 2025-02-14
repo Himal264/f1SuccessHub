@@ -11,68 +11,32 @@ export const createEvent = async (req, res) => {
     const { 
       title, 
       description, 
-      categories, 
-      startDate, 
-      endDate, 
+      level, 
+      startDate,
       location, 
       type,
-      tags,
       maxParticipants 
     } = req.body;
 
-    // Parse categories if it's a string
-    let parsedCategories = categories;
-    if (typeof categories === 'string') {
+    // Parse level if it's a string
+    let parsedLevel = level;
+    if (typeof level === 'string') {
       try {
-        parsedCategories = JSON.parse(categories);
+        parsedLevel = JSON.parse(level);
       } catch (e) {
-        parsedCategories = [categories];
+        parsedLevel = [level];
       }
     }
 
-    // Parse tags if it's a string
-    let parsedTags = tags;
-    if (typeof tags === 'string') {
-      try {
-        parsedTags = JSON.parse(tags);
-      } catch (e) {
-        parsedTags = tags.split(',').map(tag => tag.trim());
-      }
-    }
-
-    // Upload images to cloudinary if files exist
-    let uploadedImages = [];
-    if (req.files && req.files.length > 0) {
-      const imageUploadPromises = req.files.map(file => 
-        cloudinary.uploader.upload(file.path, {
-          folder: 'events',
-          width: 1200,
-          height: 800,
-          crop: "fill"
-        })
-      );
-
-      uploadedImages = await Promise.all(imageUploadPromises);
-
-      // Clean up local files
-      await Promise.all(req.files.map(file => unlinkFile(file.path)));
-    }
-
-    // Create event with all fields
+    // Create event
     const event = await eventModel.create({
       title,
       description,
-      categories: parsedCategories,
+      level: parsedLevel,
       startDate,
-      endDate,
       location,
       type,
-      tags: parsedTags,
       maxParticipants: parseInt(maxParticipants) || undefined,
-      images: uploadedImages.map(img => ({
-        url: img.secure_url,
-        public_id: img.public_id
-      })),
       createdBy: req.user._id,
       creatorRole: req.user.role
     });
@@ -95,33 +59,12 @@ export const createEvent = async (req, res) => {
 // Get All Events
 export const getAllEvents = async (req, res) => {
   try {
-    // Basic query without population first
-    const events = await eventModel.find().sort({ createdAt: -1 });
-
-    // Map the events to include only necessary information
-    const formattedEvents = events.map(event => ({
-      _id: event._id,
-      title: event.title,
-      description: event.description,
-      categories: event.categories,
-      type: event.type,
-      startDate: event.startDate,
-      endDate: event.endDate,
-      location: event.location,
-      images: event.images,
-      tags: event.tags,
-      maxParticipants: event.maxParticipants,
-      participants: event.participants || [],
-      createdBy: event.createdBy,
-      creatorRole: event.creatorRole,
-      status: event.status,
-      createdAt: event.createdAt,
-      updatedAt: event.updatedAt
-    }));
+    const events = await eventModel.find()
+      .sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      events: formattedEvents
+      events
     });
   } catch (error) {
     console.error('Error fetching events:', error);
@@ -178,32 +121,13 @@ export const updateEvent = async (req, res) => {
       });
     }
 
-    // Handle new images if any
-    if (req.files?.length > 0) {
-      // Delete old images from cloudinary
-      await Promise.all(event.images.map(img => 
-        cloudinary.uploader.destroy(img.public_id)
-      ));
-
-      // Upload new images
-      const imageUploadPromises = req.files.map(file => 
-        cloudinary.uploader.upload(file.path, {
-          folder: 'events',
-          width: 1200,
-          height: 800,
-          crop: "fill"
-        })
-      );
-
-      const uploadedImages = await Promise.all(imageUploadPromises);
-      
-      // Clean up local files
-      await Promise.all(req.files.map(file => unlinkFile(file.path)));
-
-      req.body.images = uploadedImages.map(img => ({
-        url: img.secure_url,
-        public_id: img.public_id
-      }));
+    // Parse level if it's being updated and is a string
+    if (req.body.level && typeof req.body.level === 'string') {
+      try {
+        req.body.level = JSON.parse(req.body.level);
+      } catch (e) {
+        req.body.level = [req.body.level];
+      }
     }
 
     const updatedEvent = await eventModel.findByIdAndUpdate(
@@ -246,12 +170,7 @@ export const deleteEvent = async (req, res) => {
       });
     }
 
-    // Delete images from cloudinary
-    await Promise.all(event.images.map(img => 
-      cloudinary.uploader.destroy(img.public_id)
-    ));
-
-    await event.remove();
+    await event.deleteOne();
 
     res.json({
       success: true,

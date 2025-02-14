@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import mongooseAutopopulate from 'mongoose-autopopulate';
 
 const eventSchema = new mongoose.Schema({
   title: {
@@ -9,7 +10,8 @@ const eventSchema = new mongoose.Schema({
   description: {
     type: String,
     required: [true, 'Description is required'],
-    trim: true
+    maxlength: [5000, 'Description cannot be more than 5000 characters'],
+    trim: false
   },
   level: [{
     type: String,
@@ -79,7 +81,7 @@ eventSchema.pre('save', function(next) {
 });
 
 // Add plugin for autopopulate
-eventSchema.plugin(require('mongoose-autopopulate'));
+eventSchema.plugin(mongooseAutopopulate);
 
 const eventModel = mongoose.model('Event', eventSchema);
 export default eventModel;

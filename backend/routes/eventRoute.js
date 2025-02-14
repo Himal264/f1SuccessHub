@@ -65,24 +65,9 @@ const checkRole = (allowedRoles) => (req, res, next) => {
 eventRouter.get('/all', getAllEvents);
 eventRouter.get('/:id', getEventById);
 
-// Admin routes
-eventRouter.post('/admin/create', adminAuth, upload.array('images', 6), createEvent);
-eventRouter.put('/admin/update/:id', adminAuth, upload.array('images', 6), updateEvent);
-eventRouter.delete('/admin/delete/:id', adminAuth, deleteEvent);
-
-// Counselor routes
-eventRouter.post('/counselor/create', auth, checkRole(['counselor']), upload.array('images', 6), createEvent);
-eventRouter.put('/counselor/update/:id', auth, checkRole(['counselor']), upload.array('images', 6), updateEvent);
-eventRouter.delete('/counselor/delete/:id', auth, checkRole(['counselor']), deleteEvent);
-
-// Alumni routes
-eventRouter.post('/alumni/create', auth, checkRole(['alumni']), upload.array('images', 6), createEvent);
-eventRouter.put('/alumni/update/:id', auth, checkRole(['alumni']), upload.array('images', 6), updateEvent);
-eventRouter.delete('/alumni/delete/:id', auth, checkRole(['alumni']), deleteEvent);
-
-// University routes
-eventRouter.post('/university/create', auth, checkRole(['university']), upload.array('images', 6), createEvent);
-eventRouter.put('/university/update/:id', auth, checkRole(['university']), upload.array('images', 6), updateEvent);
-eventRouter.delete('/university/delete/:id', auth, checkRole(['university']), deleteEvent);
+// Protected routes for event creation/management
+eventRouter.post('/create', auth, checkRole(['admin', 'counselor', 'university']), createEvent);
+eventRouter.put('/update/:id', auth, checkRole(['admin', 'counselor', 'university']), updateEvent);
+eventRouter.delete('/delete/:id', auth, checkRole(['admin', 'counselor', 'university']), deleteEvent);
 
 export default eventRouter;
