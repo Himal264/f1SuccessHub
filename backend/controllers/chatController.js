@@ -71,10 +71,11 @@ export const sendMessage = async (req, res) => {
     const newMessage = {
       sender: senderId,
       content,
+      timestamp: new Date()
     };
 
     chat.messages.push(newMessage);
-    chat.lastMessage = Date.now();
+    chat.lastMessage = new Date();
     
     await chat.save();
 
@@ -85,7 +86,7 @@ export const sendMessage = async (req, res) => {
       message: newMessage
     });
     
-    res.status(200).json(chat);
+    res.status(200).json(newMessage);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -93,27 +94,13 @@ export const sendMessage = async (req, res) => {
 
 export const getChats = async (req, res) => {
   try {
-    const { userId, role } = req.query;
+    const { userId } = req.query;
     
-    // For counselors, verify they are approved
-    if (role === 'counselor') {
-      const isApproved = await verifyCounselor(userId);
-      if (!isApproved) {
-        return res.status(403).json({ 
-          message: 'Counselor is not approved to access chats' 
-        });
-      }
-    }
-
-    const query = role === 'counselor' 
-      ? { counselor: userId }
-      : { user: userId };
-    
-    const chats = await Chat.find(query)
-      .populate('user', 'name email profilePicture')
-      .populate('counselor', 'name email profilePicture')
-      .populate('applicationId')
-      .sort({ lastMessage: -1 });
+    const chats = await Chat.find({
+      'participants.user': userId
+    })
+    .populate('participants.user', 'name email profilePicture role universityName department')
+    .sort({ lastMessage: -1 });
     
     res.status(200).json(chats);
   } catch (error) {
@@ -134,12 +121,31 @@ export const getChatMessages = async (req, res) => {
     }
 
     // Verify the requester is part of this chat
-    if (userId.toString() !== chat.user.toString() && 
-        userId.toString() !== chat.counselor.toString()) {
+    if (!chat.participants.some(p => p.user.toString() === userId)) {
       return res.status(403).json({ message: 'Unauthorized to access these messages' });
     }
     
     res.status(200).json(chat.messages);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getAvailableUsers = async (req, res) => {
+  try {
+    const { type } = req.query;
+    const userId = req.user._id;
+
+    // Find users of the specified type who are verified
+    const users = await User.find({
+      _id: { $ne: userId },
+      role: type,
+      'verificationRequest.status': 'approved'
+    })
+    .select('name email profilePicture role universityName department')
+    .lean();
+
+    res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

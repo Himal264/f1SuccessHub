@@ -7,24 +7,18 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in (you might want to fetch this from your backend)
-    const checkAuth = async () => {
+    // Check local storage for user info instead of making an API call
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
       try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/check-auth`, {
-          credentials: 'include'
-        });
-        const data = await response.json();
-        if (data.user) {
-          setUser(data.user);
-        }
+        const parsedUser = JSON.parse(userInfo);
+        setUser(parsedUser);
       } catch (error) {
-        console.error('Auth check failed:', error);
-      } finally {
-        setLoading(false);
+        console.error('Error parsing user info:', error);
+        localStorage.removeItem('userInfo');
       }
-    };
-
-    checkAuth();
+    }
+    setLoading(false);
   }, []);
 
   return (

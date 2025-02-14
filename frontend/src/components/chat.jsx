@@ -2,48 +2,53 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { IoMdChatboxes } from 'react-icons/io';
 import { IoClose, IoSend } from 'react-icons/io5';
+import { BsPersonCircle } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
-const Chat = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [chats, setChats] = useState([]);
+const Chat = ({ isOpen, onClose, user }) => {
   const [activeChat, setActiveChat] = useState(null);
   const [message, setMessage] = useState('');
-  const [hasApplication, setHasApplication] = useState(false);
+  const [chatType, setChatType] = useState(null);
+  const [availableUsers, setAvailableUsers] = useState([]);
   const messagesEndRef = useRef(null);
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
   const navigate = useNavigate();
   const [socket, setSocket] = useState(null);
+  const [selectedUserType, setSelectedUserType] = useState('all');
+  const [selectedUser, setSelectedUser] = useState(null);
 
-  const handleChatIconClick = async () => {
-    if (!user) {
-      // Redirect to login if user is not authenticated
+  const userTypes = [
+    { id: 'all', label: 'All Chats' },
+    { id: 'counselor', label: 'Counselors' },
+    { id: 'alumni', label: 'Alumni' },
+    { id: 'university', label: 'Universities' },
+    { id: 'user', label: 'Users' }
+  ];
+
+  const [chats, setChats] = useState([]);
+
+  const filteredChats = chats.filter(chat => {
+    if (selectedUserType === 'all') return true;
+    return chat.participants.some(p => 
+      p.user._id !== authUser._id && p.role === selectedUserType
+    );
+  });
+
+  const handleChatIconClick = () => {
+    if (!authUser) {
       navigate('/login');
       return;
     }
-
-    // Only check application status and fetch chats if user is authenticated
-    try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/applications/check/${user._id}`);
-      const data = await response.json();
-      setHasApplication(data.hasApplication);
-      
-      if (data.hasApplication) {
-        setIsOpen(true);
-        fetchChats();
-      } else {
-        alert('Please submit an application before starting a chat.');
-      }
-    } catch (error) {
-      console.error('Error checking application:', error);
-    }
+    setChatType(null);
+    setAvailableUsers([]);
+    fetchChats();
   };
 
   const fetchChats = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/chat/list?userId=${user._id}&role=${user.role}`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/chat/list?userId=${authUser._id}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -57,6 +62,390 @@ const Chat = () => {
     }
   };
 
+  const fetchAvailableUsers = async (type) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/chat/available-users?type=${type}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      const data = await response.json();
+      setAvailableUsers(data);
+    } catch (error) {
+      console.error('Error fetching available users:', error);
+    }
+  };
+
+  const startNewChat = async (selectedUserId, userDetails) => {
+    try {
+      setSelectedUser(userDetails);
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/chat/create`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            participants: [
+              { user: authUser._id, role: authUser.role },
+              { user: selectedUserId, role: chatType }
+            ]
+          })
+        }
+      );
+      const data = await response.json();
+      data.selectedUserDetails = userDetails;
+      setChats([...chats, data]);
+      setActiveChat(data);
+      setChatType(null);
+      setAvailableUsers([]);
+    } catch (error) {
+      console.error('Error creating chat:', error);
+    }
+  };
+
+  const fetchChatMessages = async (chatId) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/chat/${chatId}/messages?userId=${authUser._id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      return [];
+    }
+  };
+
+  const handleSetActiveChat = async (chat) => {
+    try {
+      const messages = await fetchChatMessages(chat._id);
+      setActiveChat({
+        ...chat,
+        messages: messages
+      });
+    } catch (error) {
+      console.error('Error setting active chat:', error);
+    }
+  };
+
+  const renderChatTypeSelection = () => {
+    if (authUser.role === 'counselor' || authUser.role === 'alumni' || authUser.role === 'university') {
+      return (
+        <div className="p-4">
+          <p className="text-gray-500">You can view and respond to chats from your messages.</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="p-4 space-y-4">
+        <h3 className="font-medium text-lg">Start a new chat with:</h3>
+        <div className="grid grid-cols-1 gap-3">
+          <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+            onClick={() => {
+              setChatType('counselor');
+              fetchAvailableUsers('counselor');
+            }}>
+            <div className="flex items-center space-x-3">
+              <div className="bg-blue-100 p-3 rounded-full">
+                <IoMdChatboxes className="text-blue-600 w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900">Chat with Counselor</h4>
+                <p className="text-sm text-gray-500">Get professional guidance and advice</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+            onClick={() => {
+              setChatType('alumni');
+              fetchAvailableUsers('alumni');
+            }}>
+            <div className="flex items-center space-x-3">
+              <div className="bg-green-100 p-3 rounded-full">
+                <IoMdChatboxes className="text-green-600 w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900">Chat with Alumni</h4>
+                <p className="text-sm text-gray-500">Connect with experienced graduates</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+            onClick={() => {
+              setChatType('university');
+              fetchAvailableUsers('university');
+            }}>
+            <div className="flex items-center space-x-3">
+              <div className="bg-purple-100 p-3 rounded-full">
+                <IoMdChatboxes className="text-purple-600 w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900">Chat with University</h4>
+                <p className="text-sm text-gray-500">Discuss with university representatives</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderAvailableUsers = () => (
+    <div className="p-4 space-y-4">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-medium text-lg">
+          Available {chatType.charAt(0).toUpperCase() + chatType.slice(1)}s
+        </h3>
+        <button
+          onClick={() => {
+            setChatType(null);
+            setAvailableUsers([]);
+          }}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          Back
+        </button>
+      </div>
+      <div className="divide-y">
+        {availableUsers.map((availableUser) => (
+          <div
+            key={availableUser._id}
+            onClick={() => startNewChat(availableUser._id, availableUser)}
+            className="p-4 hover:bg-gray-50 cursor-pointer"
+          >
+            <div className="flex items-center space-x-3">
+              {availableUser.profilePicture?.url ? (
+                <img
+                  src={availableUser.profilePicture.url}
+                  alt="Profile"
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+              ) : (
+                <BsPersonCircle className="w-12 h-12 text-gray-400" />
+              )}
+              <div className="flex-1">
+                <p className="font-medium">{availableUser.name}</p>
+                {chatType === 'counselor' && (
+                  <div className="text-sm text-gray-500">
+                    <p>Professional Counselor</p>
+                    <p>{availableUser.specialization || 'Career Guidance'}</p>
+                    <p>{availableUser.experience || '5+ years experience'}</p>
+                  </div>
+                )}
+                {chatType === 'alumni' && (
+                  <div className="text-sm text-gray-500">
+                    <p>Alumni Member</p>
+                    <p>{availableUser.university || 'University Graduate'}</p>
+                    <p>{availableUser.graduationYear || 'Class of 2022'}</p>
+                  </div>
+                )}
+                {chatType === 'university' && (
+                  <div className="text-sm text-gray-500">
+                    <p>University Representative</p>
+                    <p>{availableUser.universityName || 'University Admin'}</p>
+                    <p>{availableUser.department || 'Admissions Department'}</p>
+                  </div>
+                )}
+                <div className="mt-1 flex items-center text-sm">
+                  <span className={`w-2 h-2 rounded-full mr-2 ${
+                    availableUser.online ? 'bg-green-500' : 'bg-gray-400'
+                  }`}></span>
+                  <span className="text-gray-500">
+                    {availableUser.online ? 'Online' : 'Offline'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderUserTypeTabs = () => (
+    <div className="flex overflow-x-auto border-b bg-white sticky top-0 z-10">
+      {userTypes.map(type => (
+        <button
+          key={type.id}
+          onClick={() => setSelectedUserType(type.id)}
+          className={`px-4 py-2 whitespace-nowrap ${
+            selectedUserType === type.id
+              ? 'border-b-2 border-blue-500 text-blue-500'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          {type.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  const renderChatList = () => (
+    <div className="flex flex-col h-full">
+      {renderUserTypeTabs()}
+      <div className="flex-1 overflow-y-auto">
+        <div className="divide-y">
+          {filteredChats.map((chat) => {
+            const otherParticipant = chat.participants.find(
+              p => p.user._id !== authUser._id
+            );
+            const lastMessage = chat.messages[chat.messages.length - 1];
+
+            return (
+              <div
+                key={chat._id}
+                onClick={() => handleSetActiveChat(chat)}
+                className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
+              >
+                <div className="relative">
+                  {otherParticipant.user.profilePicture?.url ? (
+                    <img
+                      src={otherParticipant.user.profilePicture.url}
+                      alt="Profile"
+                      className="w-12 h-12 rounded-full"
+                    />
+                  ) : (
+                    <BsPersonCircle className="w-12 h-12 text-gray-400" />
+                  )}
+                  <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
+                    otherParticipant.user.online ? 'bg-green-500' : 'bg-gray-300'
+                  }`} />
+                </div>
+                <div className="ml-3 flex-1">
+                  <div className="flex justify-between items-baseline">
+                    <h3 className="font-medium text-gray-900">
+                      {otherParticipant.user.name}
+                    </h3>
+                    {lastMessage && (
+                      <span className="text-xs text-gray-500">
+                        {new Date(lastMessage.timestamp).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-sm text-gray-500 capitalize">
+                      {otherParticipant.role}
+                    </span>
+                    {lastMessage && (
+                      <p className="text-sm text-gray-500 truncate ml-2">
+                        • {lastMessage.content}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {authUser.role === 'user' && (
+        <div className="p-3 border-t">
+          <button
+            onClick={() => setChatType('select')}
+            className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 flex items-center justify-center"
+          >
+            <IoMdChatboxes className="mr-2" />
+            Start New Chat
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderActiveChat = () => (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center p-3 border-b bg-white">
+        <button
+          onClick={() => {
+            setActiveChat(null);
+            setSelectedUser(null);
+          }}
+          className="mr-2 text-gray-500 hover:text-gray-700"
+        >
+          <IoClose size={24} />
+        </button>
+        <div className="flex items-center">
+          {activeChat.participants.find(p => p.user._id !== authUser._id).user.profilePicture?.url ? (
+            <img
+              src={activeChat.participants.find(p => p.user._id !== authUser._id).user.profilePicture.url}
+              alt="Profile"
+              className="w-10 h-10 rounded-full"
+            />
+          ) : (
+            <BsPersonCircle className="w-10 h-10 text-gray-400" />
+          )}
+          <div className="ml-3">
+            <h3 className="font-medium text-gray-900">
+              {activeChat.participants.find(p => p.user._id !== authUser._id).user.name}
+            </h3>
+            {activeChat.selectedUserDetails && activeChat.selectedUserDetails.role === 'university' && (
+              <div className="text-sm text-gray-500">
+                <p>University Representative</p>
+                <p>{activeChat.selectedUserDetails.universityName || 'University Admin'}</p>
+                <p>{activeChat.selectedUserDetails.department || 'Admissions Department'}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {activeChat.messages.map((msg, index) => (
+          <div
+            key={index}
+            className={`flex ${msg.sender === authUser._id ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-[70%] p-3 rounded-lg ${
+                msg.sender === authUser._id
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100'
+              }`}
+            >
+              {msg.content}
+              <div className="text-xs mt-1 opacity-70">
+                {new Date(msg.timestamp).toLocaleTimeString()}
+              </div>
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <form onSubmit={handleSendMessage} className="p-3 border-t bg-white">
+        <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Type a message..."
+            className="flex-1 p-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600"
+          >
+            <IoSend size={20} />
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -66,160 +455,107 @@ const Chat = () => {
   }, [activeChat]);
 
   useEffect(() => {
-    if (user) {
-      // Initialize socket connection
+    if (!socket && authUser) {
+      const token = localStorage.getItem('token');
       const newSocket = io(import.meta.env.VITE_BACKEND_URL, {
-        auth: {
-          token: localStorage.getItem('token')
-        }
+        auth: { token },
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
       });
 
       newSocket.on('connect', () => {
         console.log('Connected to socket server');
       });
 
-      newSocket.on('new_message', (data) => {
-        if (activeChat && activeChat._id === data.chatId) {
-          setActiveChat(prev => ({
-            ...prev,
-            messages: [...prev.messages, data.message]
-          }));
-        }
-        // Update chat list
-        fetchChats();
+      newSocket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
       });
 
-      newSocket.on('user_typing', (data) => {
-        // Handle typing indicator
+      newSocket.on('new_message', async (data) => {
+        if (activeChat && activeChat._id === data.chatId) {
+          const messages = await fetchChatMessages(data.chatId);
+          setActiveChat(prev => ({
+            ...prev,
+            messages: messages
+          }));
+        }
+        fetchChats();
       });
 
       setSocket(newSocket);
 
-      return () => newSocket.close();
+      return () => {
+        if (newSocket) {
+          newSocket.disconnect();
+        }
+      };
     }
-  }, [user]);
+  }, [authUser]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!message.trim() || !socket) return;
 
     try {
-      socket.emit('new_message', {
-        chatId: activeChat._id,
-        message: {
-          sender: user._id,
-          content: message,
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/chat/message`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            chatId: activeChat._id,
+            senderId: authUser._id,
+            content: message
+          })
         }
-      });
+      );
 
-      setMessage('');
+      if (response.ok) {
+        socket.emit('new_message', {
+          chatId: activeChat._id,
+          message: {
+            sender: authUser._id,
+            content: message,
+            timestamp: new Date()
+          }
+        });
+
+        setMessage('');
+      }
     } catch (error) {
       console.error('Error sending message:', error);
     }
   };
 
-  if (!user || (user.role === 'user' && !hasApplication)) {
-    return null;
-  }
+  if (!authUser || !isOpen) return null;
 
   return (
-    <div className="fixed bottom-5 right-5 z-50">
-      {!isOpen ? (
-        <button
-          onClick={handleChatIconClick}
-          className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg"
-        >
-          <IoMdChatboxes size={24} />
-        </button>
-      ) : (
+    <div className="fixed bottom-20 right-[10%] z-50">
+      {isOpen && (
         <div className="bg-white rounded-lg shadow-xl w-[350px] h-[500px] flex flex-col">
-          {/* Header */}
-          <div className="flex justify-between items-center p-4 border-b">
-            <h2 className="font-semibold">Messages</h2>
+          <div className="p-4 border-b flex justify-between items-center">
+            <h3 className="font-medium text-lg">Messages</h3>
             <button
-              onClick={() => setIsOpen(false)}
+              onClick={onClose}
               className="text-gray-500 hover:text-gray-700"
             >
-              <IoClose size={24} />
+              ✕
             </button>
           </div>
-
-          {/* Chat List / Messages */}
-          <div className="flex-1 overflow-y-auto">
-            {!activeChat ? (
-              // Chat List
-              <div className="divide-y">
-                {chats.map((chat) => (
-                  <div
-                    key={chat._id}
-                    onClick={() => setActiveChat(chat)}
-                    className="p-4 hover:bg-gray-50 cursor-pointer"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <img
-                        src={user.role === 'counselor' 
-                          ? chat.user.profilePicture.url 
-                          : chat.counselor.profilePicture.url}
-                        alt="Profile"
-                        className="w-10 h-10 rounded-full"
-                      />
-                      <div>
-                        <p className="font-medium">
-                          {user.role === 'counselor' 
-                            ? chat.user.name 
-                            : chat.counselor.name}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {chat.messages[chat.messages.length - 1]?.content.substring(0, 30)}...
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              // Messages View
-              <div className="p-4 space-y-4">
-                {activeChat.messages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`flex ${msg.sender === user._id ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-[70%] p-3 rounded-lg ${
-                        msg.sender === user._id
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100'
-                      }`}
-                    >
-                      {msg.content}
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            )}
-          </div>
-
-          {/* Input Area */}
-          {activeChat && (
-            <form onSubmit={handleSendMessage} className="p-4 border-t">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1 p-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600"
-                >
-                  <IoSend size={20} />
-                </button>
-              </div>
-            </form>
+          
+          {activeChat ? (
+            renderActiveChat()
+          ) : chatType === 'select' ? (
+            renderChatTypeSelection()
+          ) : chatType && availableUsers.length > 0 ? (
+            renderAvailableUsers()
+          ) : (
+            renderChatList()
           )}
         </div>
       )}

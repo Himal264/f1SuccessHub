@@ -10,10 +10,12 @@ import 'react-toastify/dist/ReactToastify.css';
 import EmailForm from "./pages/EmailForm";
 import ListUniversity from "./pages/ListUniversity";
 import AddUniversity from "./pages/AddUni";
-import Dashboard from "./pages/Dashboard";
 import CreateStory from "./pages/CreateStory";
 import RoleRequest from "./pages/RoleRequest";
 import EventAdd from "./pages/EventAdd";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminChat from "./pages/AdminChat";
+
 export const backendUrl = import.meta.env.VITE_BACKEND_URL
 
 const App = () => {
@@ -38,7 +40,7 @@ const App = () => {
             <div className="w-[70%] mx-auto ml-[max(5vw, 25px)] my-8 text-gray-600 text-base">
               <Routes>
                 <Route path="/eventadd" element={<EventAdd setToken={setToken}/>} />
-                <Route path="/" element={<Dashboard token={token} />} />
+                <Route path="/" element={<AdminDashboard token={token} />} />
                 <Route path="/add" element={<Add token={token}/>} />
                 <Route path="/list" element={<List token={token}/>} />
                 <Route path="/email" element={<EmailForm setToken={setToken}/>} />
@@ -46,6 +48,7 @@ const App = () => {
                 <Route path="/listuniverstiy" element={<ListUniversity setToken={setToken}/>} />
                 <Route path="/createstory" element={<CreateStory setToken={setToken}/>} />
                 <Route path="/rolerequest" element={<RoleRequest setToken={setToken}/>} />
+                <Route path="/chat" element={<AdminChat />} />
               </Routes>
             </div>
           </div>

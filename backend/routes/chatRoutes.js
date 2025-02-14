@@ -3,7 +3,8 @@ import {
   createChat, 
   sendMessage, 
   getChats, 
-  getChatMessages 
+  getChatMessages, 
+  getAvailableUsers 
 } from '../controllers/chatController.js';
 import { auth } from '../middlewares/auth.js';
 
@@ -15,5 +16,6 @@ router.post('/create', createChat);
 router.post('/message', sendMessage);
 router.get('/list', getChats);
 router.get('/:chatId/messages', getChatMessages);
+router.get('/available-users', getAvailableUsers);
 
 export default router; 

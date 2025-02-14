@@ -7,8 +7,11 @@ export const initializeSocket = (server) => {
   io = new Server(server, {
     cors: {
       origin: ["http://localhost:5173", "http://localhost:5174"],
+      methods: ["GET", "POST"],
       credentials: true
-    }
+    },
+    allowEIO3: true, // Allow Engine.IO version 3
+    transports: ['websocket', 'polling'] // Explicitly specify transport methods
   });
 
   // Authentication middleware
@@ -16,14 +19,19 @@ export const initializeSocket = (server) => {
     try {
       const token = socket.handshake.auth.token;
       if (!token) {
-        return next(new Error('Authentication error'));
+        return next(new Error('Authentication token missing'));
       }
 
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      socket.userId = decoded.id;
-      socket.userRole = decoded.role;
-      next();
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        socket.userId = decoded.id;
+        socket.userRole = decoded.role;
+        next();
+      } catch (err) {
+        return next(new Error('Invalid authentication token'));
+      }
     } catch (error) {
+      console.error('Socket authentication error:', error);
       next(new Error('Authentication error'));
     }
   });
@@ -45,15 +53,19 @@ export const initializeSocket = (server) => {
     });
 
     // Handle new message
-    socket.on('new_message', (data) => {
-      io.to(data.chatId).emit('receive_message', {
-        chatId: data.chatId,
-        message: data.message,
-        sender: {
-          _id: socket.userId,
-          role: socket.userRole
-        }
-      });
+    socket.on('new_message', async (data) => {
+      try {
+        io.to(data.chatId).emit('receive_message', {
+          chatId: data.chatId,
+          message: data.message,
+          sender: {
+            _id: socket.userId,
+            role: socket.userRole
+          }
+        });
+      } catch (error) {
+        console.error('Error handling new message:', error);
+      }
     });
 
     // Handle typing status

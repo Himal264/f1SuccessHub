@@ -43,7 +43,18 @@ const verificationDocsDir = path.join(uploadsDir, "verification-documents");
 // App Config
 const app = express();
 const httpServer = createServer(app);
+
+// CORS configuration
+app.use(cors({
+  origin: ["http://localhost:5173", "http://localhost:5174"],
+  methods: ["GET", "POST"],
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+// Initialize socket after CORS configuration
 const io = initializeSocket(httpServer);
+
 const port = process.env.PORT || 9000;
 connectDB();
 connectCloudinary();
@@ -51,12 +62,6 @@ connectCloudinary();
 // Middleware order is important
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
-    credentials: true,
-  })
-);
 
 // Serve uploaded files statically
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

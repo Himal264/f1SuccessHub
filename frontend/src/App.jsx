@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from './context/AuthContext';
 import { FormProvider } from './context/FormContext';
-import Chat from './components/chat';
+
 
 import Home from "./pages/Home";
 import F1QestionsandAnswer from "./pages/F1QestionsandAnswer.jsx";
@@ -72,7 +72,6 @@ import Event from "./pages/Event";
 import Results from "./components/Results";
 import ApplyNow from "./components/ApplyNow";
 
-
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 const App = () => {
@@ -82,6 +81,7 @@ const App = () => {
         <Router>
           <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
             <Navbar />
+           
            
             <ScrollToTop />
 
@@ -267,7 +267,6 @@ const App = () => {
                 element={<AluminiConnection />}
               />
             </Routes>
-            <Chat />
             <ScrollToTop />
           </div>
         </Router>
