@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useAgora } from '../context/AgoraContext';
+import WebChat from '../components/WebChat';
 import axios from 'axios';
 import { backendUrl } from '../App';
 
@@ -12,6 +14,10 @@ const WebinarRoom = () => {
   const { user } = useAuth();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const { initializeAgora, startBroadcast, stopBroadcast, localVideoTrack } = useAgora();
+  const videoRef = useRef(null);
+  const [isStreaming, setIsStreaming] = useState(false);
 
   useEffect(() => {
     const fetchEventDetails = async () => {
@@ -34,6 +40,29 @@ const WebinarRoom = () => {
 
     fetchEventDetails();
   }, [id, user, role]);
+
+  const handleStartBroadcast = async () => {
+    try {
+      await initializeAgora(id, null, user._id);
+      await startBroadcast();
+      setIsStreaming(true);
+      
+      if (localVideoTrack && videoRef.current) {
+        localVideoTrack.play(videoRef.current);
+      }
+    } catch (error) {
+      console.error('Error starting broadcast:', error);
+    }
+  };
+
+  const handleStopBroadcast = async () => {
+    try {
+      await stopBroadcast();
+      setIsStreaming(false);
+    } catch (error) {
+      console.error('Error stopping broadcast:', error);
+    }
+  };
 
   if (loading) {
     return <div>Loading webinar room...</div>;
@@ -88,39 +117,38 @@ const WebinarRoom = () => {
           {/* Main Video Area */}
           <div className="lg:col-span-2">
             <div className="bg-black aspect-video rounded-lg flex items-center justify-center">
-              {role === 'host' ? (
-                <div className="text-white text-center">
-                  <p className="mb-2">Host Controls</p>
-                  <button className="bg-[#4B0082] px-4 py-2 rounded-full">
-                    Start Broadcasting
-                  </button>
-                </div>
-              ) : (
-                <p className="text-white">Waiting for host to start the stream...</p>
-              )}
+              <div ref={videoRef} className="w-full h-full">
+                {role === 'host' ? (
+                  !isStreaming ? (
+                    <div className="text-white text-center">
+                      <p className="mb-2">Host Controls</p>
+                      <button 
+                        onClick={handleStartBroadcast}
+                        className="bg-[#4B0082] px-4 py-2 rounded-full"
+                      >
+                        Start Broadcasting
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={handleStopBroadcast}
+                      className="absolute top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-full"
+                    >
+                      Stop Broadcasting
+                    </button>
+                  )
+                ) : (
+                  <p className="text-white">
+                    {isStreaming ? "Connecting to stream..." : "Waiting for host to start the stream..."}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Chat Area */}
-          <div className="bg-white rounded-lg p-4 h-[600px] flex flex-col">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold">Live Chat</h3>
-              {role === 'host' && (
-                <button className="text-sm text-gray-600">
-                  Manage Chat
-                </button>
-              )}
-            </div>
-            <div className="flex-1 overflow-y-auto mb-4">
-              {/* Chat messages will appear here */}
-            </div>
-            <div className="border-t pt-4">
-              <input
-                type="text"
-                placeholder="Type your message..."
-                className="w-full px-4 py-2 border rounded-full"
-              />
-            </div>
+          <div className="bg-white rounded-lg p-4 h-[600px]">
+            <WebChat roomId={id} isHost={role === 'host'} />
           </div>
         </div>
       </div>
