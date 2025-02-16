@@ -12,6 +12,13 @@ const AdminDashboard = () => {
     pendingRoleRequests: 0,
     totalQuestions: 0,
     recentUpdates: [],
+    userStats: {
+      totalUsers: 0,
+      standardUsers: 0,
+      universities: 0,
+      alumni: 0,
+      counselors: 0
+    }
   });
   const [loading, setLoading] = useState(true);
   const [questionCategories, setQuestionCategories] = useState({});
@@ -25,6 +32,11 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem('token');
       
+      // Fetch user statistics
+      const userStatsResponse = await axios.get(`${backendUrl}/api/user/stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
       // Fetch universities with features
       const universitiesResponse = await axios.get(`${backendUrl}/api/university/list`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -69,7 +81,8 @@ const AdminDashboard = () => {
 
       setQuestionCategories(categories);
 
-      setStats({
+      setStats(prevStats => ({
+        ...prevStats,
         universities: universitiesResponse.data.universities || [],
         roleRequests: roleRequestsResponse.data.data || [],
         questions: questionsResponse.data.questions || [],
@@ -77,7 +90,14 @@ const AdminDashboard = () => {
         pendingRoleRequests: roleRequestsResponse.data.data?.length || 0,
         totalQuestions: questionsResponse.data.questions?.length || 0,
         recentUpdates,
-      });
+        userStats: userStatsResponse.data || {
+          totalUsers: 0,
+          standardUsers: 0,
+          universities: 0,
+          alumni: 0,
+          counselors: 0
+        }
+      }));
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast.error('Error loading dashboard data');
@@ -99,7 +119,33 @@ const AdminDashboard = () => {
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* New User Statistics Card */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">User Statistics</h2>
+            <span className="text-2xl font-bold text-purple-600">{stats.userStats.totalUsers}</span>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+              <span className="text-sm font-medium">Standard Users</span>
+              <span className="text-sm text-gray-600">{stats.userStats.standardUsers}</span>
+            </div>
+            <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+              <span className="text-sm font-medium">Universities</span>
+              <span className="text-sm text-gray-600">{stats.userStats.universities}</span>
+            </div>
+            <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+              <span className="text-sm font-medium">Alumni</span>
+              <span className="text-sm text-gray-600">{stats.userStats.alumni}</span>
+            </div>
+            <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+              <span className="text-sm font-medium">Counselors</span>
+              <span className="text-sm text-gray-600">{stats.userStats.counselors}</span>
+            </div>
+          </div>
+        </div>
+
         {/* Universities Card */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">

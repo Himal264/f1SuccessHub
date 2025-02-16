@@ -9,7 +9,8 @@ import {
   registerUser,
   adminLogin,
   updateProfilePicture,
-  updateProfile
+  updateProfile,
+  getUserStats
 } from "../controllers/userController.js";
 import userModel from "../models/userModel.js";
 import sendEmail from "../utils/emailSender.js";
@@ -236,5 +237,8 @@ userRouter.put("/update-profile-picture", auth, upload.single('profilePicture'),
 userRouter.get("/test", (req, res) => {
   res.json({ message: "User route is working" });
 });
+
+// Add this new route
+userRouter.get("/stats", adminAuth, getUserStats);
 
 export default userRouter;

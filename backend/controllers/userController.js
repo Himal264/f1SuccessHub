@@ -343,7 +343,28 @@ const updateProfile = async (req, res) => {
   }
 };
 
-export { loginUser, registerUser, adminLogin, updateProfilePicture, updateProfile };
+// Add this new controller function
+const getUserStats = async (req, res) => {
+  try {
+    const stats = {
+      totalUsers: await userModel.countDocuments({}),
+      standardUsers: await userModel.countDocuments({ role: 'user' }),
+      universities: await userModel.countDocuments({ role: 'university' }),
+      alumni: await userModel.countDocuments({ role: 'alumni' }),
+      counselors: await userModel.countDocuments({ role: 'counselor' })
+    };
+
+    res.status(200).json(stats);
+  } catch (error) {
+    console.error('Error fetching user stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching user statistics'
+    });
+  }
+};
+
+export { loginUser, registerUser, adminLogin, updateProfilePicture, updateProfile, getUserStats };
 
 // Route for admin login
 const adminLogin = (req, res) => {
