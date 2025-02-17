@@ -129,13 +129,25 @@ export const getChats = async (req, res) => {
   try {
     const { userId } = req.query;
     
+    // Verify the requesting user exists and has permission
+    if (userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Unauthorized to access these chats' 
+      });
+    }
+
+    // Find all chats where the user is a participant
     const chats = await Chat.find({
       'participants.user': userId
     })
     .populate({
       path: 'participants.user',
-      select: 'name email profilePicture role counselorInfo alumniInfo universityInfo online',
-      // Include all relevant user info based on role
+      select: 'name email profilePicture role counselorInfo alumniInfo universityInfo online'
+    })
+    .populate({
+      path: 'messages.sender',
+      select: 'name role profilePicture'
     })
     .sort({ lastMessage: -1 });
 
@@ -145,43 +157,50 @@ export const getChats = async (req, res) => {
         p => p.user._id.toString() !== userId
       );
 
-      if (otherParticipant) {
-        const user = otherParticipant.user;
-        let additionalInfo = {};
-
-        // Add role-specific information
-        switch (user.role) {
-          case 'counselor':
-            additionalInfo = {
-              specialization: user.counselorInfo?.certifiedCompany || 'Career Guidance',
-              experience: user.counselorInfo?.startDate ? 
-                `${new Date().getFullYear() - new Date(user.counselorInfo.startDate).getFullYear()}+ years experience` : 
-                '5+ years experience'
-            };
-            break;
-          case 'alumni':
-            additionalInfo = {
-              university: user.alumniInfo?.universityName,
-              graduationYear: user.alumniInfo?.endStudy ? 
-                new Date(user.alumniInfo.endStudy).getFullYear() : 
-                'Recent Graduate'
-            };
-            break;
-          case 'university':
-            additionalInfo = {
-              universityName: user.universityInfo?.universityName,
-              department: 'Admissions Department',
-              location: user.universityInfo?.location
-            };
-            break;
-        }
-
-        // Merge additional info with user data
-        otherParticipant.user = {
-          ...otherParticipant.user.toObject(),
-          ...additionalInfo
-        };
+      if (!otherParticipant || !otherParticipant.user) {
+        return chat;
       }
+
+      const user = otherParticipant.user;
+      let additionalInfo = {};
+
+      // Add role-specific information
+      switch (user.role) {
+        case 'counselor':
+          additionalInfo = {
+            specialization: user.counselorInfo?.certifiedCompany || 'Career Guidance',
+            experience: user.counselorInfo?.startDate ? 
+              `${new Date().getFullYear() - new Date(user.counselorInfo.startDate).getFullYear()}+ years experience` : 
+              '5+ years experience'
+          };
+          break;
+        case 'alumni':
+          additionalInfo = {
+            university: user.alumniInfo?.universityName,
+            graduationYear: user.alumniInfo?.endStudy ? 
+              new Date(user.alumniInfo.endStudy).getFullYear() : 
+              'Recent Graduate'
+          };
+          break;
+        case 'university':
+          additionalInfo = {
+            universityName: user.universityInfo?.universityName,
+            department: 'Admissions Department',
+            location: user.universityInfo?.location
+          };
+          break;
+        case 'user':
+          additionalInfo = {
+            status: 'Student'
+          };
+          break;
+      }
+
+      // Merge additional info with user data
+      otherParticipant.user = {
+        ...otherParticipant.user.toObject(),
+        ...additionalInfo
+      };
 
       return chat;
     });
@@ -196,49 +215,48 @@ export const getChats = async (req, res) => {
 export const getChatMessages = async (req, res) => {
   try {
     const { chatId } = req.params;
-    const { userId } = req.query;
+    const userId = req.user._id;
     
     const chat = await Chat.findById(chatId)
       .populate({
         path: 'messages.sender',
         select: 'name email profilePicture role counselorInfo alumniInfo universityInfo'
+      })
+      .populate({
+        path: 'participants.user',
+        select: 'name email profilePicture role counselorInfo alumniInfo universityInfo online'
       });
     
     if (!chat) {
-      return res.status(404).json({ message: 'Chat not found' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Chat not found' 
+      });
     }
 
     // Verify the requester is part of this chat
-    if (!chat.participants.some(p => p.user.toString() === userId)) {
-      return res.status(403).json({ message: 'Unauthorized to access these messages' });
-    }
-
-    // Mark unread messages as read
-    const unreadMessages = chat.messages.filter(
-      msg => !msg.read && msg.sender.toString() !== userId
+    const isParticipant = chat.participants.some(
+      p => p.user._id.toString() === userId.toString()
     );
 
-    if (unreadMessages.length > 0) {
-      await Chat.updateOne(
-        { _id: chatId, 'messages._id': { $in: unreadMessages.map(m => m._id) } },
-        { $set: { 'messages.$[elem].read': true } },
-        { arrayFilters: [{ 'elem._id': { $in: unreadMessages.map(m => m._id) } }] }
-      );
-
-      // Notify sender that messages were read
-      const io = getIO();
-      unreadMessages.forEach(msg => {
-        io.to(msg.sender.toString()).emit('message_read', {
-          chatId,
-          messageIds: [msg._id]
-        });
+    if (!isParticipant) {
+      return res.status(403).json({ 
+        success: false,
+        message: 'Unauthorized to access these messages' 
       });
     }
-    
-    res.status(200).json(chat.messages);
+
+    // Ensure messages is always an array
+    const chatData = chat.toObject();
+    chatData.messages = chatData.messages || [];
+
+    res.status(200).json(chatData);
   } catch (error) {
     console.error('Error fetching messages:', error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 };
 

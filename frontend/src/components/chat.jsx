@@ -22,6 +22,7 @@ const Chat = ({ isOpen, onClose, user }) => {
   const typingTimeoutRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [typingTimeout, setTypingTimeout] = useState(null);
+  const [error, setError] = useState(null);
 
   const userTypes = [
     { id: 'all', label: 'All Chats' },
@@ -52,6 +53,7 @@ const Chat = ({ isOpen, onClose, user }) => {
 
   const fetchChats = async () => {
     try {
+      setError(null);
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/chat/list?userId=${authUser._id}`,
         {
@@ -60,10 +62,16 @@ const Chat = ({ isOpen, onClose, user }) => {
           }
         }
       );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch chats');
+      }
+
       const data = await response.json();
       setChats(data);
     } catch (error) {
       console.error('Error fetching chats:', error);
+      setError('Failed to load chats. Please try again.');
     }
   };
 
@@ -140,13 +148,28 @@ const Chat = ({ isOpen, onClose, user }) => {
 
   const handleSetActiveChat = async (chat) => {
     try {
-      const messages = await fetchChatMessages(chat._id);
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/chat/${chat._id}/messages?userId=${authUser._id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch messages');
+      }
+
+      const chatData = await response.json();
+      
       setActiveChat({
-        ...chat,
-        messages: messages
+        ...chatData,
+        messages: Array.isArray(chatData.messages) ? chatData.messages : []
       });
     } catch (error) {
       console.error('Error setting active chat:', error);
+      setError('Failed to load chat messages');
     }
   };
 
@@ -307,60 +330,72 @@ const Chat = ({ isOpen, onClose, user }) => {
 
   const renderChatList = () => (
     <div className="flex flex-col h-full">
+      {error && (
+        <div className="p-4 text-red-500 text-center">
+          {error}
+        </div>
+      )}
       {renderUserTypeTabs()}
       <div className="flex-1 overflow-y-auto">
         <div className="divide-y">
-          {filteredChats.map((chat) => {
-            const otherParticipant = chat.participants.find(
-              p => p.user._id !== authUser._id
-            );
-            const lastMessage = chat.messages[chat.messages.length - 1];
+          {filteredChats.length === 0 ? (
+            <div className="p-4 text-center text-gray-500">
+              No chats found
+            </div>
+          ) : (
+            filteredChats.map((chat) => {
+              const otherParticipant = chat.participants.find(
+                p => p.user._id !== authUser._id
+              );
+              
+              if (!otherParticipant) return null;
 
-            return (
-              <div
-                key={chat._id}
-                onClick={() => handleSetActiveChat(chat)}
-                className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
-              >
-                <div className="relative">
-                  {otherParticipant.user.profilePicture?.url ? (
-                    <img
-                      src={otherParticipant.user.profilePicture.url}
-                      alt="Profile"
-                      className="w-12 h-12 rounded-full"
-                    />
-                  ) : (
-                    <BsPersonCircle className="w-12 h-12 text-gray-400" />
-                  )}
-                  <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
-                    otherParticipant.user.online ? 'bg-green-500' : 'bg-gray-300'
-                  }`} />
-                </div>
-                <div className="ml-3 flex-1">
-                  <div className="flex justify-between items-baseline">
-                    <h3 className="font-medium text-gray-900">
-                      {otherParticipant.user.name}
-                    </h3>
-                    {lastMessage && (
-                      <span className="text-xs text-gray-500">
-                        {new Date(lastMessage.timestamp).toLocaleDateString()}
+              return (
+                <div
+                  key={chat._id}
+                  onClick={() => handleSetActiveChat(chat)}
+                  className="flex items-center p-3 hover:bg-gray-50 cursor-pointer"
+                >
+                  <div className="relative">
+                    {otherParticipant.user.profilePicture?.url ? (
+                      <img
+                        src={otherParticipant.user.profilePicture.url}
+                        alt="Profile"
+                        className="w-12 h-12 rounded-full"
+                      />
+                    ) : (
+                      <BsPersonCircle className="w-12 h-12 text-gray-400" />
+                    )}
+                    <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
+                      otherParticipant.user.online ? 'bg-green-500' : 'bg-gray-300'
+                    }`} />
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className="font-medium text-gray-900">
+                        {otherParticipant.user.name}
+                      </h3>
+                      {chat.messages[chat.messages.length - 1] && (
+                        <span className="text-xs text-gray-500">
+                          {new Date(chat.messages[chat.messages.length - 1].timestamp).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-sm text-gray-500 capitalize">
+                        {otherParticipant.role}
                       </span>
-                    )}
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-sm text-gray-500 capitalize">
-                      {otherParticipant.role}
-                    </span>
-                    {lastMessage && (
-                      <p className="text-sm text-gray-500 truncate ml-2">
-                        • {lastMessage.content}
-                      </p>
-                    )}
+                      {chat.messages[chat.messages.length - 1] && (
+                        <p className="text-sm text-gray-500 truncate ml-2">
+                          • {chat.messages[chat.messages.length - 1].content}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
       {authUser.role === 'user' && (
@@ -378,11 +413,21 @@ const Chat = ({ isOpen, onClose, user }) => {
   );
 
   const renderMessage = (msg, index) => {
-    const isCurrentUser = msg.sender === authUser._id;
+    if (!msg || !msg.sender || !authUser) {
+      return null;
+    }
+
+    const isCurrentUser = msg.sender === authUser._id || 
+                         msg.sender._id === authUser._id;
+                         
     const otherParticipant = activeChat.participants.find(
       p => p.user._id !== authUser._id
-    ).user;
-    
+    )?.user;
+
+    if (!otherParticipant) {
+      return null;
+    }
+
     return (
       <div
         key={index}
@@ -444,7 +489,7 @@ const Chat = ({ isOpen, onClose, user }) => {
 
   const renderActiveChat = () => {
     if (!activeChat || !activeChat.participants) {
-      return <div>Loading chat...</div>;
+      return <div className="p-4 text-center text-gray-500">Loading chat...</div>;
     }
 
     const otherParticipant = activeChat.participants.find(
@@ -452,8 +497,10 @@ const Chat = ({ isOpen, onClose, user }) => {
     );
 
     if (!otherParticipant || !otherParticipant.user) {
-      return <div>Error loading chat participant</div>;
+      return <div className="p-4 text-center text-red-500">Error loading chat participant</div>;
     }
+
+    const messages = Array.isArray(activeChat.messages) ? activeChat.messages : [];
 
     return (
       <div className="flex flex-col h-full">
@@ -514,7 +561,13 @@ const Chat = ({ isOpen, onClose, user }) => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {activeChat.messages.map((msg, index) => renderMessage(msg, index))}
+          {messages.length === 0 ? (
+            <div className="text-center text-gray-500">
+              No messages yet. Start the conversation!
+            </div>
+          ) : (
+            messages.map((msg, index) => renderMessage(msg, index))
+          )}
           {isTyping && (
             <div className="flex justify-start">
               <div className="bg-gray-100 p-3 rounded-lg">
@@ -585,6 +638,12 @@ const Chat = ({ isOpen, onClose, user }) => {
       return () => newSocket.disconnect();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (authUser) {
+      fetchChats();
+    }
+  }, [authUser]);
 
   const handleTyping = (e) => {
     setMessage(e.target.value);
