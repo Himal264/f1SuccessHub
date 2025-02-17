@@ -65,23 +65,96 @@ const eventSchema = new mongoose.Schema({
     type: String,
     enum: ['upcoming', 'ongoing', 'completed'],
     default: 'upcoming'
+  },
+  webinar: {
+    isActive: { type: Boolean, default: false },
+    startedAt: { type: Date },
+    endedAt: { type: Date },
+    participants: [{
+      userId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'User',
+        autopopulate: { select: 'name email profilePicture' }
+      },
+      joinedAt: { type: Date },
+      leftAt: { type: Date },
+      role: {
+        type: String,
+        enum: ['host', 'participant', 'moderator'],
+        default: 'participant'
+      },
+      isAudioEnabled: { type: Boolean, default: true },
+      isVideoEnabled: { type: Boolean, default: true },
+      isScreenSharing: { type: Boolean, default: false }
+    }],
+    recording: {
+      url: String,
+      duration: Number,
+      startedAt: Date,
+      endedAt: Date,
+      status: {
+        type: String,
+        enum: ['processing', 'completed', 'failed'],
+        default: 'processing'
+      }
+    },
+    channel: {
+      name: { type: String },
+      token: { type: String },
+      uid: { type: String }
+    },
+    settings: {
+      participantAudioDefault: { type: Boolean, default: true },
+      participantVideoDefault: { type: Boolean, default: true },
+      allowChat: { type: Boolean, default: true },
+      allowRaiseHand: { type: Boolean, default: true },
+      allowScreenShare: { type: Boolean, default: true },
+      maxDuration: { type: Number, default: 120 }
+    }
   }
 }, {
   timestamps: true
 });
 
-// Modify the pre-save hook to work without endDate
 eventSchema.pre('save', function(next) {
   const now = new Date();
-  if (this.startDate < now) {
+  
+  if (this.webinar?.isActive) {
+    this.status = 'ongoing';
+  } else if (this.startDate < now) {
     this.status = 'completed';
   } else {
     this.status = 'upcoming';
   }
+  
+  if (this.type === 'webinar' && !this.webinar.channel.name) {
+    this.webinar.channel.name = `webinar_${this._id}_${Date.now()}`;
+  }
+
   next();
 });
 
-// Add plugin for autopopulate
+eventSchema.methods.canUserJoin = function(userId) {
+  if (!this.webinar.isActive) return false;
+  
+  if (this.createdBy.toString() === userId.toString()) return true;
+  
+  if (this.maxParticipants && 
+      this.webinar.participants.length >= this.maxParticipants) {
+    return false;
+  }
+  
+  const existingParticipant = this.webinar.participants.find(
+    p => p.userId.toString() === userId.toString() && !p.leftAt
+  );
+  
+  return !existingParticipant;
+};
+
+eventSchema.methods.getActiveParticipantsCount = function() {
+  return this.webinar.participants.filter(p => p.joinedAt && !p.leftAt).length;
+};
+
 eventSchema.plugin(mongooseAutopopulate);
 
 const Event = mongoose.model('Event', eventSchema);

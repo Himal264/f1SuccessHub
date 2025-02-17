@@ -118,6 +118,45 @@ const handleWebinarMessage = (ws, message, session) => {
         userId: ws.userId,
       });
       break;
+
+    case 'raise-hand':
+      if (ws.role === 'participant') {
+        session.host?.send(JSON.stringify({
+          type: 'raise-hand',
+          userId: ws.userId
+        }));
+      }
+      break;
+
+    case 'mute-participant':
+      if (ws.role === 'host') {
+        const targetParticipant = Array.from(session.participants)
+          .find(p => p.userId === message.targetUserId);
+        if (targetParticipant) {
+          targetParticipant.send(JSON.stringify({
+            type: 'mute-request'
+          }));
+        }
+      }
+      break;
+
+    case 'screen-share-start':
+      if (ws.role === 'host') {
+        broadcastToParticipants(session, {
+          type: 'screen-share-started',
+          sdp: message.sdp
+        });
+      }
+      break;
+
+    case 'webinar-recording':
+      if (ws.role === 'host') {
+        broadcastMessage(session, {
+          type: 'recording-status',
+          isRecording: message.isRecording
+        });
+      }
+      break;
   }
 };
 
