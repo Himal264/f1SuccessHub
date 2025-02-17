@@ -17,6 +17,11 @@ const Chat = ({ isOpen, onClose, user }) => {
   const [socket, setSocket] = useState(null);
   const [selectedUserType, setSelectedUserType] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
+  const [typing, setTyping] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
+  const [messages, setMessages] = useState([]);
+  const [typingTimeout, setTypingTimeout] = useState(null);
 
   const userTypes = [
     { id: 'all', label: 'All Chats' },
@@ -366,85 +371,171 @@ const Chat = ({ isOpen, onClose, user }) => {
     </div>
   );
 
-  const renderActiveChat = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center p-3 border-b bg-white">
-        <button
-          onClick={() => {
-            setActiveChat(null);
-            setSelectedUser(null);
-          }}
-          className="mr-2 text-gray-500 hover:text-gray-700"
+  const renderMessage = (msg, index) => {
+    const isCurrentUser = msg.sender === authUser._id;
+    const otherParticipant = activeChat.participants.find(
+      p => p.user._id !== authUser._id
+    ).user;
+    
+    return (
+      <div
+        key={index}
+        className={`flex items-end space-x-2 mb-4 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+      >
+        {!isCurrentUser && (
+          <div className="flex-shrink-0">
+            {otherParticipant.profilePicture?.url ? (
+              <img
+                src={otherParticipant.profilePicture.url}
+                alt={otherParticipant.name}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <BsPersonCircle className="w-8 h-8 text-gray-400" />
+            )}
+          </div>
+        )}
+
+        <div
+          className={`max-w-[70%] p-3 rounded-lg ${
+            isCurrentUser
+              ? 'bg-blue-500 text-white rounded-br-none'
+              : 'bg-gray-100 rounded-bl-none'
+          }`}
         >
-          <IoClose size={24} />
-        </button>
-        <div className="flex items-center">
-          {activeChat.participants.find(p => p.user._id !== authUser._id).user.profilePicture?.url ? (
-            <img
-              src={activeChat.participants.find(p => p.user._id !== authUser._id).user.profilePicture.url}
-              alt="Profile"
-              className="w-10 h-10 rounded-full"
-            />
-          ) : (
-            <BsPersonCircle className="w-10 h-10 text-gray-400" />
+          {!isCurrentUser && (
+            <div className="text-xs text-gray-500 mb-1">
+              {otherParticipant.name}
+            </div>
           )}
-          <div className="ml-3">
-            <h3 className="font-medium text-gray-900">
-              {activeChat.participants.find(p => p.user._id !== authUser._id).user.name}
-            </h3>
-            {activeChat.selectedUserDetails && activeChat.selectedUserDetails.role === 'university' && (
-              <div className="text-sm text-gray-500">
-                <p>University Representative</p>
-                <p>{activeChat.selectedUserDetails.universityName || 'University Admin'}</p>
-                <p>{activeChat.selectedUserDetails.department || 'Admissions Department'}</p>
-              </div>
+          {msg.content}
+          <div className="text-xs mt-1 opacity-70 flex justify-between items-center">
+            <span>{new Date(msg.timestamp).toLocaleTimeString()}</span>
+            {isCurrentUser && (
+              <span className="ml-2">
+                {msg.read ? '✓✓' : '✓'}
+              </span>
             )}
           </div>
         </div>
-      </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {activeChat.messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`flex ${msg.sender === authUser._id ? 'justify-end' : 'justify-start'}`}
+        {isCurrentUser && (
+          <div className="flex-shrink-0">
+            {authUser.profilePicture?.url ? (
+              <img
+                src={authUser.profilePicture.url}
+                alt="Your profile"
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <BsPersonCircle className="w-8 h-8 text-gray-400" />
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderActiveChat = () => {
+    const otherParticipant = activeChat.participants.find(
+      p => p.user._id !== authUser._id
+    ).user;
+    
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex items-center p-3 border-b bg-white">
+          <button
+            onClick={() => {
+              setActiveChat(null);
+              setSelectedUser(null);
+            }}
+            className="mr-2 text-gray-500 hover:text-gray-700"
           >
-            <div
-              className={`max-w-[70%] p-3 rounded-lg ${
-                msg.sender === authUser._id
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100'
-              }`}
-            >
-              {msg.content}
-              <div className="text-xs mt-1 opacity-70">
-                {new Date(msg.timestamp).toLocaleTimeString()}
-              </div>
+            <IoClose size={24} />
+          </button>
+          <div className="flex items-center flex-1">
+            <div className="relative">
+              {otherParticipant.profilePicture?.url ? (
+                <img
+                  src={otherParticipant.profilePicture.url}
+                  alt={otherParticipant.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+              ) : (
+                <BsPersonCircle className="w-10 h-10 text-gray-400" />
+              )}
+              <span 
+                className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
+                  otherParticipant.online ? 'bg-green-500' : 'bg-gray-300'
+                } border-2 border-white`}
+              />
+            </div>
+            <div className="ml-3 flex-1">
+              <h3 className="font-medium text-gray-900">
+                {otherParticipant.name}
+              </h3>
+              {otherParticipant.role === 'university' && (
+                <div className="text-sm text-gray-500">
+                  <p>University Representative</p>
+                  <p>{otherParticipant.universityName || 'University Admin'}</p>
+                  <p>{otherParticipant.department || 'Admissions Department'}</p>
+                </div>
+              )}
+              {otherParticipant.role === 'counselor' && (
+                <div className="text-sm text-gray-500">
+                  <p>Professional Counselor</p>
+                  <p>{otherParticipant.specialization || 'Career Guidance'}</p>
+                  <p>{otherParticipant.experience || '5+ years experience'}</p>
+                </div>
+              )}
+              {otherParticipant.role === 'alumni' && (
+                <div className="text-sm text-gray-500">
+                  <p>Alumni Member</p>
+                  <p>{otherParticipant.university || 'University Graduate'}</p>
+                  <p>{otherParticipant.graduationYear || 'Class of 2022'}</p>
+                </div>
+              )}
             </div>
           </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <form onSubmit={handleSendMessage} className="p-3 border-t bg-white">
-        <div className="flex items-center space-x-2">
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 p-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            type="submit"
-            className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600"
-          >
-            <IoSend size={20} />
-          </button>
         </div>
-      </form>
-    </div>
-  );
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {activeChat.messages.map((msg, index) => renderMessage(msg, index))}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="bg-gray-100 p-3 rounded-lg">
+                <div className="typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <form onSubmit={handleSendMessage} className="p-3 border-t bg-white">
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              value={message}
+              onChange={handleTyping}
+              placeholder="Type a message..."
+              className="flex-1 p-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="submit"
+              className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600"
+              disabled={!message.trim()}
+            >
+              <IoSend size={20} />
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -455,82 +546,106 @@ const Chat = ({ isOpen, onClose, user }) => {
   }, [activeChat]);
 
   useEffect(() => {
-    if (!socket && authUser) {
-      const token = localStorage.getItem('token');
+    if (!socket && user) {
       const newSocket = io(import.meta.env.VITE_BACKEND_URL, {
-        auth: { token },
-        transports: ['websocket', 'polling'],
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
+        auth: { token: localStorage.getItem('token') }
       });
 
       newSocket.on('connect', () => {
-        console.log('Connected to socket server');
+        console.log('Connected to chat server');
       });
 
-      newSocket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
+      newSocket.on('new_message', (data) => {
+        setMessages(prev => [...prev, data.message]);
+        scrollToBottom();
       });
 
-      newSocket.on('new_message', async (data) => {
-        if (activeChat && activeChat._id === data.chatId) {
-          const messages = await fetchChatMessages(data.chatId);
-          setActiveChat(prev => ({
-            ...prev,
-            messages: messages
-          }));
+      newSocket.on('user_typing', ({ userId, isTyping }) => {
+        if (userId !== user._id) {
+          setIsTyping(isTyping);
         }
-        fetchChats();
       });
 
       setSocket(newSocket);
 
-      return () => {
-        if (newSocket) {
-          newSocket.disconnect();
-        }
-      };
+      return () => newSocket.disconnect();
     }
-  }, [authUser]);
+  }, [user]);
+
+  const handleTyping = (e) => {
+    setMessage(e.target.value);
+    
+    if (socket) {
+      socket.emit('typing', {
+        chatId: activeChat._id,
+        isTyping: true
+      });
+
+      if (typingTimeout) clearTimeout(typingTimeout);
+      
+      const timeout = setTimeout(() => {
+        socket.emit('typing', {
+          chatId: activeChat._id,
+          isTyping: false
+        });
+      }, 1000);
+
+      setTypingTimeout(timeout);
+    }
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!message.trim() || !socket) return;
+    if (!message.trim()) return;
 
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/chat/message`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({
-            chatId: activeChat._id,
-            senderId: authUser._id,
-            content: message
-          })
-        }
-      );
+      const response = await fetch('/api/chat/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          chatId: activeChat._id,
+          content: message
+        })
+      });
 
       if (response.ok) {
-        socket.emit('new_message', {
-          chatId: activeChat._id,
-          message: {
-            sender: authUser._id,
-            content: message,
-            timestamp: new Date()
-          }
-        });
-
+        const newMessage = await response.json();
+        setMessages(prev => [...prev, newMessage]);
         setMessage('');
+        scrollToBottom();
       }
     } catch (error) {
       console.error('Error sending message:', error);
     }
   };
+
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .typing-indicator {
+        display: flex;
+        gap: 4px;
+      }
+      .typing-indicator span {
+        width: 8px;
+        height: 8px;
+        background: #90909090;
+        border-radius: 50%;
+        animation: bounce 1.4s infinite ease-in-out;
+      }
+      .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+      .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+      @keyframes bounce {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
 
   if (!authUser || !isOpen) return null;
 

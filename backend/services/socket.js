@@ -1,82 +1,69 @@
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
+import User from '../models/userModel.js';
 
 let io;
 
 export const initializeSocket = (server) => {
   io = new Server(server, {
     cors: {
-      origin: ["http://localhost:5173", "http://localhost:5174"],
+      origin: process.env.FRONTEND_URL || "http://localhost:5173",
       methods: ["GET", "POST"],
       credentials: true
     },
-    allowEIO3: true, // Allow Engine.IO version 3
-    transports: ['websocket', 'polling'] // Explicitly specify transport methods
+    pingTimeout: 60000,
   });
 
-  // Authentication middleware
+  // Store online users
+  const onlineUsers = new Map();
+
   io.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth.token;
-      if (!token) {
-        return next(new Error('Authentication token missing'));
-      }
+      if (!token) return next(new Error('Authentication required'));
 
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        socket.userId = decoded.id;
-        socket.userRole = decoded.role;
-        next();
-      } catch (err) {
-        return next(new Error('Invalid authentication token'));
-      }
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id);
+      
+      if (!user) return next(new Error('User not found'));
+      
+      socket.userId = user._id;
+      socket.userRole = user.role;
+      next();
     } catch (error) {
-      console.error('Socket authentication error:', error);
-      next(new Error('Authentication error'));
+      next(new Error('Authentication failed'));
     }
   });
 
   io.on('connection', (socket) => {
     console.log(`User connected: ${socket.userId}`);
-    
-    // Join a personal room for private messages
-    socket.join(socket.userId);
+    onlineUsers.set(socket.userId.toString(), socket.id);
 
-    // Join chat room
+    // Join personal room
+    socket.join(socket.userId.toString());
+
+    // Update online status
+    io.emit('user_online', socket.userId.toString());
+
+    // Handle joining specific chat
     socket.on('join_chat', (chatId) => {
       socket.join(chatId);
-    });
-
-    // Leave chat room
-    socket.on('leave_chat', (chatId) => {
-      socket.leave(chatId);
-    });
-
-    // Handle new message
-    socket.on('new_message', async (data) => {
-      try {
-        io.to(data.chatId).emit('receive_message', {
-          chatId: data.chatId,
-          message: data.message,
-          sender: {
-            _id: socket.userId,
-            role: socket.userRole
-          }
-        });
-      } catch (error) {
-        console.error('Error handling new message:', error);
-      }
+      console.log(`User ${socket.userId} joined chat ${chatId}`);
     });
 
     // Handle typing status
-    socket.on('typing', (data) => {
-      socket.to(data.chatId).emit('user_typing', {
-        chatId: data.chatId,
-        userId: socket.userId
+    socket.on('typing', ({ chatId, isTyping }) => {
+      socket.to(chatId).emit('user_typing', {
+        chatId,
+        userId: socket.userId,
+        isTyping
       });
     });
 
+    // Handle disconnect
     socket.on('disconnect', () => {
+      onlineUsers.delete(socket.userId.toString());
+      io.emit('user_offline', socket.userId.toString());
       console.log(`User disconnected: ${socket.userId}`);
     });
   });
@@ -85,8 +72,6 @@ export const initializeSocket = (server) => {
 };
 
 export const getIO = () => {
-  if (!io) {
-    throw new Error('Socket.io not initialized');
-  }
+  if (!io) throw new Error('Socket.io not initialized');
   return io;
 }; 

@@ -32,6 +32,7 @@ import './models/userModel.js';  // Load User model first
 import './models/eventModel.js'; // Then load Event model
 import setupWebinarWebSocket from './services/webinarSocket.js';
 import webinarRouter from './routes/webinarRoute.js';
+import { initializeSocket } from './services/socket.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -59,50 +60,8 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-// Initialize socket after CORS configuration
-const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    methods: ["GET", "POST"],
-    credentials: true
-  },
-  pingTimeout: 60000,
-  pingInterval: 25000,
-});
-
-// Socket.IO middleware for authentication
-io.use((socket, next) => {
-  try {
-    const token = socket.handshake.auth.token;
-    if (!token) {
-      return next(new Error('Authentication token missing'));
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    socket.userId = decoded.id;
-    next();
-  } catch (error) {
-    next(new Error('Authentication error'));
-  }
-});
-
-// Socket.IO connection handler
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.userId);
-
-  socket.on('join_room', ({ roomId, userId }) => {
-    socket.join(roomId);
-    console.log(`User ${userId} joined room ${roomId}`);
-  });
-
-  socket.on('send_message', (messageData) => {
-    io.to(messageData.roomId).emit('receive_message', messageData);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.userId);
-  });
-});
+// Initialize socket.io through our service
+const io = initializeSocket(httpServer);
 
 const port = process.env.PORT || 9000;
 connectDB();

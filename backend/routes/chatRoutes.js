@@ -4,18 +4,20 @@ import {
   sendMessage, 
   getChats, 
   getChatMessages, 
-  getAvailableUsers 
+  getAvailableUsers,
+  markMessagesAsRead
 } from '../controllers/chatController.js';
 import { auth } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-router.use(auth); // Use the auth middleware instead of verifyToken
+router.use(auth);
 
 router.post('/create', createChat);
 router.post('/message', sendMessage);
 router.get('/list', getChats);
 router.get('/:chatId/messages', getChatMessages);
 router.get('/available-users', getAvailableUsers);
+router.post('/messages/read', markMessagesAsRead);
 
 export default router; 
