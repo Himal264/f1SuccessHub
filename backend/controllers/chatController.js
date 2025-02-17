@@ -22,10 +22,11 @@ export const createChat = async (req, res) => {
     const { participantId } = req.body;
     const userId = req.user._id;
 
-    // Verify participant exists and is of correct role
+    // Verify participant exists
     const participant = await User.findById(participantId);
-    if (!participant || !['counselor', 'alumni', 'university'].includes(participant.role)) {
+    if (!participant) {
       return res.status(400).json({ 
+        success: false,
         message: 'Invalid participant' 
       });
     }
@@ -42,8 +43,8 @@ export const createChat = async (req, res) => {
     // Create new chat
     const newChat = await Chat.create({
       participants: [
-        { user: userId },
-        { user: participantId }
+        { user: userId, role: req.user.role },
+        { user: participantId, role: participant.role }
       ]
     });
 
@@ -57,7 +58,11 @@ export const createChat = async (req, res) => {
 
     res.status(201).json(populatedChat);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error creating chat:', error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 };
 

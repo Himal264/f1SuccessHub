@@ -96,19 +96,25 @@ const Chat = ({ isOpen, onClose, user }) => {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           },
           body: JSON.stringify({
-            participants: [
-              { user: authUser._id, role: authUser.role },
-              { user: selectedUserId, role: chatType }
-            ]
+            participantId: selectedUserId
           })
         }
       );
+
+      if (!response.ok) {
+        throw new Error('Failed to create chat');
+      }
+
       const data = await response.json();
-      data.selectedUserDetails = userDetails;
-      setChats([...chats, data]);
-      setActiveChat(data);
-      setChatType(null);
-      setAvailableUsers([]);
+      
+      if (data && data.participants) {
+        setChats(prevChats => [...prevChats, data]);
+        setActiveChat(data);
+        setChatType(null);
+        setAvailableUsers([]);
+      } else {
+        throw new Error('Invalid chat data received');
+      }
     } catch (error) {
       console.error('Error creating chat:', error);
     }
@@ -437,10 +443,18 @@ const Chat = ({ isOpen, onClose, user }) => {
   };
 
   const renderActiveChat = () => {
+    if (!activeChat || !activeChat.participants) {
+      return <div>Loading chat...</div>;
+    }
+
     const otherParticipant = activeChat.participants.find(
       p => p.user._id !== authUser._id
-    ).user;
-    
+    );
+
+    if (!otherParticipant || !otherParticipant.user) {
+      return <div>Error loading chat participant</div>;
+    }
+
     return (
       <div className="flex flex-col h-full">
         <div className="flex items-center p-3 border-b bg-white">
@@ -455,10 +469,10 @@ const Chat = ({ isOpen, onClose, user }) => {
           </button>
           <div className="flex items-center flex-1">
             <div className="relative">
-              {otherParticipant.profilePicture?.url ? (
+              {otherParticipant.user.profilePicture?.url ? (
                 <img
-                  src={otherParticipant.profilePicture.url}
-                  alt={otherParticipant.name}
+                  src={otherParticipant.user.profilePicture.url}
+                  alt={otherParticipant.user.name}
                   className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
@@ -466,33 +480,33 @@ const Chat = ({ isOpen, onClose, user }) => {
               )}
               <span 
                 className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
-                  otherParticipant.online ? 'bg-green-500' : 'bg-gray-300'
+                  otherParticipant.user.online ? 'bg-green-500' : 'bg-gray-300'
                 } border-2 border-white`}
               />
             </div>
             <div className="ml-3 flex-1">
               <h3 className="font-medium text-gray-900">
-                {otherParticipant.name}
+                {otherParticipant.user.name}
               </h3>
-              {otherParticipant.role === 'university' && (
+              {otherParticipant.user.role === 'university' && (
                 <div className="text-sm text-gray-500">
                   <p>University Representative</p>
-                  <p>{otherParticipant.universityName || 'University Admin'}</p>
-                  <p>{otherParticipant.department || 'Admissions Department'}</p>
+                  <p>{otherParticipant.user.universityName || 'University Admin'}</p>
+                  <p>{otherParticipant.user.department || 'Admissions Department'}</p>
                 </div>
               )}
-              {otherParticipant.role === 'counselor' && (
+              {otherParticipant.user.role === 'counselor' && (
                 <div className="text-sm text-gray-500">
                   <p>Professional Counselor</p>
-                  <p>{otherParticipant.specialization || 'Career Guidance'}</p>
-                  <p>{otherParticipant.experience || '5+ years experience'}</p>
+                  <p>{otherParticipant.user.specialization || 'Career Guidance'}</p>
+                  <p>{otherParticipant.user.experience || '5+ years experience'}</p>
                 </div>
               )}
-              {otherParticipant.role === 'alumni' && (
+              {otherParticipant.user.role === 'alumni' && (
                 <div className="text-sm text-gray-500">
                   <p>Alumni Member</p>
-                  <p>{otherParticipant.university || 'University Graduate'}</p>
-                  <p>{otherParticipant.graduationYear || 'Class of 2022'}</p>
+                  <p>{otherParticipant.user.university || 'University Graduate'}</p>
+                  <p>{otherParticipant.user.graduationYear || 'Class of 2022'}</p>
                 </div>
               )}
             </div>
