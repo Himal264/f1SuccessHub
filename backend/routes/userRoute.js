@@ -16,6 +16,7 @@ import userModel from "../models/userModel.js";
 import sendEmail from "../utils/emailSender.js";
 import adminAuth from "../middlewares/adminAuth.js";
 import { auth } from '../middlewares/auth.js';
+import validator from 'validator';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -230,7 +231,36 @@ The F1 Success Hub Team`;
 });
 
 // Update profile routes
-userRouter.put("/update-profile", auth, updateProfile);
+userRouter.put("/update-profile", auth, async (req, res) => {
+  try {
+    // Validate request body
+    const { name, bio, socialLinks } = req.body;
+    
+    if (socialLinks) {
+      // Validate social links format
+      const validUrls = Object.values(socialLinks).every(url => 
+        !url || validator.isURL(url, { require_protocol: true })
+      );
+      
+      if (!validUrls) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid URL format in social links"
+        });
+      }
+    }
+
+    // Forward to controller
+    await updateProfile(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error processing request",
+      error: error.message
+    });
+  }
+});
+
 userRouter.put("/update-profile-picture", auth, upload.single('profilePicture'), updateProfilePicture);
 
 // Test route

@@ -18,6 +18,7 @@
     "@heroicons/react": "^2.2.0",
     "agora-access-token": "^2.0.4",
     "agora-rtc-sdk-ng": "^4.23.1",
+    "agora-token": "^2.0.3",
     "axios": "^1.7.9",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.474.0",

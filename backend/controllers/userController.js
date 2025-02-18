@@ -289,10 +289,10 @@ const updateProfilePicture = async (req, res) => {
   }
 };
 
-// Add this to your existing controller file
+// Update the updateProfile controller
 const updateProfile = async (req, res) => {
   try {
-    const { name, currentPassword, newPassword } = req.body;
+    const { name, bio, socialLinks } = req.body;
     const userId = req.user._id;
 
     const user = await userModel.findById(userId);
@@ -303,36 +303,74 @@ const updateProfile = async (req, res) => {
       });
     }
 
-    // Update name if provided
-    if (name && name !== user.name) {
+    // Check if user has a special role and is verified
+    const isVerifiedSpecialUser = user.role !== 'user' && 
+                                 user.verificationRequest?.status === 'approved';
+
+    // Basic validation
+    if (bio && bio.length > 500) {
+      return res.status(400).json({
+        success: false,
+        message: "Bio must not exceed 500 characters"
+      });
+    }
+
+    // Update basic info
+    if (name) {
       user.name = name;
     }
 
-    // Update password if provided
-    if (currentPassword && newPassword) {
-      const isMatch = await bcrypt.compare(currentPassword, user.password);
-      if (!isMatch) {
-        return res.status(400).json({
-          success: false,
-          message: "Current password is incorrect"
-        });
+    // Update role-specific info for verified special users
+    if (isVerifiedSpecialUser) {
+      const roleInfoKey = `${user.role}Info`;
+      
+      // Initialize the role info object if it doesn't exist
+      if (!user[roleInfoKey]) {
+        user[roleInfoKey] = {};
       }
 
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(newPassword, salt);
+      // Update bio and social links in the role-specific section
+      if (bio !== undefined) {
+        user[roleInfoKey].bio = bio;
+      }
+
+      if (socialLinks) {
+        user[roleInfoKey].socialLinks = {
+          website: socialLinks.website || '',
+          linkedin: socialLinks.linkedin || '',
+          twitter: socialLinks.twitter || '',
+          instagram: socialLinks.instagram || ''
+        };
+      }
+
+      // Remove bio and socialLinks from root level if they exist
+      if (user.bio) delete user.bio;
+      if (user.socialLinks) delete user.socialLinks;
     }
 
     await user.save();
 
-    res.json({
+    // Get the updated role-specific info
+    const roleInfo = user[`${user.role}Info`] || {};
+
+    // Prepare response data
+    const responseData = {
       success: true,
       message: "Profile updated successfully",
       user: {
         name: user.name,
-        email: user.email,
-        profilePicture: user.profilePicture
+        role: user.role,
+        bio: roleInfo.bio || '',
+        socialLinks: roleInfo.socialLinks || {
+          website: '',
+          linkedin: '',
+          twitter: '',
+          instagram: ''
+        }
       }
-    });
+    };
+
+    res.status(200).json(responseData);
   } catch (error) {
     console.error("Error updating profile:", error);
     res.status(500).json({

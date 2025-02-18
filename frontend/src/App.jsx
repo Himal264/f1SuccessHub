@@ -74,6 +74,7 @@ import Results from "./components/Results";
 import ApplyNow from "./components/ApplyNow";
 import EventDetails from './pages/EventDetails';
 import WebinarRoom from './pages/WebinarRoom';
+import Stories from './pages/Stories';
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -91,6 +92,7 @@ const App = () => {
                 <ScrollToTop />
 
                 <Routes>
+                  <Route path="/stories" element={<Stories />} />
                   <Route path="/applynow/:id" element={<ApplyNow />} />
                   <Route path="/results" element={<Results />} />
                   <Route path="/" element={<Home />} />

@@ -28,7 +28,14 @@ const Navbar = () => {
     name: '',
     email: '',
     profilePicture: null,
-    previewUrl: ''
+    previewUrl: '',
+    bio: '',
+    socialLinks: {
+      website: '',
+      linkedin: '',
+      twitter: '',
+      instagram: ''
+    }
   });
   const [showChatContainer, setShowChatContainer] = useState(false);
 
@@ -188,11 +195,19 @@ const Navbar = () => {
   // Initialize profile data when user is loaded
   useEffect(() => {
     if (user) {
+      const roleInfo = user[`${user.role}Info`] || {};
       setProfileData({
         name: user.name,
         email: user.email,
         profilePicture: null,
-        previewUrl: user.profilePicture?.url || getDefaultProfilePicture(user.name)
+        previewUrl: user.profilePicture?.url || getDefaultProfilePicture(user.name),
+        bio: roleInfo.bio || '',
+        socialLinks: roleInfo.socialLinks || {
+          website: '',
+          linkedin: '',
+          twitter: '',
+          instagram: ''
+        }
       });
     }
   }, [user]);
@@ -202,6 +217,7 @@ const Navbar = () => {
     e.preventDefault();
     
     try {
+      // First handle profile picture update if there's a new one
       if (profileData.profilePicture) {
         const formData = new FormData();
         formData.append('profilePicture', profileData.profilePicture);
@@ -218,41 +234,50 @@ const Navbar = () => {
           const errorData = await pictureResponse.json();
           throw new Error(errorData.message || 'Failed to update profile picture');
         }
-
-        const pictureData = await pictureResponse.json();
-        if (pictureData.success) {
-          const updatedUser = {
-            ...user,
-            profilePicture: pictureData.profilePicture
-          };
-          setUser(updatedUser);
-          localStorage.setItem('userInfo', JSON.stringify(updatedUser));
-        }
       }
 
-      // Update name
-      const nameResponse = await fetch('/api/user/update-profile', {
+      // Update profile info including bio and social links
+      const profileResponse = await fetch('/api/user/update-profile', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          name: profileData.name
+          name: profileData.name,
+          bio: profileData.bio,
+          socialLinks: {
+            website: profileData.socialLinks.website || '',
+            linkedin: profileData.socialLinks.linkedin || '',
+            twitter: profileData.socialLinks.twitter || '',
+            instagram: profileData.socialLinks.instagram || ''
+          }
         })
       });
 
-      if (!nameResponse.ok) {
-        const errorData = await nameResponse.json();
+      if (!profileResponse.ok) {
+        const errorData = await profileResponse.json();
         throw new Error(errorData.message || 'Failed to update profile');
       }
 
-      const nameData = await nameResponse.json();
-      if (nameData.success) {
+      const responseData = await profileResponse.json();
+      
+      if (responseData.success) {
+        // Update local user state with new data
         const updatedUser = {
           ...user,
-          name: profileData.name
+          name: responseData.user.name,
+          [`${user.role}Info`]: {
+            ...user[`${user.role}Info`],
+            bio: responseData.user.bio,
+            socialLinks: responseData.user.socialLinks
+          }
         };
+        
+        // Remove bio and socialLinks from root level if they exist
+        delete updatedUser.bio;
+        delete updatedUser.socialLinks;
+        
         setUser(updatedUser);
         localStorage.setItem('userInfo', JSON.stringify(updatedUser));
         toast.success('Profile updated successfully');
@@ -317,10 +342,10 @@ const Navbar = () => {
             <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
           </NavLink>
           <NavLink
-            to="/f1successhub-ourservices"
+            to="/stories"
             className="flex flex-col items-center gap-1 mr-4"
           >
-            <p className="text-sm">Our Services</p>
+            <p className="text-sm">Stories</p>
             <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
           </NavLink>
 
@@ -472,6 +497,67 @@ const Navbar = () => {
                           className="w-full px-3 py-2 border rounded-md bg-gray-50 text-sm"
                           readOnly
                         />
+                      </div>
+
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium mb-1">Bio</label>
+                        <textarea
+                          value={profileData.bio}
+                          onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
+                          className="w-full px-3 py-2 border rounded-md text-sm"
+                          rows="4"
+                          placeholder="Tell us about yourself..."
+                        />
+                      </div>
+
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium mb-2">Social Links</label>
+                        
+                        <div className="space-y-3">
+                          <input
+                            type="url"
+                            placeholder="Website URL"
+                            value={profileData.socialLinks.website}
+                            onChange={(e) => setProfileData(prev => ({
+                              ...prev,
+                              socialLinks: { ...prev.socialLinks, website: e.target.value }
+                            }))}
+                            className="w-full px-3 py-2 border rounded-md text-sm"
+                          />
+                          
+                          <input
+                            type="url"
+                            placeholder="LinkedIn URL"
+                            value={profileData.socialLinks.linkedin}
+                            onChange={(e) => setProfileData(prev => ({
+                              ...prev,
+                              socialLinks: { ...prev.socialLinks, linkedin: e.target.value }
+                            }))}
+                            className="w-full px-3 py-2 border rounded-md text-sm"
+                          />
+                          
+                          <input
+                            type="url"
+                            placeholder="Twitter URL"
+                            value={profileData.socialLinks.twitter}
+                            onChange={(e) => setProfileData(prev => ({
+                              ...prev,
+                              socialLinks: { ...prev.socialLinks, twitter: e.target.value }
+                            }))}
+                            className="w-full px-3 py-2 border rounded-md text-sm"
+                          />
+                          
+                          <input
+                            type="url"
+                            placeholder="Instagram URL"
+                            value={profileData.socialLinks.instagram}
+                            onChange={(e) => setProfileData(prev => ({
+                              ...prev,
+                              socialLinks: { ...prev.socialLinks, instagram: e.target.value }
+                            }))}
+                            className="w-full px-3 py-2 border rounded-md text-sm"
+                          />
+                        </div>
                       </div>
 
                       <button

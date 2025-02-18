@@ -10,6 +10,13 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "counselor", "alumni", "university" ],
       default: "user",
     },
+    bio: { type: String, default: "" },
+    socialLinks: {
+      website: { type: String, default: "" },
+      linkedin: { type: String, default: "" },
+      twitter: { type: String, default: "" },
+      instagram: { type: String, default: "" }
+    },
 
     profilePicture: {
       url: { 
@@ -62,6 +69,13 @@ const userSchema = new mongoose.Schema(
           },
         ],
       },
+      bio: { type: String, default: "" },
+      socialLinks: {
+        website: { type: String, default: "" },
+        linkedin: { type: String, default: "" },
+        twitter: { type: String, default: "" },
+        instagram: { type: String, default: "" }
+      },
     },
 
     alumniInfo: {
@@ -94,6 +108,13 @@ const userSchema = new mongoose.Schema(
             public_id: { type: String },
           },
         ],
+      },
+      bio: { type: String, default: "" },
+      socialLinks: {
+        website: { type: String, default: "" },
+        linkedin: { type: String, default: "" },
+        twitter: { type: String, default: "" },
+        instagram: { type: String, default: "" }
       },
     },
 
@@ -133,6 +154,13 @@ const userSchema = new mongoose.Schema(
             public_id: { type: String },
           },
         ],
+      },
+      bio: { type: String, default: "" },
+      socialLinks: {
+        website: { type: String, default: "" },
+        linkedin: { type: String, default: "" },
+        twitter: { type: String, default: "" },
+        instagram: { type: String, default: "" }
       },
     },
 
