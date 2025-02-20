@@ -1,5 +1,6 @@
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
@@ -26,4 +27,18 @@ const upload = multer({
   }
 });
 
-export default upload;
+// Function to delete file from uploads folder
+const deleteFile = (filePath) => {
+  return new Promise((resolve, reject) => {
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.error('Error deleting local file:', err);
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+};
+
+export  { upload, deleteFile };

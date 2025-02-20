@@ -1,6 +1,6 @@
 import express from 'express';
 import { submitApplication, getApplication } from '../controllers/applynowController.js';
-import upload from '../middlewares/multer.js';
+import  { upload }  from "../middlewares/multer.js";
 
 const applynowoRuter = express.Router();
 

@@ -6,7 +6,7 @@ import {
   updateUniversity,
   deleteUniversity,
 } from "../controllers/universityControllers.js";
-import upload from "../middlewares/multer.js";
+import  { upload }  from "../middlewares/multer.js";
 import adminAuth from "../middlewares/adminAuth.js";
 import University from '../models/universityModel.js';
 

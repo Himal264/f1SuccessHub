@@ -192,22 +192,31 @@ const Navbar = () => {
     }
   };
 
-  // Initialize profile data when user is loaded
+  // Update useEffect to properly fetch saved profile data
   useEffect(() => {
     if (user) {
-      const roleInfo = user[`${user.role}Info`] || {};
+      // Get the role-specific info
+      const roleInfo = user[`${user.role}Info`];
+      
+      // Set the profile data with existing values from the correct nested location
       setProfileData({
         name: user.name,
         email: user.email,
         profilePicture: null,
         previewUrl: user.profilePicture?.url || getDefaultProfilePicture(user.name),
-        bio: roleInfo.bio || '',
-        socialLinks: roleInfo.socialLinks || {
+        bio: roleInfo?.documents?.bio || '', // Get bio from documents
+        socialLinks: roleInfo?.documents?.socialLinks || { // Get socialLinks from documents
           website: '',
           linkedin: '',
           twitter: '',
           instagram: ''
         }
+      });
+
+      // Debug log to verify data
+      console.log('Profile Data Loaded:', {
+        bio: roleInfo?.documents?.bio,
+        socialLinks: roleInfo?.documents?.socialLinks
       });
     }
   }, [user]);
@@ -217,7 +226,7 @@ const Navbar = () => {
     e.preventDefault();
     
     try {
-      // First handle profile picture update if there's a new one
+      // Handle profile picture update if there's a new one
       if (profileData.profilePicture) {
         const formData = new FormData();
         formData.append('profilePicture', profileData.profilePicture);
@@ -231,13 +240,12 @@ const Navbar = () => {
         });
 
         if (!pictureResponse.ok) {
-          const errorData = await pictureResponse.json();
-          throw new Error(errorData.message || 'Failed to update profile picture');
+          throw new Error('Failed to update profile picture');
         }
       }
 
-      // Update profile info including bio and social links
-      const profileResponse = await fetch('/api/user/update-profile', {
+      // Update profile info
+      const response = await fetch('/api/user/update-profile', {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -246,37 +254,30 @@ const Navbar = () => {
         body: JSON.stringify({
           name: profileData.name,
           bio: profileData.bio,
-          socialLinks: {
-            website: profileData.socialLinks.website || '',
-            linkedin: profileData.socialLinks.linkedin || '',
-            twitter: profileData.socialLinks.twitter || '',
-            instagram: profileData.socialLinks.instagram || ''
-          }
+          socialLinks: profileData.socialLinks
         })
       });
 
-      if (!profileResponse.ok) {
-        const errorData = await profileResponse.json();
-        throw new Error(errorData.message || 'Failed to update profile');
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
       }
 
-      const responseData = await profileResponse.json();
+      const data = await response.json();
       
-      if (responseData.success) {
-        // Update local user state with new data
+      // Update local user state with new data
+      if (data.success) {
         const updatedUser = {
           ...user,
-          name: responseData.user.name,
+          name: data.user.name,
           [`${user.role}Info`]: {
             ...user[`${user.role}Info`],
-            bio: responseData.user.bio,
-            socialLinks: responseData.user.socialLinks
+            documents: {
+              ...user[`${user.role}Info`].documents,
+              bio: profileData.bio,
+              socialLinks: profileData.socialLinks
+            }
           }
         };
-        
-        // Remove bio and socialLinks from root level if they exist
-        delete updatedUser.bio;
-        delete updatedUser.socialLinks;
         
         setUser(updatedUser);
         localStorage.setItem('userInfo', JSON.stringify(updatedUser));
@@ -318,6 +319,147 @@ const Navbar = () => {
     } else {
       setShowLogin(true);
     }
+  };
+
+  // Update the profile display section
+  const renderProfileView = () => {
+    const documents = user[`${user.role}Info`]?.documents || {};
+    
+    return (
+      <div className="px-6 py-4">
+        <div className="flex items-center">
+          <img 
+            src={user.profilePicture?.url || getDefaultProfilePicture(user.name)}
+            alt={user.name}
+            className="w-16 h-16 rounded-full object-cover"
+          />
+          <div className="ml-4">
+            <h3 className="font-medium">{user.name}</h3>
+            <p className="text-sm text-gray-500 capitalize">{user.role}</p>
+            
+            {/* Display Bio */}
+            {documents.bio && (
+              <p className="text-sm text-gray-600 mt-2">
+                {documents.bio}
+              </p>
+            )}
+            
+            {/* Display Social Links */}
+            {documents.socialLinks && (
+              <div className="flex gap-3 mt-2">
+                {documents.socialLinks.website && (
+                  <a href={documents.socialLinks.website} 
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     className="text-gray-600 hover:text-gray-800">
+                    <i className="fas fa-globe"></i>
+                  </a>
+                )}
+                {documents.socialLinks.linkedin && (
+                  <a href={documents.socialLinks.linkedin} 
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     className="text-gray-600 hover:text-gray-800">
+                    <i className="fab fa-linkedin"></i>
+                  </a>
+                )}
+                {documents.socialLinks.twitter && (
+                  <a href={documents.socialLinks.twitter} 
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     className="text-gray-600 hover:text-gray-800">
+                    <i className="fab fa-twitter"></i>
+                  </a>
+                )}
+                {documents.socialLinks.instagram && (
+                  <a href={documents.socialLinks.instagram} 
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     className="text-gray-600 hover:text-gray-800">
+                    <i className="fab fa-instagram"></i>
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Update the edit form section
+  const renderEditForm = () => {
+    return (
+      <form onSubmit={handleProfileUpdate} className="p-4">
+        <div className="space-y-4">
+          {/* Profile Picture */}
+          <div className="flex flex-col items-center">
+            <img
+              src={profileData.previewUrl}
+              alt="Profile"
+              className="w-20 h-20 rounded-full object-cover mb-2"
+            />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleProfilePictureChange(e.target.files[0])}
+              className="text-sm"
+            />
+          </div>
+
+          {/* Name */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Name</label>
+            <input
+              type="text"
+              value={profileData.name}
+              onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+              className="w-full px-3 py-2 border rounded-md"
+            />
+          </div>
+
+          {/* Bio */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Bio</label>
+            <textarea
+              value={profileData.bio}
+              onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
+              className="w-full px-3 py-2 border rounded-md"
+              rows="4"
+            />
+          </div>
+
+          {/* Social Links */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Social Links</label>
+            <div className="space-y-2">
+              {Object.entries(profileData.socialLinks).map(([platform, url]) => (
+                <div key={platform} className="flex items-center gap-2">
+                  <i className={`fab fa-${platform === 'website' ? 'globe' : platform} w-6`}></i>
+                  <input
+                    type="url"
+                    placeholder={`${platform.charAt(0).toUpperCase() + platform.slice(1)} URL`}
+                    value={url}
+                    onChange={(e) => setProfileData(prev => ({
+                      ...prev,
+                      socialLinks: { ...prev.socialLinks, [platform]: e.target.value }
+                    }))}
+                    className="w-full px-3 py-2 border rounded-md"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-[#F37021] text-white py-2 rounded-md hover:bg-[#e85d0a]"
+          >
+            Save Changes
+          </button>
+        </div>
+      </form>
+    );
   };
 
   return (
@@ -403,19 +545,7 @@ const Navbar = () => {
                 {!isEditingProfile ? (
                   <>
                     {/* Normal Profile View */}
-                    <div className="px-6 py-4 border-b">
-                      <div className="flex items-center">
-                        <img 
-                          src={user.profilePicture?.url || getDefaultProfilePicture(user.name)}
-                          alt={user.name}
-                          className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
-                        />
-                        <div className="ml-4">
-                          <p className="text-base font-medium text-gray-900">{user.name}</p>
-                          <p className="text-sm text-gray-500 capitalize">{user.role}</p>
-                        </div>
-                      </div>
-                    </div>
+                    {renderProfileView()}
 
                     <button
                       onClick={() => setIsEditingProfile(true)}
@@ -452,122 +582,7 @@ const Navbar = () => {
                   </>
                 ) : (
                   /* Edit Profile View */
-                  <div className="p-4">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold">Edit Profile</h3>
-                      <button
-                        onClick={() => setIsEditingProfile(false)}
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        ← Back
-                      </button>
-                    </div>
-
-                    <form onSubmit={handleProfileUpdate}>
-                      <div className="mb-4 flex flex-col items-center">
-                        <img
-                          src={profileData.previewUrl}
-                          alt="Profile"
-                          className="w-20 h-20 rounded-full object-cover mb-2"
-                        />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleProfilePictureChange(e.target.files[0])}
-                          className="w-full text-sm"
-                        />
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="block text-sm font-medium mb-1">Name</label>
-                        <input
-                          type="text"
-                          value={profileData.name}
-                          onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                          className="w-full px-3 py-2 border rounded-md text-sm"
-                          required
-                        />
-                      </div>
-
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1">Email</label>
-                        <input
-                          type="email"
-                          value={profileData.email}
-                          className="w-full px-3 py-2 border rounded-md bg-gray-50 text-sm"
-                          readOnly
-                        />
-                      </div>
-
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1">Bio</label>
-                        <textarea
-                          value={profileData.bio}
-                          onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
-                          className="w-full px-3 py-2 border rounded-md text-sm"
-                          rows="4"
-                          placeholder="Tell us about yourself..."
-                        />
-                      </div>
-
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium mb-2">Social Links</label>
-                        
-                        <div className="space-y-3">
-                          <input
-                            type="url"
-                            placeholder="Website URL"
-                            value={profileData.socialLinks.website}
-                            onChange={(e) => setProfileData(prev => ({
-                              ...prev,
-                              socialLinks: { ...prev.socialLinks, website: e.target.value }
-                            }))}
-                            className="w-full px-3 py-2 border rounded-md text-sm"
-                          />
-                          
-                          <input
-                            type="url"
-                            placeholder="LinkedIn URL"
-                            value={profileData.socialLinks.linkedin}
-                            onChange={(e) => setProfileData(prev => ({
-                              ...prev,
-                              socialLinks: { ...prev.socialLinks, linkedin: e.target.value }
-                            }))}
-                            className="w-full px-3 py-2 border rounded-md text-sm"
-                          />
-                          
-                          <input
-                            type="url"
-                            placeholder="Twitter URL"
-                            value={profileData.socialLinks.twitter}
-                            onChange={(e) => setProfileData(prev => ({
-                              ...prev,
-                              socialLinks: { ...prev.socialLinks, twitter: e.target.value }
-                            }))}
-                            className="w-full px-3 py-2 border rounded-md text-sm"
-                          />
-                          
-                          <input
-                            type="url"
-                            placeholder="Instagram URL"
-                            value={profileData.socialLinks.instagram}
-                            onChange={(e) => setProfileData(prev => ({
-                              ...prev,
-                              socialLinks: { ...prev.socialLinks, instagram: e.target.value }
-                            }))}
-                            className="w-full px-3 py-2 border rounded-md text-sm"
-                          />
-                        </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        className="w-full bg-[#F37021] text-white py-2 rounded-md hover:bg-[#e85d0a] text-sm"
-                      >
-                        Save Changes
-                      </button>
-                    </form>
-                  </div>
+                  renderEditForm()
                 )}
               </div>
             )}

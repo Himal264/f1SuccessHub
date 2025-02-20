@@ -51,6 +51,9 @@ const loginUser = async (req, res) => {
         verificationRequest: user.verificationRequest
       }
     });
+
+    // Clean up user data structure
+    await cleanupUserData(user._id);
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ 
@@ -307,11 +310,10 @@ const updateProfile = async (req, res) => {
     const isVerifiedSpecialUser = user.role !== 'user' && 
                                  user.verificationRequest?.status === 'approved';
 
-    // Basic validation
-    if (bio && bio.length > 500) {
-      return res.status(400).json({
+    if (!isVerifiedSpecialUser) {
+      return res.status(403).json({
         success: false,
-        message: "Bio must not exceed 500 characters"
+        message: "Only verified special users can update profile details"
       });
     }
 
@@ -320,55 +322,78 @@ const updateProfile = async (req, res) => {
       user.name = name;
     }
 
-    // Update role-specific info for verified special users
-    if (isVerifiedSpecialUser) {
-      const roleInfoKey = `${user.role}Info`;
+    const roleInfoKey = `${user.role}Info`;
+
+    // Initialize roleInfo if it doesn't exist
+    if (!user[roleInfoKey]) {
+      user[roleInfoKey] = {};
+    }
+
+    // Remove any root level bio and socialLinks
+    if (user.bio) delete user.bio;
+    if (user.socialLinks) delete user.socialLinks;
+
+    // Update role-specific info
+    if (bio !== undefined) {
+      // Set bio directly in roleInfo
+      user[roleInfoKey].bio = bio;
       
-      // Initialize the role info object if it doesn't exist
-      if (!user[roleInfoKey]) {
-        user[roleInfoKey] = {};
+      // Clean up old locations
+      if (user[roleInfoKey].documents?.bio) {
+        delete user[roleInfoKey].documents.bio;
       }
+    }
 
-      // Update bio and social links in the role-specific section
-      if (bio !== undefined) {
-        user[roleInfoKey].bio = bio;
+    if (socialLinks) {
+      // Set socialLinks directly in roleInfo
+      user[roleInfoKey].socialLinks = {
+        website: socialLinks.website || '',
+        linkedin: socialLinks.linkedin || '',
+        twitter: socialLinks.twitter || '',
+        instagram: socialLinks.instagram || ''
+      };
+      
+      // Clean up old locations
+      if (user[roleInfoKey].documents?.socialLinks) {
+        delete user[roleInfoKey].documents.socialLinks;
       }
+    }
 
-      if (socialLinks) {
-        user[roleInfoKey].socialLinks = {
-          website: socialLinks.website || '',
-          linkedin: socialLinks.linkedin || '',
-          twitter: socialLinks.twitter || '',
-          instagram: socialLinks.instagram || ''
-        };
-      }
-
-      // Remove bio and socialLinks from root level if they exist
-      if (user.bio) delete user.bio;
-      if (user.socialLinks) delete user.socialLinks;
+    // Clean up empty documents object
+    if (user[roleInfoKey].documents && Object.keys(user[roleInfoKey].documents).length === 0) {
+      delete user[roleInfoKey].documents;
     }
 
     await user.save();
 
     // Get the updated role-specific info
-    const roleInfo = user[`${user.role}Info`] || {};
+    const roleInfo = user[roleInfoKey];
 
     // Prepare response data
     const responseData = {
       success: true,
       message: "Profile updated successfully",
       user: {
+        _id: user._id,
         name: user.name,
+        email: user.email,
         role: user.role,
-        bio: roleInfo.bio || '',
-        socialLinks: roleInfo.socialLinks || {
-          website: '',
-          linkedin: '',
-          twitter: '',
-          instagram: ''
+        profilePicture: user.profilePicture,
+        [`${user.role}Info`]: {
+          ...roleInfo,
+          bio: roleInfo.bio || '',
+          socialLinks: roleInfo.socialLinks || {
+            website: '',
+            linkedin: '',
+            twitter: '',
+            instagram: ''
+          }
         }
       }
     };
+
+    // Log the response data for debugging
+    console.log('Updated user data:', JSON.stringify(responseData, null, 2));
 
     res.status(200).json(responseData);
   } catch (error) {
@@ -421,5 +446,59 @@ const adminLogin = (req, res) => {
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: error.message });
+  }
+};
+
+// Add this function to clean up user data structure
+const cleanupUserData = async (userId) => {
+  try {
+    const user = await userModel.findById(userId);
+    if (!user) return;
+
+    const roleInfoKey = `${user.role}Info`;
+    let needsUpdate = false;
+
+    // Initialize roleInfo if it doesn't exist
+    if (!user[roleInfoKey]) {
+      user[roleInfoKey] = {};
+      needsUpdate = true;
+    }
+
+    // Move data from documents to roleInfo level
+    if (user[roleInfoKey].documents) {
+      if (user[roleInfoKey].documents.bio) {
+        user[roleInfoKey].bio = user[roleInfoKey].documents.bio;
+        delete user[roleInfoKey].documents.bio;
+        needsUpdate = true;
+      }
+      if (user[roleInfoKey].documents.socialLinks) {
+        user[roleInfoKey].socialLinks = user[roleInfoKey].documents.socialLinks;
+        delete user[roleInfoKey].documents.socialLinks;
+        needsUpdate = true;
+      }
+    }
+
+    // Remove root level duplicates
+    if (user.bio) {
+      delete user.bio;
+      needsUpdate = true;
+    }
+    if (user.socialLinks) {
+      delete user.socialLinks;
+      needsUpdate = true;
+    }
+
+    // Clean up empty documents object
+    if (user[roleInfoKey].documents && Object.keys(user[roleInfoKey].documents).length === 0) {
+      delete user[roleInfoKey].documents;
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
+      await user.save();
+      console.log(`Cleaned up data structure for user: ${user._id}`);
+    }
+  } catch (error) {
+    console.error('Error cleaning up user data:', error);
   }
 };

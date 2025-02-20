@@ -33,6 +33,7 @@ import './models/eventModel.js'; // Then load Event model
 import setupWebinarWebSocket from './services/webinarSocket.js';
 import webinarRouter from './routes/webinarRoute.js';
 import { initializeSocket } from './services/socket.js';
+import storyRouter from './routes/storyRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -120,6 +121,9 @@ app.use('/api/chat', chatRouter);
 
 // Add webinar routes
 app.use('/api/webinar', webinarRouter);
+
+// Add story routes
+app.use('/api/stories', storyRouter);
 
 // Setup WebSocket server
 setupWebinarWebSocket(httpServer);

@@ -1,28 +1,46 @@
-const express = require('express');
+import express from 'express';
+import { auth, checkRole } from '../middlewares/auth.js';
+import { upload } from '../middlewares/multer.js';
+import {
+  createStory,
+  getStories,
+  getStoryById,
+  updateStory,
+  deleteStory
+} from '../controllers/storyController.js';
+
 const router = express.Router();
-const storyController = require('../controllers/storyController');
-const authMiddleware = require('../middleware/authMiddleware');
 
-// Create a new story (Protected Route)
-router.post('/', authMiddleware.authenticate, storyController.createStory);
-
-// Get all stories (Public Route)
-router.get('/', storyController.getAllStories);
-
-// Search stories (Public Route)
-router.get('/search', storyController.searchStories);
-
-// Get story by ID (Public Route)
-router.get('/:id', storyController.getStoryByIdDetailed);
-
-// Update a story (Protected Route)
-router.put('/:id', authMiddleware.authenticate, storyController.updateStory);
-
-// Delete a story (Protected Route with Role Authorization)
-router.delete('/:id', 
-  authMiddleware.authenticate, 
-  authMiddleware.authorizeRoles('F1SuccessHub Team', 'Admin'), 
-  storyController.deleteStory
+// Create story - only authenticated counselors, university reps, alumni, and admins
+router.post(
+  '/',
+  auth,
+  checkRole(['counselor', 'university', 'alumni', 'admin']),
+  upload.single('photo'),
+  createStory
 );
 
-module.exports = router;
+// Get all stories - public access
+router.get('/', getStories);
+
+// Get single story - public access
+router.get('/:id', getStoryById);
+
+// Update story - authenticated and authorized users only
+router.put(
+  '/:id',
+  auth,
+  checkRole(['counselor', 'university', 'alumni', 'admin']),
+  upload.single('photo'),
+  updateStory
+);
+
+// Delete story - authenticated and authorized users only
+router.delete(
+  '/:id',
+  auth,
+  checkRole(['counselor', 'university', 'alumni', 'admin']),
+  deleteStory
+);
+
+export default router;

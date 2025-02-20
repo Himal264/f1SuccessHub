@@ -1,218 +1,138 @@
-const Story = require('../models/Story');
-const mongoose = require('mongoose');
+import Story from '../models/storyModel.js';
+import cloudinary from '../config/cloudinary.js';
+import { deleteFile } from '../middlewares/multer.js';
 
-exports.createStory = async (req, res) => {
+export const createStory = async (req, res) => {
   try {
-    const { postCreateType, additionalDetails, ...storyData } = req.body;
-    
-    // Validate additional details based on post create type
-    const validateAdditionalDetails = (type, details) => {
-      const validationRules = {
-        'F1SuccessHub Team': () => true,
-        'Alumni': () => details.alumni && details.alumni.country && details.alumni.graduationYear,
-        'Professor': () => details.professor && details.professor.department && details.professor.university,
-        'Counselor': () => details.counselor && details.counselor.specialization && details.counselor.experience,
-        'Partner Company': () => details.partnerCompany && details.partnerCompany.companyName && details.partnerCompany.industry,
-        'University': () => details.university && details.university.universityName && details.university.location
-      };
+    const { title, subtitle, content, storyType, tags } = req.body;
+    const photo = req.file;
 
-      return validationRules[type] ? validationRules[type]() : false;
-    };
+    if (!photo) {
+      return res.status(400).json({ success: false, message: 'Photo is required' });
+    }
 
-    if (!validateAdditionalDetails(postCreateType, additionalDetails)) {
-      return res.status(400).json({ 
-        message: `Invalid or missing details for ${postCreateType}` 
+    // Upload photo to cloudinary
+    const result = await cloudinary.uploader.upload(photo.path, {
+      folder: 'stories',
+    });
+
+    // Delete the local file after upload
+    await deleteFile(photo.path);
+
+    const story = await Story.create({
+      title,
+      subtitle,
+      content,
+      storyType,
+      tags,
+      photo: {
+        url: result.secure_url,
+        public_id: result.public_id
+      },
+      author: req.user._id
+    });
+
+    res.status(201).json({ success: true, story });
+  } catch (error) {
+    // If there's an error and a file was uploaded locally, clean it up
+    if (req.file) {
+      await deleteFile(req.file.path);
+    }
+    console.error('Create story error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getStories = async (req, res) => {
+  try {
+    const stories = await Story.find()
+      .populate('author', 'name role profilePicture')
+      .sort('-createdAt');
+    res.status(200).json({ success: true, stories });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getStoryById = async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id)
+      .populate('author', 'name role profilePicture');
+    if (!story) {
+      return res.status(404).json({ success: false, message: 'Story not found' });
+    }
+    res.status(200).json({ success: true, story });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateStory = async (req, res) => {
+  try {
+    const story = await Story.findById(req.params.id);
+    if (!story) {
+      return res.status(404).json({ success: false, message: 'Story not found' });
+    }
+
+    // Check if user is authorized to update
+    if (story.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    const updates = { ...req.body };
+    if (req.file) {
+      // Delete old photo from cloudinary
+      await cloudinary.uploader.destroy(story.photo.public_id);
+      
+      // Upload new photo
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: 'stories',
       });
+      
+      // Delete the local file after upload
+      await deleteFile(req.file.path);
+      
+      updates.photo = {
+        url: result.secure_url,
+        public_id: result.public_id
+      };
     }
 
-    const story = new Story({
-      ...storyData,
-      postCreateType,
-      additionalDetails
-    });
+    const updatedStory = await Story.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true, runValidators: true }
+    ).populate('author', 'name role profilePicture');
 
-    await story.save();
-    res.status(201).json({ 
-      message: 'Story created successfully', 
-      story 
-    });
+    res.status(200).json({ success: true, story: updatedStory });
   } catch (error) {
-    res.status(400).json({ 
-      message: 'Error creating story', 
-      error: error.message 
-    });
+    if (req.file) {
+      await deleteFile(req.file.path);
+    }
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-exports.getAllStories = async (req, res) => {
+export const deleteStory = async (req, res) => {
   try {
-    const { 
-      storiesType, 
-      postCreateType, 
-      postCategory,
-      page = 1, 
-      limit = 10 
-    } = req.query;
-
-    const filter = {};
-    if (storiesType) filter.storiesType = storiesType;
-    if (postCreateType) filter.postCreateType = postCreateType;
-    if (postCategory) filter.postCategory = postCategory;
-
-    const options = {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      sort: { createdAt: -1 },
-      select: '-__v' // Exclude version key
-    };
-
-    const stories = await Story.find(filter)
-      .sort(options.sort)
-      .skip((options.page - 1) * options.limit)
-      .limit(options.limit);
-
-    const total = await Story.countDocuments(filter);
-
-    res.status(200).json({
-      stories,
-      totalPages: Math.ceil(total / options.limit),
-      currentPage: options.page,
-      totalStories: total
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      message: 'Error fetching stories', 
-      error: error.message 
-    });
-  }
-};
-
-exports.getStoryById = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid story ID' });
-    }
-
-    const story = await Story.findById(id);
-    
+    const story = await Story.findById(req.params.id);
     if (!story) {
-      return res.status(404).json({ message: 'Story not found' });
+      return res.status(404).json({ success: false, message: 'Story not found' });
     }
+
+    // Check if user is authorized to delete
+    if (story.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    // Delete photo from cloudinary
+    await cloudinary.uploader.destroy(story.photo.public_id);
     
-    res.status(200).json(story);
+    // Delete the story
+    await story.deleteOne();
+
+    res.status(200).json({ success: true, message: 'Story deleted successfully' });
   } catch (error) {
-    res.status(500).json({ 
-      message: 'Error fetching story', 
-      error: error.message 
-    });
-  }
-};
-
-exports.updateStory = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { postCreateType, additionalDetails, ...updateData } = req.body;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid story ID' });
-    }
-
-    // Optional: Validate additional details
-    const story = await Story.findById(id);
-    if (!story) {
-      return res.status(404).json({ message: 'Story not found' });
-    }
-
-    // Update main story fields
-    story.set({
-      ...updateData,
-      ...(postCreateType && { postCreateType }),
-      ...(additionalDetails && { additionalDetails })
-    });
-
-    await story.save();
-    
-    res.status(200).json({ 
-      message: 'Story updated successfully', 
-      story 
-    });
-  } catch (error) {
-    res.status(400).json({ 
-      message: 'Error updating story', 
-      error: error.message 
-    });
-  }
-};
-
-exports.deleteStory = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: 'Invalid story ID' });
-    }
-
-    const story = await Story.findByIdAndDelete(id);
-    
-    if (!story) {
-      return res.status(404).json({ message: 'Story not found' });
-    }
-    
-    res.status(200).json({ 
-      message: 'Story deleted successfully',
-      deletedStory: story 
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      message: 'Error deleting story', 
-      error: error.message 
-    });
-  }
-};
-
-// Optional: Search stories with advanced filtering
-exports.searchStories = async (req, res) => {
-  try {
-    const { 
-      query, 
-      postCreateType, 
-      postCategory, 
-      minDate, 
-      maxDate 
-    } = req.query;
-
-    const filter = {};
-
-    // Text search across multiple fields
-    if (query) {
-      filter.$or = [
-        { text: { $regex: query, $options: 'i' } },
-        { 'additionalDetails.alumni.country': { $regex: query, $options: 'i' } },
-        { 'additionalDetails.professor.department': { $regex: query, $options: 'i' } }
-      ];
-    }
-
-    if (postCreateType) filter.postCreateType = postCreateType;
-    if (postCategory) filter.postCategory = postCategory;
-
-    // Date range filtering
-    if (minDate || maxDate) {
-      filter.createdAt = {};
-      if (minDate) filter.createdAt.$gte = new Date(minDate);
-      if (maxDate) filter.createdAt.$lte = new Date(maxDate);
-    }
-
-    const stories = await Story.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(50);
-
-    res.status(200).json(stories);
-  } catch (error) {
-    res.status(500).json({ 
-      message: 'Error searching stories', 
-      error: error.message 
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
