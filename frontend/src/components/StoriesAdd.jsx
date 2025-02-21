@@ -5,6 +5,7 @@ import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import Stories1AskAdvisor from './Stories1AskAdvisor';
 import Stories2FindSchool from './Stories2FindSchool';
+import Quill from 'quill';
 
 const StoriesAdd = () => {
   const navigate = useNavigate();
@@ -68,24 +69,66 @@ const StoriesAdd = () => {
     publishDate: new Date().toISOString().split('T')[0],
   });
 
-  // Editor configurations
-  const modules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'script': 'sub'}, { 'script': 'super' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
-      [{ 'size': ['small', false, 'large', 'huge'] }],
-      ['blockquote'],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'font': [] }],
-      [{ 'align': [] }],
-      ['clean'],
-      ['link', 'image']
-    ]
+  // Define handleTableInsert before using it in modules
+  const handleTableInsert = () => {
+    const editor = quillRef.current.getEditor();
+    const range = editor.getSelection(true);
+    
+    // Insert responsive table HTML
+    const tableHTML = `
+      <div class="overflow-x-auto my-4">
+        <table class="min-w-full divide-y divide-gray-200 border">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Header 1</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Header 2</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Header 3</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cell 1</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cell 2</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cell 3</td>
+            </tr>
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cell 4</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cell 5</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cell 6</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+    
+    editor.clipboard.dangerouslyPasteHTML(range.index, tableHTML);
   };
 
+  // Define modules with a simpler table handling approach
+  const modules = {
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'script': 'sub'}, { 'script': 'super' }],
+        [{ 'indent': '-1'}, { 'indent': '+1' }],
+        [{ 'size': ['small', false, 'large', 'huge'] }],
+        ['blockquote'],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'font': [] }],
+        [{ 'align': [] }],
+        ['clean'],
+        ['link', 'image'],
+        ['table']  // Keep the table button
+      ],
+      handlers: {
+        table: handleTableInsert  // Use our custom table handler
+      }
+    }
+  };
+
+  // Update formats to remove table-specific formats
   const formats = [
     'header',
     'bold', 'italic', 'underline', 'strike',
@@ -131,6 +174,54 @@ const StoriesAdd = () => {
       
       .ql-advisor:hover {
         background: #e85d0a !important;
+      }
+      
+      /* Custom button styles */
+      .ql-toolbar button.ql-table::after {
+        content: "TABLE";
+        font-size: 12px;
+      }
+      
+      /* Responsive table styles */
+      .ql-editor table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      
+      @media (max-width: 640px) {
+        .ql-editor table {
+          display: block;
+        }
+        
+        .ql-editor table thead {
+          display: none;
+        }
+        
+        .ql-editor table tbody,
+        .ql-editor table tr,
+        .ql-editor table td {
+          display: block;
+          width: 100%;
+        }
+        
+        .ql-editor table tr {
+          margin-bottom: 1rem;
+          border: 1px solid #ddd;
+        }
+        
+        .ql-editor table td {
+          text-align: right;
+          padding: 0.5rem;
+          position: relative;
+        }
+        
+        .ql-editor table td::before {
+          content: attr(data-label);
+          position: absolute;
+          left: 0.5rem;
+          font-weight: bold;
+          text-align: left;
+        }
       }
     `;
     document.head.appendChild(style);
