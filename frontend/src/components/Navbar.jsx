@@ -7,6 +7,8 @@ import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import { IoChatbubbleEllipsesOutline, IoSend } from 'react-icons/io5';
 import Chat from './Chat.jsx';
+import axios from 'axios';
+import { backendUrl } from '../App';
 
 const Navbar = () => {
   const [visible, setVisible] = useState(false); // Track visibility of the sidebar
@@ -38,6 +40,38 @@ const Navbar = () => {
     }
   });
   const [showChatContainer, setShowChatContainer] = useState(false);
+  const [showF1Dropdown, setShowF1Dropdown] = useState(false);
+  const [questionTypes, setQuestionTypes] = useState(['All']);
+
+  // Modified fetch function to properly handle types
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const response = await axios.get(`${backendUrl}/api/question/list`);
+        
+        if (response.data.success) {
+          // Extract unique types and filter out empty or null values
+          const types = response.data.questions.map(q => q.type)
+            .filter(type => type && type.trim()) // Remove empty or null types
+            .filter((type, index, self) => self.indexOf(type) === index); // Remove duplicates
+          
+          // Add 'All' and sort the rest
+          const allTypes = ['All', ...types].filter(Boolean);
+          console.log('Available question types:', allTypes); // Debug log
+          setQuestionTypes(allTypes);
+        }
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+      }
+    };
+
+    fetchQuestions();
+  }, []);
+
+  // Debug log when types change
+  useEffect(() => {
+    console.log('Current question types:', questionTypes);
+  }, [questionTypes]);
 
   // Function to generate default profile picture URL
   const getDefaultProfilePicture = (name) => {
@@ -470,19 +504,47 @@ const Navbar = () => {
           <img className="w-36" src={assets.f1successhubLogo} alt="Logo" />
         </Link>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Navigation with Debug Info */}
         <ul className="hidden sm:flex items-center justify-end gap-5 text-sm text-gray-700 ml-auto">
           <NavLink to="/" className="flex flex-col items-center gap-1 mr-4">
             <p className="text-sm">Home</p>
             <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
           </NavLink>
-          <NavLink
-            to="/f1questionsandanswers/:f1questionsandanswersId"
-            className="flex flex-col items-center gap-1 mr-4"
+          {/* F1 Questions Dropdown */}
+          <div 
+            className="relative"
+            onMouseEnter={() => {
+              console.log('Showing dropdown with types:', questionTypes); // Debug log
+              setShowF1Dropdown(true);
+            }}
+            onMouseLeave={() => setShowF1Dropdown(false)}
           >
-            <p className="text-sm">F1 Questions</p>
-            <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
-          </NavLink>
+            <NavLink
+              to="/f1questionsandanswers/all"
+              className="flex flex-col items-center gap-1 mr-4"
+            >
+              <p className="text-sm">F1 Questions</p>
+              <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
+            </NavLink>
+
+            {showF1Dropdown && questionTypes.length > 0 && (
+              <div className="absolute top-full left-0 w-48 bg-white rounded-md shadow-lg py-2 z-50">
+                {questionTypes.map((type, index) => (
+                  <Link
+                    key={index}
+                    to={`/f1questionsandanswers/${type.toLowerCase().replace(/\s+/g, '-')}`}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#F37021] transition-colors"
+                    onClick={() => {
+                      console.log('Selected type:', type); // Debug log
+                      setShowF1Dropdown(false);
+                    }}
+                  >
+                    {type}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
           <NavLink
             to="/stories"
             className="flex flex-col items-center gap-1 mr-4"
@@ -598,6 +660,48 @@ const Navbar = () => {
           </div>
         </ul>
 
+        {/* Mobile Navigation */}
+        <div className="sm:hidden">
+          <NavLink
+            onClick={() => setVisible(false)}
+            className="py-2 pl-6 border-b relative"
+            to="/f1questionsandanswers/all"
+          >
+            <div className="flex justify-between items-center pr-4">
+              <span>F1 Questions</span>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowF1Dropdown(!showF1Dropdown);
+                }}
+                className="p-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+            {showF1Dropdown && questionTypes.length > 0 && (
+              <div className="bg-gray-50 py-2">
+                {questionTypes.map((type, index) => (
+                  <Link
+                    key={index}
+                    to={`/f1questionsandanswers/${type.toLowerCase().replace(/\s+/g, '-')}`}
+                    className="block px-8 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#F37021]"
+                    onClick={() => {
+                      setVisible(false);
+                      setShowF1Dropdown(false);
+                    }}
+                  >
+                    {type}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </NavLink>
+        </div>
+
         {/* Search Icon & Mobile Menu */}
         <div className="flex items-center gap-6">
           <img
@@ -648,7 +752,7 @@ const Navbar = () => {
             <NavLink
               onClick={() => setVisible(false)} // Close the sidebar when a link is clicked
               className="py-2 pl-6 border-b"
-              to="/f1questionsandanswers/:f1questionsandanswersId"
+              to="/f1questionsandanswers/all"
             >
               F1 Questions
             </NavLink>

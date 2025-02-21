@@ -77,6 +77,7 @@ import EventDetails from './pages/EventDetails';
 import WebinarRoom from './pages/WebinarRoom';
 import Stories from './pages/Stories';
 import StoriesAdd from './components/StoriesAdd';
+import F1QuestionAndPerAnswer from './components/f1questionandanswerperanswer';
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -122,6 +123,10 @@ const App = () => {
                     />
 
                     <Route path="/f1questionsandanswers" element={<F1QestionsandAnswer />} />
+                    <Route 
+                      path="/f1questionsandanswers/:type" 
+                      element={<F1QuestionAndPerAnswer />} 
+                    />
                     <Route path="/university/:id" element={<UniversityDetail />} />
                     <Route path="/aboutus" element={<About />} />
                     <Route
