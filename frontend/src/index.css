@@ -34,3 +34,23 @@ a.active hr{
 
 
 
+.prose {
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+[class*="ql-decoration-"] {
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 2px !important;
+}
+
+.quill {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.ql-container {
+  flex: 1;
+  overflow: auto;
+}

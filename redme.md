@@ -26,3 +26,9 @@ stories model
 
 
 (Majors, Economics, STEM, Engineering, Liberal Arts, Business, Finance, Computer Science, Arts, Science, Technology, Math, Language, Literature, History, Geography, Philosophy, Religion, Music, Dance, Theater, Film, Photography, Art, Design, Architecture, Urban Planning, Public Policy, International Relations, Law, Medicine, Veterinary Medicine, Dentistry, Pharmacy, Nursing, Education, Psychology, Sociology, Anthropology, Geology, Geophysics, Geochemistry, Geobiology, Geomorphology, Geodynamics, Geohazards, Geothermal Energy, Geothermal Engineering, Geothermal Science, Geothermal Technology, Geothermal Energy, Geothermal Engineering, Geothermal Science, Geothermal Technology)
+
+
+
+
+questionand answer seperate per question and answer page
+(where the at the f1question page and scrol all way to the that page click at any university type i want when click the goes to that question and )

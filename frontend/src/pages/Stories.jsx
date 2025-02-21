@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import Stories1AskAdvisor from '../components/Stories1AskAdvisor';
 
 const StoryList = () => {
   const [stories, setStories] = useState([]);
@@ -32,6 +33,9 @@ const StoryList = () => {
         placeholder="Filter by Tag"
         onChange={(e) => setTag(e.target.value)}
       />
+      
+      <Stories1AskAdvisor />
+      
       {stories.map((story) => (
         <div key={story._id}>
           <h2>{story.title}</h2>

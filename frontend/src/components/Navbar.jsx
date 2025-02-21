@@ -564,13 +564,22 @@ const Navbar = () => {
                       </button>
                     )}
 
+                    {/* Add Stories and Create Event options for specific roles */}
                     {(user.role === 'counselor' || user.role === 'alumni' || user.role === 'university') && (
-                      <button
-                        onClick={() => navigate('/event/add')}
-                        className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Create Event
-                      </button>
+                      <>
+                        <button
+                          onClick={() => navigate('/stories/add')}
+                          className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Add Story
+                        </button>
+                        <button
+                          onClick={() => navigate('/event/add')}
+                          className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Create Event
+                        </button>
+                      </>
                     )}
 
                     <button
