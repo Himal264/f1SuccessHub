@@ -69,42 +69,10 @@ const StoriesAdd = () => {
     publishDate: new Date().toISOString().split('T')[0],
   });
 
-  // Define handleTableInsert before using it in modules
-  const handleTableInsert = () => {
-    const editor = quillRef.current.getEditor();
-    const range = editor.getSelection(true);
-    
-    // Insert responsive table HTML
-    const tableHTML = `
-      <div class="overflow-x-auto my-4">
-        <table class="min-w-full divide-y divide-gray-200 border">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Header 1</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Header 2</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Header 3</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cell 1</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cell 2</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cell 3</td>
-            </tr>
-            <tr>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cell 4</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cell 5</td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Cell 6</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    `;
-    
-    editor.clipboard.dangerouslyPasteHTML(range.index, tableHTML);
-  };
+  // Define custom table button and handler
+  const CustomTable = Quill.import('modules/toolbar');
 
-  // Define modules with a simpler table handling approach
+  // Define modules with working table handling
   const modules = {
     toolbar: {
       container: [
@@ -114,114 +82,127 @@ const StoriesAdd = () => {
         [{ 'script': 'sub'}, { 'script': 'super' }],
         [{ 'indent': '-1'}, { 'indent': '+1' }],
         [{ 'size': ['small', false, 'large', 'huge'] }],
-        ['blockquote'],
+        ['blockquote', 'code-block'],
         [{ 'color': [] }, { 'background': [] }],
         [{ 'font': [] }],
         [{ 'align': [] }],
         ['clean'],
         ['link', 'image'],
-        ['table']  // Keep the table button
+        ['table']
       ],
       handlers: {
-        table: handleTableInsert  // Use our custom table handler
+        table: function(value) {
+          const quill = quillRef.current.getEditor();
+          if (quill) {
+            const range = quill.getSelection();
+            const tableHTML = `
+              <table class="min-w-full divide-y divide-gray-200 border my-4">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border">Header 1</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border">Header 2</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border">Header 3</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border">Cell 1</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border">Cell 2</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border">Cell 3</td>
+                  </tr>
+                </tbody>
+              </table>
+            `;
+            quill.clipboard.dangerouslyPasteHTML(range ? range.index : 0, tableHTML);
+          }
+        }
       }
+    },
+    clipboard: {
+      matchVisual: false
     }
   };
 
-  // Update formats to remove table-specific formats
+  // Update formats to include all necessary formats
   const formats = [
     'header',
     'bold', 'italic', 'underline', 'strike',
     'list', 'bullet',
-    'script',
+    'script', 'super', 'sub',
     'indent',
     'size',
     'blockquote',
+    'code-block',
     'color', 'background',
     'font',
     'align',
-    'link',
-    'image'
+    'clean',
+    'link', 'image',
+    'table'
   ];
 
   // Add editor styles
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
+      .quill-editor {
+        display: flex;
+        flex-direction: column;
+      }
       .ql-editor {
         min-height: 300px;
+        flex: 1;
+        overflow-y: auto;
+        white-space: pre-wrap;
       }
-      
       .ql-container {
         font-size: 16px;
+        height: auto !important;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
       }
-      
       .ql-toolbar {
         position: sticky;
         top: 0;
         z-index: 1;
         background: white;
+        border-top-left-radius: 0.5rem;
+        border-top-right-radius: 0.5rem;
       }
-      
-      .ql-advisor {
-        width: auto !important;
-        padding: 0 10px !important;
-        background: #F37021 !important;
-        color: white !important;
-        border-radius: 4px !important;
-        margin-left: 10px !important;
+      .ql-toolbar button {
+        height: 24px;
+        width: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
-      
-      .ql-advisor:hover {
-        background: #e85d0a !important;
-      }
-      
-      /* Custom button styles */
       .ql-toolbar button.ql-table::after {
         content: "TABLE";
         font-size: 12px;
       }
-      
-      /* Responsive table styles */
+      /* Table styles */
       .ql-editor table {
         border-collapse: collapse;
         width: 100%;
+        margin: 1rem 0;
+        table-layout: fixed;
       }
-      
-      @media (max-width: 640px) {
-        .ql-editor table {
-          display: block;
-        }
-        
-        .ql-editor table thead {
-          display: none;
-        }
-        
-        .ql-editor table tbody,
-        .ql-editor table tr,
-        .ql-editor table td {
-          display: block;
-          width: 100%;
-        }
-        
-        .ql-editor table tr {
-          margin-bottom: 1rem;
-          border: 1px solid #ddd;
-        }
-        
-        .ql-editor table td {
-          text-align: right;
-          padding: 0.5rem;
-          position: relative;
-        }
-        
-        .ql-editor table td::before {
-          content: attr(data-label);
-          position: absolute;
-          left: 0.5rem;
-          font-weight: bold;
-          text-align: left;
-        }
+      .ql-editor table td,
+      .ql-editor table th {
+        border: 1px solid #ddd;
+        padding: 8px;
+        min-width: 100px;
+        word-wrap: break-word;
+      }
+      .ql-editor table tr:nth-child(even) {
+        background-color: #f9fafb;
+      }
+      .ql-editor table tr:hover {
+        background-color: #f3f4f6;
+      }
+      .ql-editor p {
+        margin-bottom: 1em;
       }
     `;
     document.head.appendChild(style);
@@ -232,8 +213,7 @@ const StoriesAdd = () => {
   }, []);
 
   // Handlers
-  const handleContentChange = (content) => {
-    console.log('Content changing:', content);
+  const handleContentChange = (content, delta, source, editor) => {
     setFormData(prev => ({
       ...prev,
       content: content
@@ -611,7 +591,7 @@ const StoriesAdd = () => {
 
           <div className="mb-6">
             <label className="block mb-2 font-medium">Content</label>
-            <div className="border rounded-lg" style={{ minHeight: '400px' }}>
+            <div className="border rounded-lg overflow-hidden">
               <ReactQuill 
                 ref={quillRef}
                 value={formData.content}
@@ -619,7 +599,13 @@ const StoriesAdd = () => {
                 modules={modules}
                 formats={formats}
                 theme="snow"
-                style={{ height: '350px' }}
+                preserveWhitespace={true}
+                className="quill-editor"
+                style={{ 
+                  height: '400px',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
               />
             </div>
           </div>
