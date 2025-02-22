@@ -209,36 +209,10 @@ const StoriesAdd = () => {
         ...prev,
         photo: file
       }));
-      // Create preview URL with margin styling
+      // Create preview URL for featured image only
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewUrl(reader.result);
-        
-        // If we're in the editor, insert the image with margin
-        if (quillRef.current) {
-          const quill = quillRef.current.getEditor();
-          const range = quill.getSelection(true);
-          
-          // Insert a line break before the image
-          quill.insertText(range.index, '\n');
-          
-          // Insert the image with margin styling
-          quill.insertEmbed(
-            range.index + 1, 
-            'image', 
-            reader.result,
-            'user'
-          );
-          
-          // Apply margin to the inserted image
-          const imageFormat = {
-            'style': 'margin: 40px;'
-          };
-          quill.formatText(range.index + 1, 1, imageFormat);
-          
-          // Insert a line break after the image
-          quill.insertText(range.index + 2, '\n');
-        }
       };
       reader.readAsDataURL(file);
     }
