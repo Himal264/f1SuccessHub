@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStoriesAdd } from '../context/StoriesAddContext';
 import ReactQuill from 'react-quill';
@@ -73,7 +73,7 @@ const StoriesAdd = () => {
   const CustomTable = Quill.import('modules/toolbar');
 
   // Define modules with working table handling
-  const modules = {
+  const modules = useMemo(() => ({
     toolbar: {
       container: [
         [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
@@ -91,7 +91,7 @@ const StoriesAdd = () => {
         ['table']
       ],
       handlers: {
-        table: function(value) {
+        table: function() {
           const quill = quillRef.current.getEditor();
           if (quill) {
             const range = quill.getSelection();
@@ -117,11 +117,8 @@ const StoriesAdd = () => {
           }
         }
       }
-    },
-    clipboard: {
-      matchVisual: false
     }
-  };
+  }), []);
 
   // Update formats to include all necessary formats
   const formats = [
@@ -148,19 +145,18 @@ const StoriesAdd = () => {
       .quill-editor {
         display: flex;
         flex-direction: column;
-      }
-      .ql-editor {
-        min-height: 300px;
-        flex: 1;
-        overflow-y: auto;
-        white-space: pre-wrap;
+        height: 400px !important;
       }
       .ql-container {
-        font-size: 16px;
-        height: auto !important;
         flex: 1;
-        display: flex;
-        flex-direction: column;
+        font-size: 16px;
+        overflow: auto;
+      }
+      .ql-editor {
+        min-height: 350px;
+        padding: 1rem;
+        overflow-y: auto;
+        font-family: inherit;
       }
       .ql-toolbar {
         position: sticky;
@@ -169,40 +165,41 @@ const StoriesAdd = () => {
         background: white;
         border-top-left-radius: 0.5rem;
         border-top-right-radius: 0.5rem;
+        border-bottom: 1px solid #e2e8f0;
       }
-      .ql-toolbar button {
-        height: 24px;
-        width: 24px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+      .ql-toolbar.ql-snow {
+        border: none;
+        padding: 0.5rem;
       }
-      .ql-toolbar button.ql-table::after {
-        content: "TABLE";
-        font-size: 12px;
-      }
-      /* Table styles */
-      .ql-editor table {
-        border-collapse: collapse;
-        width: 100%;
-        margin: 1rem 0;
-        table-layout: fixed;
-      }
-      .ql-editor table td,
-      .ql-editor table th {
-        border: 1px solid #ddd;
-        padding: 8px;
-        min-width: 100px;
-        word-wrap: break-word;
-      }
-      .ql-editor table tr:nth-child(even) {
-        background-color: #f9fafb;
-      }
-      .ql-editor table tr:hover {
-        background-color: #f3f4f6;
+      .ql-container.ql-snow {
+        border: none;
       }
       .ql-editor p {
         margin-bottom: 1em;
+      }
+      .ql-snow .ql-toolbar button {
+        height: 24px;
+        width: 24px;
+        padding: 3px 5px;
+      }
+      .ql-snow .ql-toolbar button.ql-table::after {
+        content: "TABLE";
+        font-size: 12px;
+      }
+      .ql-editor table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+      }
+      .ql-editor table td,
+      .ql-editor table th {
+        border: 1px solid #e2e8f0;
+        padding: 0.5rem;
+        min-width: 100px;
+      }
+      .ql-editor table th {
+        background-color: #f8fafc;
+        font-weight: 600;
       }
     `;
     document.head.appendChild(style);
@@ -212,14 +209,23 @@ const StoriesAdd = () => {
     };
   }, []);
 
-  // Handlers
-  const handleContentChange = (content, delta, source, editor) => {
+  // Update the handleContentChange function
+  const handleContentChange = useCallback((content) => {
     setFormData(prev => ({
       ...prev,
       content: content
     }));
-  };
+  }, []);
 
+  // Add this useEffect to handle editor initialization
+  useEffect(() => {
+    if (quillRef.current) {
+      const editor = quillRef.current.getEditor();
+      editor.root.setAttribute('spellcheck', 'false');
+    }
+  }, []);
+
+  // Handlers
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -599,12 +605,12 @@ const StoriesAdd = () => {
                 modules={modules}
                 formats={formats}
                 theme="snow"
-                preserveWhitespace={true}
+                preserveWhitespace
+                bounds=".quill-editor"
+                placeholder="Write your story content here..."
                 className="quill-editor"
                 style={{ 
-                  height: '400px',
-                  display: 'flex',
-                  flexDirection: 'column'
+                  minHeight: '400px'
                 }}
               />
             </div>
