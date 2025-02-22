@@ -9,7 +9,7 @@ import Quill from 'quill';
 
 const StoriesAdd = () => {
   const navigate = useNavigate();
-  const { createStory, loading, error } = useStoriesAdd();
+  const { createStory, loading, error, setError } = useStoriesAdd();
   const [showPreview, setShowPreview] = useState(false);
   const [advisorPosition, setAdvisorPosition] = useState('default');
   const quillRef = useRef(null);
@@ -450,7 +450,9 @@ const StoriesAdd = () => {
       await createStory(formData);
       navigate('/stories'); // Redirect to stories list after successful creation
     } catch (err) {
-      console.error('Error creating story:', err);
+      console.error('Error creating story:', err.response?.data?.message || 'Unknown error'); // Log the error
+      // Display error message to the user
+      setError(err.response?.data?.message || 'Failed to create story. Please try again.');
     }
   };
 

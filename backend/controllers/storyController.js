@@ -43,11 +43,10 @@ export const createStory = async (req, res) => {
 
     res.status(201).json({ success: true, story });
   } catch (error) {
-    // If there's an error and a file was uploaded locally, clean it up
+    console.error('Create story error:', error); // Log the error for debugging
     if (req.file) {
       await deleteFile(req.file.path);
     }
-    console.error('Create story error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
