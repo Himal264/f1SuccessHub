@@ -69,54 +69,26 @@ const StoriesAdd = () => {
     publishDate: new Date().toISOString().split('T')[0],
   });
 
-  // Define custom table button and handler
+  // Create a custom button for table
   const CustomTable = Quill.import('modules/toolbar');
 
-  // Define modules with working table handling
+  // Update the modules configuration
   const modules = useMemo(() => ({
     toolbar: {
       container: [
         [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
         ['bold', 'italic', 'underline', 'strike'],
+        ['customSize'],  // Single custom size input
+        [{ 'color': [] }, { 'background': [] }],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
         [{ 'script': 'sub'}, { 'script': 'super' }],
         [{ 'indent': '-1'}, { 'indent': '+1' }],
-        [{ 'size': ['small', false, 'large', 'huge'] }],
         ['blockquote', 'code-block'],
-        [{ 'color': [] }, { 'background': [] }],
         [{ 'font': [] }],
         [{ 'align': [] }],
         ['clean'],
-        ['link', 'image'],
-        ['table']
-      ],
-      handlers: {
-        table: function() {
-          const quill = quillRef.current.getEditor();
-          if (quill) {
-            const range = quill.getSelection();
-            const tableHTML = `
-              <table class="min-w-full divide-y divide-gray-200 border my-4">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border">Header 1</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border">Header 2</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border">Header 3</th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border">Cell 1</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border">Cell 2</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 border">Cell 3</td>
-                  </tr>
-                </tbody>
-              </table>
-            `;
-            quill.clipboard.dangerouslyPasteHTML(range ? range.index : 0, tableHTML);
-          }
-        }
-      }
+        ['link', 'image']
+      ]
     }
   }), []);
 
@@ -134,80 +106,8 @@ const StoriesAdd = () => {
     'font',
     'align',
     'clean',
-    'link', 'image',
-    'table'
+    'link', 'image'
   ];
-
-  // Add editor styles
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      .quill-editor {
-        display: flex;
-        flex-direction: column;
-        height: 400px !important;
-      }
-      .ql-container {
-        flex: 1;
-        font-size: 16px;
-        overflow: auto;
-      }
-      .ql-editor {
-        min-height: 350px;
-        padding: 1rem;
-        overflow-y: auto;
-        font-family: inherit;
-      }
-      .ql-toolbar {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-        background: white;
-        border-top-left-radius: 0.5rem;
-        border-top-right-radius: 0.5rem;
-        border-bottom: 1px solid #e2e8f0;
-      }
-      .ql-toolbar.ql-snow {
-        border: none;
-        padding: 0.5rem;
-      }
-      .ql-container.ql-snow {
-        border: none;
-      }
-      .ql-editor p {
-        margin-bottom: 1em;
-      }
-      .ql-snow .ql-toolbar button {
-        height: 24px;
-        width: 24px;
-        padding: 3px 5px;
-      }
-      .ql-snow .ql-toolbar button.ql-table::after {
-        content: "TABLE";
-        font-size: 12px;
-      }
-      .ql-editor table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 1rem 0;
-      }
-      .ql-editor table td,
-      .ql-editor table th {
-        border: 1px solid #e2e8f0;
-        padding: 0.5rem;
-        min-width: 100px;
-      }
-      .ql-editor table th {
-        background-color: #f8fafc;
-        font-weight: 600;
-      }
-    `;
-    document.head.appendChild(style);
-
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
 
   // Update the handleContentChange function
   const handleContentChange = useCallback((content) => {
@@ -241,14 +141,211 @@ const StoriesAdd = () => {
         ...prev,
         photo: file
       }));
-      // Create preview URL
+      // Create preview URL with margin styling
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewUrl(reader.result);
+        
+        // If we're in the editor, insert the image with margin
+        if (quillRef.current) {
+          const quill = quillRef.current.getEditor();
+          const range = quill.getSelection(true);
+          
+          // Insert a line break before the image
+          quill.insertText(range.index, '\n');
+          
+          // Insert the image with margin styling
+          quill.insertEmbed(
+            range.index + 1, 
+            'image', 
+            reader.result,
+            'user'
+          );
+          
+          // Apply margin to the inserted image
+          const imageFormat = {
+            'style': 'margin: 40px;'
+          };
+          quill.formatText(range.index + 1, 1, imageFormat);
+          
+          // Insert a line break after the image
+          quill.insertText(range.index + 2, '\n');
+        }
       };
       reader.readAsDataURL(file);
     }
   };
+
+  // Add these styles to ensure images have proper margin in both editor and preview
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .ql-editor img {
+        margin: 40px;
+        max-width: calc(100% - 80px);
+        height: auto;
+        display: block;
+      }
+      
+      .story-preview img {
+        margin: 40px;
+        max-width: calc(100% - 80px);
+        height: auto;
+        display: block;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  // Add custom styles for size options
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      /* Preset sizes */
+      .ql-size-small {
+        font-size: 12px;
+      }
+      .ql-size-medium {
+        font-size: 14px;
+      }
+      .ql-size-normal {
+        font-size: 16px;
+      }
+      .ql-size-large {
+        font-size: 20px;
+      }
+      .ql-size-huge {
+        font-size: 24px;
+      }
+
+      /* Custom size input styles */
+      .ql-size .ql-picker-options {
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      /* Add numbered sizes from 8px to 72px */
+      ${Array.from({ length: 65 }, (_, i) => i + 8).map(size => `
+        .ql-size-${size} {
+          font-size: ${size}px;
+        }
+      `).join('\n')}
+
+      /* Style for the size picker dropdown */
+      .ql-size.ql-picker {
+        width: 100px;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  // Register custom sizes
+  useEffect(() => {
+    if (quillRef.current) {
+      const Quill = quillRef.current.getEditor().constructor;
+      const Size = Quill.import('attributors/style/size');
+      Size.whitelist = [
+        'small', 'medium', 'normal', 'large', 'huge',
+        ...Array.from({ length: 65 }, (_, i) => `${i + 8}px`)  // 8px to 72px
+      ];
+      Quill.register(Size, true);
+    }
+  }, []);
+
+  // Add custom styles and font size input
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      /* Font size input container */
+      .ql-customSize {
+        width: 150px !important;
+        display: inline-flex !important;
+        align-items: center;
+        padding: 0 5px;
+      }
+      
+      /* Label styles */
+      .ql-customSize span {
+        font-size: 14px;
+        color: #444;
+        margin-right: 8px;
+        user-select: none;
+        pointer-events: none;
+      }
+      
+      /* Input styles */
+      .ql-customSize input {
+        width: 50px;
+        height: 24px;
+        padding: 2px 5px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        text-align: center;
+        font-size: 14px;
+      }
+      
+      .ql-customSize input:focus {
+        outline: none;
+        border-color: #06c;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Add the custom size input
+    const toolbar = document.querySelector('.ql-toolbar');
+    if (toolbar) {
+      const customSizeButton = toolbar.querySelector('.ql-customSize');
+      if (customSizeButton) {
+        // Clear any existing content
+        customSizeButton.innerHTML = '';
+        
+        // Add label
+        const label = document.createElement('span');
+        label.textContent = 'Text size';
+        customSizeButton.appendChild(label);
+        
+        // Add input
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '1';
+        input.value = '16';
+        input.placeholder = 'Size';
+        
+        input.addEventListener('change', (e) => {
+          const quill = quillRef.current.getEditor();
+          const range = quill.getSelection();
+          if (range) {
+            const size = e.target.value;
+            quill.format('size', `${size}px`);
+          }
+        });
+        
+        customSizeButton.appendChild(input);
+      }
+    }
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  // Register custom size format
+  useEffect(() => {
+    if (quillRef.current) {
+      const Quill = quillRef.current.getEditor().constructor;
+      const Size = Quill.import('attributors/style/size');
+      Size.whitelist = Array.from({ length: 200 }, (_, i) => `${i + 1}px`);
+      Quill.register(Size, true);
+    }
+  }, []);
 
   // Function to get tag suggestions
   const getTagSuggestions = (input) => {
@@ -348,6 +445,12 @@ const StoriesAdd = () => {
         }
         .story-content li {
           margin-bottom: 0.5rem;
+        }
+        .story-content img {
+          margin: 50px;
+          max-width: calc(100% - 100px);
+          height: auto;
+          display: block;
         }
       `;
       document.head.appendChild(style);
@@ -451,8 +554,9 @@ const StoriesAdd = () => {
               <div className="w-full mt-4">
                   <Stories1AskAdvisor />
                 </div>
-                <div dangerouslySetInnerHTML={{ __html: formData.content }} 
-                     className="story-content"
+                <div 
+                  dangerouslySetInnerHTML={{ __html: formData.content }} 
+                  className="story-content"
                 />
                
               </div>
