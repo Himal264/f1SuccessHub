@@ -5,6 +5,15 @@ import { deleteFile } from '../middlewares/multer.js';
 export const createStory = async (req, res) => {
   try {
     const { title, subtitle, content, storyType, tags } = req.body;
+    
+    // Validate that content is proper HTML
+    if (!content || typeof content !== 'string') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Content must be valid HTML' 
+      });
+    }
+
     const photo = req.file;
 
     if (!photo) {

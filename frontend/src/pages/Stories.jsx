@@ -23,39 +23,114 @@ const Stories = () => {
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
-      .prose u {
-        text-decoration-color: #F37021;
-        text-underline-offset: 2px;
-      }
-      .prose u:hover {
-        color: #F37021;
-        transition: color 0.3s ease;
-      }
       .story-content {
         font-size: 1.125rem;
         line-height: 1.75;
+        color: #4B5563; /* Consistent text color */
       }
+      
+      /* Headers */
+      .story-content h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+        color: #2A3342;
+        font-family: serif;
+      }
+      
+      .story-content h2 {
+        font-size: 2rem;
+        margin-bottom: 1.25rem;
+        color: #2A3342;
+        font-family: serif;
+      }
+      
+      .story-content h3 {
+        font-size: 1.75rem;
+        margin-bottom: 1rem;
+        color: #2A3342;
+        font-family: serif;
+      }
+      
+      /* Paragraphs and spacing */
       .story-content p {
         margin-bottom: 1.5rem;
+        color: #4B5563;
       }
-      .story-content ul {
-        list-style-type: disc;
-        padding-left: 2rem;
+      
+      /* Lists */
+      .story-content ul, .story-content ol {
         margin-bottom: 1.5rem;
-      }
-      .story-content ol {
-        list-style-type: decimal;
         padding-left: 2rem;
-        margin-bottom: 1.5rem;
       }
+      
       .story-content li {
         margin-bottom: 0.5rem;
+        color: #4B5563;
       }
+      
+      /* Links */
+      .story-content a {
+        color: #2A3342;
+        text-decoration: underline;
+        text-decoration-color: #F37021;
+        text-underline-offset: 2px;
+      }
+      
+      .story-content a:hover {
+        color: #F37021;
+        transition: color 0.3s ease;
+      }
+      
+      /* Images */
       .story-content img {
-        margin: 50px;
+        margin: 50px auto;
         max-width: calc(100% - 100px);
         height: auto;
         display: block;
+        border-radius: 8px;
+      }
+      
+      /* Blockquotes */
+      .story-content blockquote {
+        border-left: 4px solid #F37021;
+        padding-left: 1rem;
+        margin-left: 0;
+        margin-right: 0;
+        margin-bottom: 1.5rem;
+        font-style: italic;
+        color: #6B7280;
+      }
+      
+      /* Tables */
+      .story-content table {
+        width: 100%;
+        margin-bottom: 1.5rem;
+        border-collapse: collapse;
+      }
+      
+      .story-content table td,
+      .story-content table th {
+        border: 1px solid #E5E7EB;
+        padding: 0.75rem;
+      }
+      
+      .story-content table th {
+        background-color: #F9FAFB;
+        color: #2A3342;
+      }
+      
+      /* Code blocks */
+      .story-content pre {
+        background-color: #F9FAFB;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        overflow-x: auto;
+      }
+      
+      .story-content code {
+        font-family: monospace;
+        color: #2A3342;
       }
     `;
     document.head.appendChild(style);

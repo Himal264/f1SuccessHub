@@ -14,8 +14,7 @@ const storySchema = new mongoose.Schema({
   content: { 
     type: String, 
     required: [true, 'Content is required'],
-    maxLength: [2000, 'Content cannot exceed 2000 characters'],
-    trim: true
+    trim: false
   },
   storyType: {
     type: String,
