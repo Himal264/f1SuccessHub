@@ -9,7 +9,7 @@ const subjectData = {
     salary: "94,500",
     governmentJobs: "18%",
     description:
-      "Pursue a degree in Engineering to develop innovative solutions for real-world problems. Focus on mechanical, electrical, civil, or chemical engineering principles.",
+      "Pursue a degree in Engineering to develop innovative solutions for real-world problems. Focus on mechanical, electrical, civil, or chemical engineering principles. Pursue a degree in Engineering to develop innovative solutions for real-world problems. Focus on mechanical, electrical, civil, or chemical engineering principles.",
     videoTitle: "Engineering Career Paths",
   },
   Humanities: {
@@ -17,7 +17,7 @@ const subjectData = {
     salary: "65,800",
     governmentJobs: "22%",
     description:
-      "Study literature, philosophy, history, and languages to develop critical thinking and communication skills essential for various careers.",
+      "Study literature, philosophy, history, and languages to develop critical thinking and communication skills essential for various careers. Study literature, philosophy, history, and languages to develop critical thinking and communication skills essential for various careers.",
     videoTitle: "Careers in Humanities",
   },
   MedicalandHealthSciences: {
@@ -25,7 +25,7 @@ const subjectData = {
     salary: "86,700",
     governmentJobs: "24%",
     description:
-      "Explore healthcare, medicine, and research to prepare for careers in hospitals, research facilities, or private practice.",
+      "Explore healthcare, medicine, and research to prepare for careers in hospitals, research facilities, or private practice. Explore healthcare, medicine, and research to prepare for careers in hospitals, research facilities, or private practice.",
     videoTitle: "Healthcare Career Options",
   },
   NaturalSciences: {
@@ -33,7 +33,7 @@ const subjectData = {
     salary: "78,900",
     governmentJobs: "28%",
     description:
-      "Study physics, chemistry, biology, and environmental science to understand natural phenomena and conduct groundbreaking research.",
+      "Study physics, chemistry, biology, and environmental science to understand natural phenomena and conduct groundbreaking research. Study physics, chemistry, biology, and environmental science to understand natural phenomena and conduct groundbreaking research.",
     videoTitle: "Natural Sciences Research",
   },
   Business: {
@@ -41,7 +41,7 @@ const subjectData = {
     salary: "88,600",
     governmentJobs: "15%",
     description:
-      "Master business principles, management strategies, and financial analysis to lead organizations and drive economic growth.",
+      "Master business principles, management strategies, and financial analysis to lead organizations and drive economic growth. Master business principles, management strategies, and financial analysis to lead organizations and drive economic growth.",
     videoTitle: "Business Leadership Paths",
   },
   ComputerScience: {
@@ -49,7 +49,7 @@ const subjectData = {
     salary: "118,370",
     governmentJobs: "26%",
     description:
-      "Gain expertise in programming, algorithms, artificial intelligence, and software development for cutting-edge technology careers.",
+      "Gain expertise in programming, algorithms, artificial intelligence, and software development for cutting-edge technology careers. Gain expertise in programming, algorithms, artificial intelligence, and software development for cutting-edge technology careers.",
     videoTitle: "Tech Career Opportunities",
   },
   SocialScience: {
@@ -57,7 +57,7 @@ const subjectData = {
     salary: "68,400",
     governmentJobs: "32%",
     description:
-      "Analyze human behavior, society, and culture through psychology, sociology, and anthropology studies.",
+      "Analyze human behavior, society, and culture through psychology, sociology, and anthropology studies. Analyze human behavior, society, and culture through psychology, sociology, and anthropology studies.",
     videoTitle: "Social Science Impact",
   },
   Education: {
@@ -65,9 +65,46 @@ const subjectData = {
     salary: "58,900",
     governmentJobs: "85%",
     description:
-      "Develop teaching skills and educational theory to shape future generations in schools, universities, and learning centers.",
+      "Develop teaching skills and educational theory to shape future generations in schools, universities, and learning centers. Develop teaching skills and educational theory to shape future generations in schools, universities, and learning centers.",
     videoTitle: "Education Career Guide",
   },
+};
+
+const FAQLink = ({ text, href }) => (
+  <a 
+    href={href}
+    className="text-gray-700 underline transition-colors duration-200"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    {text}
+  </a>
+);
+
+const FAQItem = ({ question, answerContent, isOpen, onToggle }) => {
+  return (
+    <div className="border rounded-lg mb-4 bg-white shadow-sm">
+      <button
+        className="w-full py-4 px-6 text-left flex justify-between items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-black rounded-lg"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+      >
+        <span className="text-lg font-medium text-gray-900">{question}</span>
+        <span className="ml-6 flex-shrink-0 bg-black rounded-full w-6 h-6 flex items-center justify-center">
+          <span className="text-white text-xl">
+            {isOpen ? '−' : '+'}
+          </span>
+        </span>
+      </button>
+      {isOpen && (
+        <div className="px-6 pb-4">
+          <div className="pt-4 text-gray-600 space-y-4">
+            {answerContent}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 const SubjectProgramPage = () => {
@@ -78,6 +115,7 @@ const SubjectProgramPage = () => {
   const [programDetails, setProgramDetails] = useState(null);
   const [featuredUniversities, setFeaturedUniversities] = useState([]);
   const [sortOption, setSortOption] = useState("rank-low");
+  const [openIndex, setOpenIndex] = useState(null);
 
   const formatSubject = (text) => {
     return text.replace(/([A-Z])/g, " $1").trim();
@@ -94,6 +132,10 @@ const SubjectProgramPage = () => {
       window.scrollTo({ top: y, behavior: "smooth" });
     }
     setActiveSection(sectionId);
+  };
+
+  const toggleFaq = (index) => {
+    setOpenIndex(openIndex === index ? null : index);
   };
 
   useEffect(() => {
@@ -207,7 +249,7 @@ const SubjectProgramPage = () => {
               <h1 className="text-4xl font-serif text-gray-900 mb-4">
                 {level} Degrees in {formatSubject(subject)}
               </h1>
-              <p className="text-gray-700 mb-6">
+              <p className="text-lg text-gray-700 mb-6">
                 Looking to earn a {level.toLowerCase()} degree in{" "}
                 {formatSubject(subject).toLowerCase()}? Talk to a F1SuccessHub
                 advisor about top-ranked universities &{" "}
@@ -295,7 +337,7 @@ const SubjectProgramPage = () => {
               <h2 className="text-3xl font-serif text-gray-900 mb-6">
                 What is {formatSubject(subject)}?
               </h2>
-              <p className="text-gray-700">{currentSubject.description}</p>
+              <p className="text-lg text-gray-700">{currentSubject.description}</p>
             </div>
             <div className="lg:w-1/3">
               <div className="space-y-8">
@@ -486,6 +528,82 @@ const SubjectProgramPage = () => {
           )}
         </div>
       </div>
+
+      {/* FAQ Section */}
+      <div id="faqs" className="bg-white pt-16">
+        <div className="max-w-3xl mx-auto px-4 py-12">
+          <h2 className="text-3xl font-serif text-center mb-8">Frequently Asked Questions</h2>
+          <div className="space-y-2">
+            {[
+              {
+                question: `What are the career prospects for ${formatSubject(subject)} graduates?`,
+                answerContent: (
+                  <div>
+                    <p className="mb-2">Career opportunities in {formatSubject(subject)} include:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                      <li>Average salary: ${currentSubject.salary} per year</li>
+                      <li>Job growth rate: {currentSubject.jobGrowth} through 2028</li>
+                      <li>{currentSubject.governmentJobs} of positions in government sector</li>
+                      <li><FAQLink text="View detailed career paths" href="#/careers" /></li>
+                    </ul>
+                  </div>
+                )
+              },
+              {
+                question: `What are the admission requirements for ${formatSubject(subject)} programs?`,
+                answerContent: (
+                  <div>
+                    <p className="mb-2">Common requirements include:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                      <li>High school diploma or equivalent</li>
+                      <li>Standardized test scores (SAT/ACT)</li>
+                      <li>Letters of recommendation</li>
+                      <li><FAQLink text="View full requirements" href="#/requirements" /></li>
+                    </ul>
+                  </div>
+                )
+              },
+              {
+                question: "What financial aid options are available?",
+                answerContent: (
+                  <div>
+                    <p className="mb-2">International students can access:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                      <li>Merit-based scholarships</li>
+                      <li>University grants</li>
+                      <li>Student loans</li>
+                      <li><FAQLink text="Explore financial aid options" href="#/financial-aid" /></li>
+                    </ul>
+                  </div>
+                )
+              },
+              {
+                question: "How can F1SuccessHub help with my application?",
+                answerContent: (
+                  <div>
+                    <p className="mb-2">We provide comprehensive support:</p>
+                    <ul className="list-disc pl-5 space-y-2">
+                      <li>University selection guidance</li>
+                      <li>Application process assistance</li>
+                      <li>Visa application support</li>
+                      <li><FAQLink text="Learn about our services" href="#/services" /></li>
+                    </ul>
+                  </div>
+                )
+              }
+            ].map((faq, index) => (
+              <FAQItem
+                key={index}
+                question={faq.question}
+                answerContent={faq.answerContent}
+                isOpen={openIndex === index}
+                onToggle={() => toggleFaq(index)}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
       <Footer />
     </div>
   );

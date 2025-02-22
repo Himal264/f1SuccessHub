@@ -72,23 +72,92 @@ const StoriesAdd = () => {
   // Create a custom button for table
   const CustomTable = Quill.import('modules/toolbar');
 
-  // Update the modules configuration
+  // Update the modules configuration to include image handling
   const modules = useMemo(() => ({
     toolbar: {
       container: [
         [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
         ['bold', 'italic', 'underline', 'strike'],
-        ['customSize'],  // Single custom size input
+        [{ 
+          'size': [
+            '8px', '10px', '12px', '14px', '16px', 
+            '18px', '20px', '24px', '32px', '48px'
+          ] 
+        }],
         [{ 'color': [] }, { 'background': [] }],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
         [{ 'script': 'sub'}, { 'script': 'super' }],
         [{ 'indent': '-1'}, { 'indent': '+1' }],
-        ['blockquote', 'code-block'],
+        ['blockquote'],
         [{ 'font': [] }],
         [{ 'align': [] }],
         ['clean'],
         ['link', 'image']
-      ]
+      ],
+      handlers: {
+        'size': function(value) {
+          this.quill.format('size', value);
+        },
+        'link': function(value) {
+          if (value) {
+            const range = this.quill.getSelection();
+            if (range && range.length > 0) {
+              // Get the selected text
+              const selectedText = this.quill.getText(range.index, range.length);
+              const href = prompt(`Enter URL for "${selectedText}"`);
+              if (href) {
+                this.quill.format('link', href);
+              }
+            } else {
+              // If no text is selected
+              alert('Please select some text first to create a link');
+            }
+          } else {
+            // Remove link
+            const range = this.quill.getSelection();
+            if (range) {
+              this.quill.format('link', false);
+            }
+          }
+        },
+        'image': function() {
+          const input = document.createElement('input');
+          input.setAttribute('type', 'file');
+          input.setAttribute('accept', 'image/*');
+          input.click();
+
+          input.onchange = () => {
+            const file = input.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const range = this.quill.getSelection(true);
+                
+                // Insert a line break before the image
+                this.quill.insertText(range.index, '\n');
+                
+                // Insert the image with margin styling
+                this.quill.insertEmbed(
+                  range.index + 1,
+                  'image',
+                  reader.result,
+                  'user'
+                );
+                
+                // Apply margin to the inserted image
+                const imageFormat = {
+                  'style': 'margin: 40px;'
+                };
+                this.quill.formatText(range.index + 1, 1, imageFormat);
+                
+                // Insert a line break after the image
+                this.quill.insertText(range.index + 2, '\n');
+              };
+              reader.readAsDataURL(file);
+            }
+          };
+        }
+      }
     }
   }), []);
 
@@ -101,7 +170,6 @@ const StoriesAdd = () => {
     'indent',
     'size',
     'blockquote',
-    'code-block',
     'color', 'background',
     'font',
     'align',
@@ -205,40 +273,39 @@ const StoriesAdd = () => {
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
-      /* Preset sizes */
-      .ql-size-small {
+      /* Custom size styles */
+      .ql-editor {
+        font-size: 16px; /* Default size */
+      }
+      
+      .ql-editor .ql-size-small {
         font-size: 12px;
       }
-      .ql-size-medium {
-        font-size: 14px;
-      }
-      .ql-size-normal {
-        font-size: 16px;
-      }
-      .ql-size-large {
+      
+      .ql-editor .ql-size-large {
         font-size: 20px;
       }
-      .ql-size-huge {
+      
+      .ql-editor .ql-size-huge {
         font-size: 24px;
       }
-
-      /* Custom size input styles */
-      .ql-size .ql-picker-options {
-        max-height: 200px;
-        overflow-y: auto;
-      }
-
-      /* Add numbered sizes from 8px to 72px */
-      ${Array.from({ length: 65 }, (_, i) => i + 8).map(size => `
-        .ql-size-${size} {
-          font-size: ${size}px;
+      
+      /* Dynamic size classes */
+      ${Array.from({ length: 93 }, (_, i) => i + 8).map(size => `
+        .ql-editor .ql-size-${size} {
+          font-size: ${size}px !important;
         }
       `).join('\n')}
-
-      /* Style for the size picker dropdown */
-      .ql-size.ql-picker {
-        width: 100px;
+      
+      /* Preview styles */
+      .story-content [class*="ql-size-"] {
+        font-size: inherit;
       }
+      ${Array.from({ length: 93 }, (_, i) => i + 8).map(size => `
+        .story-content .ql-size-${size} {
+          font-size: ${size}px !important;
+        }
+      `).join('\n')}
     `;
     document.head.appendChild(style);
 
@@ -253,8 +320,8 @@ const StoriesAdd = () => {
       const Quill = quillRef.current.getEditor().constructor;
       const Size = Quill.import('attributors/style/size');
       Size.whitelist = [
-        'small', 'medium', 'normal', 'large', 'huge',
-        ...Array.from({ length: 65 }, (_, i) => `${i + 8}px`)  // 8px to 72px
+        'small', 'normal', 'large', 'huge',
+        ...Array.from({ length: 93 }, (_, i) => `${i + 8}px`)  // 8px to 100px
       ];
       Quill.register(Size, true);
     }
@@ -573,6 +640,97 @@ const StoriesAdd = () => {
       </div>
     );
   };
+
+  // Update the CSS to specifically target first column cells
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      /* For the editor */
+      .ql-editor table td:first-child {
+        background-color: black !important;
+        color: white !important;
+      }
+      
+      /* For the preview */
+      .story-content table td:first-child {
+        background-color: black !important;
+        color: white !important;
+      }
+
+      /* Ensure other columns maintain default styling */
+      .ql-editor table td,
+      .story-content table td {
+        background-color: white;
+        color: black;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  // Update the CSS styles for links
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      /* Link styles in editor */
+      .ql-editor a {
+        color: #2A3342; /* Black color */
+        text-decoration: underline;
+        cursor: pointer;
+        transition: color 0.3s ease;
+      }
+
+      .ql-editor a:hover {
+        color: #F37021; /* Yellow/Orange color */
+      }
+
+      /* Link styles in preview */
+      .story-content a {
+        color: #2A3342; /* Black color */
+        text-decoration: underline;
+        cursor: pointer;
+        transition: color 0.3s ease;
+      }
+
+      .story-content a:hover {
+        color: #F37021; /* Yellow/Orange color */
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  // Register the size format
+  useEffect(() => {
+    if (quillRef.current) {
+      const Quill = quillRef.current.getEditor().constructor;
+      const Size = Quill.import('attributors/style/size');
+      Size.whitelist = ['8px', '10px', '12px', '14px', '16px', '18px', '20px', '24px', '32px', '48px'];
+      Quill.register(Size, true);
+    }
+  }, []);
+
+  // Update the CSS to show pixel values in dropdown
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .ql-snow .ql-picker.ql-size .ql-picker-label::before,
+      .ql-snow .ql-picker.ql-size .ql-picker-item::before {
+        content: attr(data-value) !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   return (
     <div className="max-w-6xl mx-auto p-4">
