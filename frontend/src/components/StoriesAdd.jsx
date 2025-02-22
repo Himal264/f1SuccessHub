@@ -330,11 +330,24 @@ const StoriesAdd = () => {
           transition: color 0.3s ease;
         }
         .story-content {
-          font-size: 1.125rem; /* 18px */
+          font-size: 1.125rem;
           line-height: 1.75;
         }
         .story-content p {
           margin-bottom: 1.5rem;
+        }
+        .story-content ul {
+          list-style-type: disc;
+          padding-left: 2rem;
+          margin-bottom: 1.5rem;
+        }
+        .story-content ol {
+          list-style-type: decimal;
+          padding-left: 2rem;
+          margin-bottom: 1.5rem;
+        }
+        .story-content li {
+          margin-bottom: 0.5rem;
         }
       `;
       document.head.appendChild(style);
