@@ -6,7 +6,8 @@ import {
   getStories,
   getStoryById,
   updateStory,
-  deleteStory
+  deleteStory,
+  getStoriesByAuthor
 } from '../controllers/storyController.js';
 
 const router = express.Router();
@@ -42,5 +43,7 @@ router.delete(
   checkRole(['counselor', 'university', 'alumni', 'admin']),
   deleteStory
 );
+
+router.get('/author/:authorId', getStoriesByAuthor);
 
 export default router;

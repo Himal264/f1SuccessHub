@@ -144,3 +144,15 @@ export const deleteStory = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const getStoriesByAuthor = async (req, res) => {
+  try {
+    const stories = await Story.find({ author: req.params.authorId })
+      .populate('author', 'name profilePicture')
+      .sort('-createdAt');
+
+    res.json({ success: true, stories });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

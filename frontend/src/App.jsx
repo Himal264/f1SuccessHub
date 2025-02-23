@@ -79,6 +79,7 @@ import Stories from './pages/Stories';
 import StoriesAdd from './components/StoriesAdd';
 import F1QuestionAndPerAnswer from './components/f1questionandanswerperanswer';
 import StoriesDetail from './pages/StoriesDetail';
+import AuthorProfile from './pages/AuthorProfile';
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -287,6 +288,7 @@ const App = () => {
                     <Route path="/webinar/:id" element={<WebinarRoom />} />
                     <Route path="/stories/add" element={<StoriesAdd />} />
                     <Route path="/stories/:id" element={<StoriesDetail />} />
+                    <Route path="/author/:authorId" element={<AuthorProfile />} />
                   </Routes>
                   <ScrollToTop />
                 </div>

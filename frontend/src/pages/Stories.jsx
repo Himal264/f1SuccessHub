@@ -180,7 +180,7 @@ const Stories = () => {
   }, []);
 
   return (
-    <div className="bg-gray-50">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Hero Section */}
       <div className="relative bg-[#2A3342] text-white">
         <div className="max-w-6xl mx-auto px-4 py-16">
@@ -226,76 +226,76 @@ const Stories = () => {
         </div>
       </div>
 
-      {/* Stories Grid */}
-      <div className="max-w-6xl mx-auto p-4 space-y-4">
-        {error && <div className="text-red-500">{error}</div>}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.isArray(stories) && stories.length > 0 ? (
+      {/* Updated grid container for larger cards */}
+      <div className="mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {stories.length > 0 ? (
             stories.map((story) => (
-              <Link to={`/stories/${story._id}`} key={story._id}>
-                <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  {story.photo && (
-                    <div className="relative">
-                      <img 
-                        src={story.photo.url} 
-                        alt={story.title}
-                        className="w-full h-48 object-cover rounded-t-lg"
-                      />
-                      {/* Author Profile Picture - Overlapping */}
-                      <div className="absolute -bottom-6 left-4">
-                        <img 
-                          src={story.author?.profilePicture?.url || assets.default_profile_icon} 
+              <Link
+                key={story._id}
+                to={`/stories/${story._id}`}
+                className="group"
+              >
+                <div className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl relative h-full">
+                  {/* Reduced image height from h-[300px] to h-[250px] */}
+                  <div className="relative h-[250px]">
+                    <img
+                      src={story.photo?.url || assets.default_post_image}
+                      alt={story.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  {/* Content section with more padding */}
+                  <div className="p-8 relative">
+                    {/* Author image and info */}
+                    <div className="absolute -top-8 left-8">
+                      <div className="flex flex-col items-center">
+                        <img
+                          src={story.author?.profilePicture?.url || assets.default_profile_icon}
                           alt={story.author?.name || 'Author'}
-                          className="w-12 h-12 rounded-full border-2 border-white shadow-md object-cover"
+                          className="w-16 h-16 rounded-full border-4 border-white shadow-lg object-cover"
                         />
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Story Content */}
-                  <div className="p-4 pt-8">
-                    <div className="flex justify-between items-center mb-3">
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {story.author?.name || 'Anonymous'}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {new Date(story.createdAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          })}
+                        <div className="mt-2 text-center">
+                          <div className="text-sm font-medium text-gray-900">
+                            {story.author?.name || 'Anonymous'}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(story.createdAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </div>
                         </div>
                       </div>
-                      <div className="text-sm text-gray-500">
-                        {story.readTime || '5 min read'}
+                    </div>
+
+                    {/* Title and content */}
+                    <div className="mt-12">
+                      <h3 className="text-2xl font-semibold text-gray-900 mb-3 line-clamp-2">
+                        {story.title}
+                      </h3>
+                      <p className="text-gray-600 mb-4 line-clamp-6 text-base">
+                        {story.subtitle}
+                      </p>
+
+                      {/* Updated tags and read time to be on the same line */}
+                      <div className="flex justify-between items-center">
+                        <div className="flex flex-wrap gap-2 flex-1">
+                          {story.tags?.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="text-sm text-gray-500 ml-4 whitespace-nowrap">
+                          {story.readTime || '5 min read'}
+                        </div>
                       </div>
-                    </div>
-
-                    <h2 className="text-xl font-serif font-semibold mb-2">
-                      {story.title}
-                    </h2>
-                    <p className="text-gray-600 line-clamp-2 mb-3">
-                      {story.subtitle}
-                    </p>
-
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {story.tags?.slice(0, 3).map((tag, index) => (
-                        <span 
-                          key={index}
-                          className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Story Type Badge */}
-                    <div className="absolute top-4 right-4">
-                      <span className="px-3 py-1 bg-white/90 text-gray-800 rounded-full text-sm font-medium">
-                        {story.storyType}
-                      </span>
                     </div>
                   </div>
                 </div>

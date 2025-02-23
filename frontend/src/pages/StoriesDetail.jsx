@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import Stories1AskAdvisor from '../components/Stories1AskAdvisor';
 import Stories2FindSchool from '../components/Stories2FindSchool';
 
@@ -101,11 +101,12 @@ const StoriesDetail = () => {
             {/* Author and Date */}
             <div className="mt-4 mb-4">
               <div className="text-gray-700">
-                By <span 
-                  className="text-[#2A3342] font-semibold text-lg underline decoration-[#F37021] decoration-1 hover:text-[#F37021] transition-colors cursor-pointer"
+                By <Link 
+                  to={`/author/${story.author._id}`}
+                  className="text-sm font-medium text-gray-900 hover:text-[#F37021]"
                 >
-                  {story.author?.name}
-                </span>
+                  {story.author?.name || 'Anonymous'}
+                </Link>
               </div>
               <div className="text-gray-700">
                 Published on {new Date(story.createdAt).toLocaleDateString('en-US', {
