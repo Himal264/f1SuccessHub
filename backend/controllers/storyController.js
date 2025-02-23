@@ -147,11 +147,27 @@ export const deleteStory = async (req, res) => {
 
 export const getStoriesByAuthor = async (req, res) => {
   try {
+    // First get one story to get author details
+    const authorStory = await Story.findOne({ author: req.params.authorId })
+      .populate('author', 'name profilePicture role counselorInfo alumniInfo universityInfo');
+    
+    if (!authorStory) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Author not found' 
+      });
+    }
+
+    // Get all stories by the author
     const stories = await Story.find({ author: req.params.authorId })
       .populate('author', 'name profilePicture')
       .sort('-createdAt');
 
-    res.json({ success: true, stories });
+    res.json({ 
+      success: true, 
+      author: authorStory.author,
+      stories 
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

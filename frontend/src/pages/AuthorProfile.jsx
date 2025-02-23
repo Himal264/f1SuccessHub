@@ -22,15 +22,13 @@ const AuthorProfile = () => {
   useEffect(() => {
     const fetchAuthorAndStories = async () => {
       try {
-        // Fetch author details
-        const authorResponse = await axios.get(`/api/users/${authorId}`);
-        setAuthor(authorResponse.data.user);
-
-        // Fetch author's stories
-        const storiesResponse = await axios.get(`/api/stories/author/${authorId}`);
+        // Single API call to get both author and stories
+        const response = await axios.get(`/api/stories/author/${authorId}`);
+        setAuthor(response.data.author);
+        
         const filteredStories = activeType === 'all' 
-          ? storiesResponse.data.stories 
-          : storiesResponse.data.stories.filter(story => story.storyType === activeType);
+          ? response.data.stories 
+          : response.data.stories.filter(story => story.storyType === activeType);
         
         setStories(filteredStories);
       } catch (error) {
@@ -50,33 +48,101 @@ const AuthorProfile = () => {
       {/* Author Hero Section */}
       <div className="relative bg-[#2A3342] text-white rounded-xl overflow-hidden">
         <div className="max-w-6xl mx-auto px-4 py-16">
-          <div className="flex items-center gap-8">
-            <img
-              src={author.profilePicture?.url || assets.default_profile_icon}
-              alt={author.name}
-              className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
-            />
-            <div>
+          <div className="flex flex-col md:flex-row md:items-start gap-8">
+            <div className="flex flex-col items-center">
+              <img
+                src={author.profilePicture?.url || assets.default_profile_icon}
+                alt={author.name}
+                className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
+              />
+            </div>
+            
+            <div className="flex-1">
               <h1 className="text-4xl font-serif font-bold mb-4">
                 {author.name}
               </h1>
-              <p className="text-lg text-gray-300">
+              
+              {/* Role-specific information */}
+              {author.role === 'university' && (
+                <div className="mb-4">
+                  <p className="text-gray-300 mb-2">
+                    {author.universityInfo?.location}
+                  </p>
+                 
+                </div>
+              )}
+
+              {/* Bio */}
+              <p className="text-lg text-gray-300 mb-6">
                 {author.role === 'counselor' && author.counselorInfo?.bio}
                 {author.role === 'alumni' && author.alumniInfo?.bio}
                 {author.role === 'university' && author.universityInfo?.bio}
               </p>
               
               {/* Social Links */}
-              <div className="flex gap-4 mt-4">
-                {author.role === 'counselor' && author.counselorInfo?.socialLinks && (
-                  Object.entries(author.counselorInfo.socialLinks).map(([platform, link]) => (
-                    link && <a key={platform} href={link} target="_blank" rel="noopener noreferrer" 
-                      className="text-white hover:text-[#F37021]">
-                      {platform}
-                    </a>
+              <div className="flex flex-wrap gap-6 mt-4">
+                {/* Website */}
+                {author.role === 'university' && author.universityInfo?.website && (
+                  <a 
+                    href={author.universityInfo.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white hover:text-[#F37021] transition-colors text-xl"
+                  >
+                    <i className="fas fa-globe"></i>
+                  </a>
+                )}
+
+                {/* University Social Links */}
+                {author.role === 'university' && author.universityInfo?.socialLinks && (
+                  Object.entries(author.universityInfo.socialLinks).map(([platform, link]) => (
+                    link && platform !== 'website' && (
+                      <a
+                        key={platform}
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-white hover:text-[#F37021] transition-colors text-xl"
+                      >
+                        <i className={`fab fa-${platform.toLowerCase()}`}></i>
+                      </a>
+                    )
                   ))
                 )}
-                {/* Add similar conditions for alumni and university roles */}
+
+                {/* Counselor Social Links */}
+                {author.role === 'counselor' && author.counselorInfo?.socialLinks && (
+                  Object.entries(author.counselorInfo.socialLinks).map(([platform, link]) => (
+                    link && (
+                      <a
+                        key={platform}
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-white hover:text-[#F37021] transition-colors text-xl"
+                      >
+                        <i className={`fab fa-${platform.toLowerCase()}`}></i>
+                      </a>
+                    )
+                  ))
+                )}
+
+                {/* Alumni Social Links */}
+                {author.role === 'alumni' && author.alumniInfo?.socialLinks && (
+                  Object.entries(author.alumniInfo.socialLinks).map(([platform, link]) => (
+                    link && (
+                      <a
+                        key={platform}
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-white hover:text-[#F37021] transition-colors text-xl"
+                      >
+                        <i className={`fab fa-${platform.toLowerCase()}`}></i>
+                      </a>
+                    )
+                  ))
+                )}
               </div>
             </div>
           </div>

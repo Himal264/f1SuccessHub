@@ -295,3 +295,9 @@ const Stories = () => {
 };
 
 export default Stories;
+ {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-4">
+              <Stories2FindSchool />
+            </div>
+          </div>
