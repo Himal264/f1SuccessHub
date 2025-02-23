@@ -49,6 +49,12 @@ import north_logo from "./UniversityNorthCarolinaAthletics.png"; //
 import vir_logo from "./Virginia.png"; //
 import wamu_logo from "./WaMu American University Radio.png"; //
 import default_profile_icon from "./profile-icon-png-909.png";
+import NewLandingpage from './Shorelight__New_Landing_Page.jpg';
+import fatimah from './Shorelight_Student_landing_page_Fatimah.jpg';
+import korean_studetn from './Shorelight_Study_in_USA_landing_page_Korean_Students.jpg';
+import student_career from './Shorelight_University_landing_page_Student_Career.jpg';
+import alllandings from './Shorelight_View_All_landing_page_Seattle.jpg'
+
 
 
 
@@ -97,6 +103,11 @@ const assets = {
   north_logo,
   vir_logo,
   wamu_logo,
+  NewLandingpage,
+  fatimah,
+  korean_studetn,
+  student_career,
+  alllandings,
 };
 
 export default assets;

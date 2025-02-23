@@ -54,7 +54,7 @@ export const createStory = async (req, res) => {
 export const getStories = async (req, res) => {
   try {
     const stories = await Story.find()
-      .populate('author', 'name role profilePicture')
+      .populate('author', 'name profilePicture')
       .sort('-createdAt');
     res.status(200).json({ success: true, stories });
   } catch (error) {

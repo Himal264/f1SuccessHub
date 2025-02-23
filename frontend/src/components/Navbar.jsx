@@ -510,23 +510,28 @@ const Navbar = () => {
             <p className="text-sm">Home</p>
             <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
           </NavLink>
-          {/* F1 Questions Dropdown */}
+          {/* F1 Questions Dropdown - Only visible on desktop */}
           <div 
-            className="relative"
-            onMouseEnter={() => {
-              console.log('Showing dropdown with types:', questionTypes); // Debug log
-              setShowF1Dropdown(true);
-            }}
+            className="relative hidden sm:block"
+            onMouseEnter={() => setShowF1Dropdown(true)}
             onMouseLeave={() => setShowF1Dropdown(false)}
           >
             <NavLink
               to="/f1questionsandanswers/all"
-              className="flex flex-col items-center gap-1 mr-4"
+              className={({ isActive }) => `
+                flex flex-col items-center gap-1 mr-4
+                ${isActive ? 'text-[#F37021]' : 'text-gray-700'}
+                hover:text-[#F37021] transition-colors
+              `}
             >
               <p className="text-sm">F1 Questions</p>
-              <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
+              <hr className={({ isActive }) => `
+                w-2/4 h-[1.5px] bg-[#F37021] transition-all duration-300
+                ${isActive ? 'block' : 'hidden'}
+              `} />
             </NavLink>
 
+            {/* Dropdown menu - Only show when showF1Dropdown is true and on desktop */}
             {showF1Dropdown && questionTypes.length > 0 && (
               <div className="absolute top-full left-0 w-48 bg-white rounded-md shadow-lg py-2 z-50">
                 {questionTypes.map((type, index) => (
@@ -534,10 +539,7 @@ const Navbar = () => {
                     key={index}
                     to={`/f1questionsandanswers/${type.toLowerCase().replace(/\s+/g, '-')}`}
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#F37021] transition-colors"
-                    onClick={() => {
-                      console.log('Selected type:', type); // Debug log
-                      setShowF1Dropdown(false);
-                    }}
+                    onClick={() => setShowF1Dropdown(false)}
                   >
                     {type}
                   </Link>
@@ -682,8 +684,9 @@ const Navbar = () => {
                 </svg>
               </button>
             </div>
+            {/* Mobile dropdown menu */}
             {showF1Dropdown && questionTypes.length > 0 && (
-              <div className="bg-gray-50 py-2">
+              <div className="bg-white py-2">
                 {questionTypes.map((type, index) => (
                   <Link
                     key={index}
