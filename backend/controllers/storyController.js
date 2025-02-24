@@ -65,7 +65,7 @@ export const getStories = async (req, res) => {
 export const getStoryById = async (req, res) => {
   try {
     const story = await Story.findById(req.params.id)
-      .populate('author', 'name role profilePicture');
+      .populate('author', 'name role profilePicture counselorInfo alumniInfo universityInfo');
     if (!story) {
       return res.status(404).json({ success: false, message: 'Story not found' });
     }

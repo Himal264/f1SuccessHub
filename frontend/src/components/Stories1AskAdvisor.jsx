@@ -20,7 +20,7 @@ const Stories1AskAdvisor = () => {
             application to arrival, at no additional cost to you.
           </p>
           <Link
-            to="/advisor" // Replace with your actual advisor route
+            to="/advisor-inquiriesform"
             className="inline-block bg-[#F37021] text-white px-6 py-2 rounded-full hover:bg-[#e85d0a] transition-colors duration-300"
           >
             Ask an Advisor →

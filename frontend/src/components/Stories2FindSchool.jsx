@@ -103,7 +103,7 @@ const Stories2FindSchool = () => {
 
           {/* CTA Button */}
           <Link
-            to="/find-school"
+            to="/universityform"
             className="inline-block w-full text-center bg-[#F37021] text-white px-6 py-3 rounded-full hover:bg-[#e85d0a] transition-colors duration-300"
           >
             Ask an Advisor →

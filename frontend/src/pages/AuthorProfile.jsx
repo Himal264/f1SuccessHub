@@ -47,7 +47,7 @@ const AuthorProfile = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Author Hero Section */}
       <div className="relative bg-[#2A3342] text-white rounded-xl overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 py-16">
+        <div className="max-w-6xl mx-auto px-4 py-5">
           <div className="flex flex-col md:flex-row md:items-start gap-8">
             <div className="flex flex-col items-center">
               <img
@@ -180,7 +180,7 @@ const AuthorProfile = () => {
                 to={`/stories/${story._id}`}
                 className="group"
               >
-                <div className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl relative h-full">
+                <div className="bg-white rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:shadow-xl hover:scale-103 transform relative h-full">
                   <div className="relative h-[250px]">
                     <img
                       src={story.photo?.url || assets.default_post_image}

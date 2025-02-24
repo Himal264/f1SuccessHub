@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Stories1AskAdvisor from "../components/Stories1AskAdvisor";
 import Stories2FindSchool from "../components/Stories2FindSchool";
+import Footer from "../components/Footer";
+import assets from "../assets/assets";
 
 // Add this CSS at the top of your component or in a separate CSS file
 const storyContentStyles = `
@@ -23,6 +25,7 @@ const StoriesDetail = () => {
   const [story, setStory] = useState(null);
   const [error, setError] = useState(null);
   const { id } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStory = async () => {
@@ -30,6 +33,7 @@ const StoriesDetail = () => {
         const { data } = await axios.get(`/api/stories/${id}`);
         if (data.success) {
           setStory(data.story);
+          console.log('Story data:', data.story);
         } else {
           setError(data.message || "Failed to fetch story");
         }
@@ -46,11 +50,25 @@ const StoriesDetail = () => {
   if (!story) return <div>Loading...</div>;
 
   return (
-    <div className="bg-white">
+    <div className="bg-gray-50">
       {/* Add the styles to the page */}
       <style>{storyContentStyles}</style>
 
       <div className="max-w-6xl mx-auto">
+        {/* Add Breadcrumb Navigation */}
+        <div className="py-4">
+          <div className="flex items-center text-xl">
+            <span 
+              onClick={() => navigate('/stories')} 
+              className="text-gray-600 hover:text-[#F37021] cursor-pointer"
+            >
+              Stories
+            </span>
+            <span className="mx-2 text-gray-400">{'>'}</span>
+            <span className="text-gray-600">{story.storyType}</span>
+          </div>
+        </div>
+
         {/* Title and Image Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
           {/* Left side - Title and Content */}
@@ -99,9 +117,11 @@ const StoriesDetail = () => {
                 <p className="text-gray-700 text-lg">
                   Let us help you find your best fit university!
                 </p>
-                <button className="bg-[#F37021] text-white px-6 py-2 rounded-full hover:bg-[#e85d0a] transition-colors whitespace-nowrap">
-                  Find your school
-                </button>
+                <Link to="/universityform">
+                  <button className="bg-[#F37021] text-white px-6 py-2 rounded-full hover:bg-[#e85d0a] transition-colors whitespace-nowrap">
+                    Find your school
+                  </button>
+                </Link>
               </div>
               <div className="border-t border-gray-200 mt-4"></div>
             </div>
@@ -160,6 +180,22 @@ const StoriesDetail = () => {
                 className="story-content"
               />
             </div>
+
+            {/* Author Box */}
+            <div 
+              onClick={() => navigate(`/author/${story.author._id}`)}
+              className="mt-12 p-8 bg-[#1F2937] text-white rounded-xl cursor-pointer hover:bg-opacity-90 transition-colors"
+            >
+              <div className="text-sm mb-2">Written By</div>
+              <h3 className="text-3xl font-serif font-bold mb-4">
+                {story.author?.name}
+              </h3>
+              <p className="text-sm text-gray-300">
+                {story.author?.role === 'counselor' && story.author?.counselorInfo?.bio}
+                {story.author?.role === 'alumni' && story.author?.alumniInfo?.bio}
+                {story.author?.role === 'university' && story.author?.universityInfo?.bio}
+              </p>
+            </div>
           </div>
           {/* Sidebar */}
           <div className="lg:col-span-1">
@@ -169,6 +205,7 @@ const StoriesDetail = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
