@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import assets from "../assets/assets";
 
@@ -9,6 +9,7 @@ const AuthorProfile = () => {
   const [stories, setStories] = useState([]);
   const [activeType, setActiveType] = useState("all");
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   // Story type navigation items
   const storyTypes = [
@@ -39,6 +40,19 @@ const AuthorProfile = () => {
 
     fetchAuthorAndStories();
   }, [authorId, activeType]);
+
+  const handleAboutClick = async (authorName) => {
+    if (author.role === 'university') {
+      try {
+        const response = await axios.get(`/api/university/name/${authorName}`);
+        if (response.data.university) {
+          navigate(`/university/${response.data.university._id}`);
+        }
+      } catch (error) {
+        console.error('Error fetching university:', error);
+      }
+    }
+  };
 
   if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
   if (!author) return <div className="text-center py-8">Loading...</div>;
@@ -144,13 +158,15 @@ const AuthorProfile = () => {
                   ))
                 )}
 
-                {/* About Icon - Moved to the end */}
-                <a 
-                  href="#about"
-                  className="text-white hover:text-[#F37021] transition-colors text-xl"
-                >
-                  <i className="fas fa-info-circle"></i>
-                </a>
+                {/* About Icon */}
+                {author.role === 'university' && (
+                  <button 
+                    onClick={() => handleAboutClick(author.name)}
+                    className="text-white hover:text-[#F37021] transition-colors text-xl"
+                  >
+                    <i className="fas fa-info-circle"></i>
+                  </button>
+                )}
               </div>
             </div>
           </div>

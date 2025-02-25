@@ -209,3 +209,30 @@ export const deleteUniversity = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const getUniversityByName = async (req, res) => {
+  try {
+    const { name } = req.params;
+
+    if (!name) {
+      return res.status(400).json({ message: "University name is required" });
+    }
+
+    console.log("Searching for university with name:", name);
+
+    const university = await University.findOne({ name: name });
+
+    if (!university) {
+      console.log("No university found for name:", name);
+      return res.status(404).json({ message: "University not found" });
+    }
+
+    res.status(200).json({ university });
+  } catch (error) {
+    console.error("Error in getUniversityByName:", error);
+    res.status(500).json({
+      message: "Error fetching university",
+      error: error.message,
+    });
+  }
+};

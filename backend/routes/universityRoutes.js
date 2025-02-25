@@ -5,6 +5,7 @@ import {
   addUniversity,
   updateUniversity,
   deleteUniversity,
+  getUniversityByName,
 } from "../controllers/universityControllers.js";
 import  { upload }  from "../middlewares/multer.js";
 import adminAuth from "../middlewares/adminAuth.js";
@@ -46,5 +47,7 @@ universityRouter.get("/api/university/:id", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
+universityRouter.get("/name/:name", getUniversityByName);
 
 export default universityRouter;
