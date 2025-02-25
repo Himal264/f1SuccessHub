@@ -154,7 +154,7 @@ const StoriesDetail = () => {
                 By{" "}
                 <Link
                   to={`/author/${story.author._id}`}
-                  className="text-sm font-medium text-gray-900 hover:text-[#F37021]"
+                  className="text-sm underline font-medium text-gray-900 hover:text-[#F37021]"
                 >
                   {story.author?.name || "Anonymous"}
                 </Link>

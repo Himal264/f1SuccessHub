@@ -29,6 +29,7 @@ const StoriesAdd = () => {
       'Carnegie Mellon University',
       'Harvard University',
       'MIT',
+      'Youngstown State University',
       // ... add more universities
     ],
     // Countries

@@ -172,3 +172,20 @@ export const getStoriesByAuthor = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const getStoriesByUniversityTag = async (req, res) => {
+  try {
+    const universityName = req.params.universityName;
+    
+    const stories = await Story.find({
+      tags: { $regex: new RegExp(universityName, 'i') }
+    })
+    .populate('author', 'name profilePicture')
+    .sort('-createdAt')
+    .limit(3); // Limit to 3 most recent stories
+
+    res.status(200).json({ success: true, stories });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

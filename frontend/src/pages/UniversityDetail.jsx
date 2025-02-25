@@ -11,7 +11,8 @@ import Footer from "../components/Footer";
 import AboutSection from "../components/AboutSection";
 import ScholarshipSection from "../components/ScholarshipSection";
 import RelatedUniversities from "../components/RelatedUniversities";
-import FAQpage from "./FAQpage"
+import FAQpage from "./FAQpage";
+import StoryUniversityCard from "../components/StoryUniversityCard";
 
 const UniversityDetail = () => {
   const { id } = useParams();
@@ -148,6 +149,12 @@ const UniversityDetail = () => {
 
           {/* Active Section Content */}
           {renderActiveSection()}
+
+          {universityData?.university && (
+            <StoryUniversityCard 
+              universityName={universityData.university.name} 
+            />
+          )}
 
           {universityData?.university && (
             <RelatedUniversities currentUniversity={universityData.university} />

@@ -7,7 +7,8 @@ import {
   getStoryById,
   updateStory,
   deleteStory,
-  getStoriesByAuthor
+  getStoriesByAuthor,
+  getStoriesByUniversityTag
 } from '../controllers/storyController.js';
 
 const router = express.Router();
@@ -46,4 +47,7 @@ router.delete(
 
 router.get('/author/:authorId', getStoriesByAuthor);
 
+router.get('/university/:universityName', getStoriesByUniversityTag);
+
 export default router;
+
