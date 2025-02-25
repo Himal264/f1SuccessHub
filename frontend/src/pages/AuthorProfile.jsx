@@ -143,6 +143,14 @@ const AuthorProfile = () => {
                     )
                   ))
                 )}
+
+                {/* About Icon - Moved to the end */}
+                <a 
+                  href="#about"
+                  className="text-white hover:text-[#F37021] transition-colors text-xl"
+                >
+                  <i className="fas fa-info-circle"></i>
+                </a>
               </div>
             </div>
           </div>
