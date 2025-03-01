@@ -498,7 +498,7 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between font-medium py-5 w-full">
+      <div className="flex items-center justify-between font-medium py-5 w-full relative">
         {/* Logo */}
         <Link to="/">
           <img className="w-36" src={assets.f1successhubLogo} alt="Logo" />
@@ -507,43 +507,21 @@ const Navbar = () => {
         {/* Desktop Navigation with Debug Info */}
         <ul className="hidden sm:flex items-center justify-end gap-5 text-sm text-gray-700 ml-auto">
           <NavLink to="/" className="flex flex-col items-center gap-1 mr-4">
-            <p className="text-sm">Home</p>
+            <p className="text-[#333333]">Home</p>
             <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
           </NavLink>
-          {/* F1 Questions Dropdown */}
-          <div 
-            className="relative hidden sm:block"
-            onMouseEnter={() => setShowF1Dropdown(true)}
-            onMouseLeave={() => setShowF1Dropdown(false)}
-          >
-            <NavLink
-              to="/f1questionsandanswers/all"
-              className="flex flex-col items-center gap-1 mr-4 text-gray-700"
+          <NavLink
+              to="/f1questionsandanswers"
+              className="flex flex-col items-center gap-1 mr-4 text-gray-700 f1-dropdown"
             >
-              <p className="text-sm">F1 Questions</p>
+              <p className="text-[#333333]">F1 Questions</p>
               <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
             </NavLink>
-
-            {showF1Dropdown && questionTypes.length > 0 && (
-              <div className="absolute top-full left-0 w-48 bg-white rounded-md shadow-lg py-2 z-50">
-                {questionTypes.map((type, index) => (
-                  <Link
-                    key={index}
-                    to={`/f1questionsandanswers/${type.toLowerCase().replace(/\s+/g, '-')}`}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    onClick={() => setShowF1Dropdown(false)}
-                  >
-                    {type}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
           <NavLink
             to="/stories"
             className="flex flex-col items-center gap-1 mr-4"
           >
-            <p className="text-sm">Stories</p>
+            <p className="text-[#333333]">Stories</p>
             <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
           </NavLink>
 
@@ -551,7 +529,7 @@ const Navbar = () => {
             to="/event"
             className="flex flex-col items-center gap-1 mr-4"
           >
-            <p className="text-sm">Events</p>
+            <p className="text-[#333333]">Events</p>
             <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
           </NavLink>
 
@@ -559,7 +537,7 @@ const Navbar = () => {
             to="/universityform"
             className="flex flex-col items-center gap-1 mr-4"
           >
-            <p className="text-sm text-white border bg-[#F37021]  border-[#F37021] px-2 rounded-l-full rounded-r-full">
+            <p className="text-[#F8F9FA] border bg-[#002349] border-[#002349] px-2 rounded-l-full rounded-r-full">
               Find University
             </p>
           </NavLink>
@@ -655,7 +633,7 @@ const Navbar = () => {
         </ul>
 
         {/* Mobile Navigation */}
-        <div className="sm:hidden">
+        <div className="sm:hidden f1-dropdown">
           <NavLink
             onClick={() => setVisible(false)}
             className="py-2 pl-6 border-b relative"
@@ -663,142 +641,28 @@ const Navbar = () => {
           >
             <div className="flex justify-between items-center pr-4">
               <span>F1 Questions</span>
-              <button 
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setShowF1Dropdown(!showF1Dropdown);
-                }}
-                className="p-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
             </div>
-            {/* Mobile dropdown menu */}
-            {showF1Dropdown && questionTypes.length > 0 && (
-              <div className="bg-white py-2">
-                {questionTypes.map((type, index) => (
-                  <Link
-                    key={index}
-                    to={`/f1questionsandanswers/${type.toLowerCase().replace(/\s+/g, '-')}`}
-                    className="block px-8 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#F37021]"
-                    onClick={() => {
-                      setVisible(false);
-                      setShowF1Dropdown(false);
-                    }}
-                  >
-                    {type}
-                  </Link>
-                ))}
-              </div>
-            )}
           </NavLink>
         </div>
 
         {/* Search Icon & Mobile Menu */}
         <div className="flex items-center gap-6">
           <img
-            onClick={() => setVisible(!visible)} // Toggle sidebar visibility
+            onClick={() => setVisible(!visible)}
             src={assets.menu_icon}
             className="w-5 cursor-pointer sm:hidden"
             alt=""
           />
         </div>
+      </div>
 
-        {/* Sidebar Menu for Small Screens */}
-        <div
-          className={`absolute top-0 left-0 bottom-0 z-50 bg-white transition-all duration-300 ease-in-out ${
-            visible ? "w-full opacity-100" : "w-0 opacity-0"
-          } sm:hidden`}
-        >
-          {/* Sidebar Content */}
-          <div
-            className={`flex flex-col text-gray-600 h-full transition-all duration-300 ease-in-out ${
-              visible ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <div
-              onClick={() => setVisible(false)} // Close the sidebar
-              className="flex items-center gap-4 p-3 cursor-pointer"
-            >
-              <img
-                className="h-4 rotate-180"
-                src={assets.dropdown_icon}
-                alt=""
-              />
-              <p>Back</p>
-            </div>
-            <NavLink
-              onClick={() => setVisible(false)} // Close the sidebar when a link is clicked
-              className="py-2 pl-6 border-b"
-              to="/"
-            >
-              Home
-            </NavLink>
-            <NavLink
-              onClick={() => setVisible(false)} // Close the sidebar when a link is clicked
-              className="py-2 pl-6 border-b"
-              to="/universityform"
-            >
-              Find University
-            </NavLink>
-            <NavLink
-              onClick={() => setVisible(false)} // Close the sidebar when a link is clicked
-              className="py-2 pl-6 border-b"
-              to="/f1questionsandanswers/all"
-            >
-              F1 Questions
-            </NavLink>
-            <NavLink
-              onClick={() => setVisible(false)} // Close the sidebar when a link is clicked
-              className="py-2 pl-6 border-b"
-              to="/f1successhub-ourservices"
-            >
-              The Services We Provide ?
-            </NavLink>
-            <NavLink
-              onClick={() => setVisible(false)} // Close the sidebar when a link is clicked
-              className="py-2 pl-6 border-b"
-              to="/f1successhub-ourpatners"
-            >
-              Our Patners ?
-            </NavLink>
-            <NavLink
-              onClick={() => setVisible(false)} // Close the sidebar when a link is clicked
-              className="py-2 pl-6 border-b"
-              to="/forf1success"
-            >
-              What F1 Visa Success Matters?
-            </NavLink>
-            <NavLink
-              onClick={() => setVisible(false)} // Close the sidebar when a link is clicked
-              className="py-2 pl-6 border-b"
-              to="/f1successhubfaqs?"
-            >
-              F1SuccessHub FAQs?
-            </NavLink>
-            <NavLink
-              onClick={() => setVisible(false)} // Close the sidebar when a link is clicked
-              className="py-2 pl-6 border-b"
-              to="/aboutus"
-            >
-              About Us
-            </NavLink>
-            <NavLink
-              onClick={() => setVisible(false)} // Close the sidebar when a link is clicked
-              className="py-2 pl-6 border-b"
-              to="/loginform"
-            >
-              Profile
-            </NavLink>
-          </div>
-        </div>
+      {/* Red Triangle - Moved outside the navbar */}
+      <div className="fixed top-0 right-0 w-10 h-20 overflow-hidden z-10">
+        <div className="absolute top-0 right-0 w-20 h-40 bg-red-600 transform rotate-45 translate-x-20 -translate-y-20"></div>
       </div>
 
       {/* Update the chat button positioning */}
-      <div className="fixed bottom-5 right-[10%] z-40">
+      <div className={`fixed bottom-5 right-5 z-40 ${showChatContainer ? 'w-11/12 md:w-80' : ''}`}>
         <button
           onClick={handleChatClick}
           className="bg-[#F37021] hover:bg-[#e85d0a] text-white rounded-full p-3 shadow-lg transition-all duration-300 ease-in-out hover:scale-110 flex flex-col items-center"
@@ -814,6 +678,7 @@ const Navbar = () => {
             isOpen={showChatContainer} 
             onClose={() => setShowChatContainer(false)}
             user={user}
+            className="w-full md:w-80"
           />
         )}
       </div>

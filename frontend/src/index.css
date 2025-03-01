@@ -25,6 +25,13 @@ a.active hr, a:hover hr {
   display: none;
 }
 
+/* Hide F1 dropdown for screens below 825px */
+@media (max-width: 825px) {
+  .f1-dropdown {
+    display: none !important;
+  }
+}
+
 @media (max-width:640px){
   a:hover {
     background-color: black;

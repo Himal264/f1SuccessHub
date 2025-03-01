@@ -36,3 +36,17 @@ questionand answer seperate per question and answer page
 
 
 https://shorelight.com/student-stories/igcse-exams-a-complete-guide-for-international-students/
+
+
+
+: Blue (#002349), gold (#957C3D)
+
+✔ White (#F8F9FA) – For a clean, crisp contrast.
+✔ Charcoal Gray (#333333) – To add depth without overpowering.
+✔ Muted Beige (#EAE0C8) – A soft neutral to balance the richness.
+
+
+
+🖤 Rich Black (#0D0D0D) – A deep black that feels bold and premium.
+🎩 Charcoal Black (#1A1A1A) – Slightly softened black for a refined look.
+🕶 Midnight Black (#121212) – A deep, slightly warm-toned black for a luxurious feel.
