@@ -135,7 +135,7 @@ const UniversityDetail = () => {
                       onClick={() => handleNavClick(item.id)}
                       className={`w-full lg:w-auto py-4 px-2 border-b-2 transition-colors ${
                         activeSection === item.id
-                          ? "border-blue-900 text-blue-900"
+                          ? "border-[#002349] text-[#002349"
                           : "border-transparent text-gray-600 hover:text-blue-900"
                       }`}
                     >
@@ -162,7 +162,7 @@ const UniversityDetail = () => {
 
           <button 
             onClick={handleApplyNow}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md"
+            className="bg-[#002349] text-white px-6 py-2 rounded-md"
           >
             Apply Now
           </button>

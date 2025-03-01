@@ -54,7 +54,12 @@ const StoriesAdd = () => {
       'Computer Science',
       'Business',
       'Finance',
+
       // ... add more majors
+    ],
+    //others
+    others:[
+      'announcement'
     ]
   };
 

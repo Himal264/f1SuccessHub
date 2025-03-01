@@ -210,7 +210,7 @@ const UniPageHero = ({ university }) => {
                 </span>
               </div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-blue-900">
+                <span className="text-sm font-medium text-[#002349]">
                   #{university?.rankings?.world} World Universities
                 </span>
                 <span className="text-xs text-gray-500">QS World Rankings</span>
@@ -292,7 +292,7 @@ const UniPageHero = ({ university }) => {
                     </div>
 
                     {selectedIntake && (
-                      <div className="bg-blue-900 p-2 rounded-lg text-white h-14">
+                      <div className="bg-[#002349] p-2 rounded-lg text-white h-14">
                         <p className="text-sm leading-tight">
                           There are{" "}
                           <span className="font-bold">{monthsLeft} months</span>{" "}
@@ -321,12 +321,12 @@ const UniPageHero = ({ university }) => {
                   }}
                   className="w-full"
                 >
-                  <button className="w-full bg-blue-900 text-white py-2 px-3 rounded-md hover:bg-blue-800 transition-colors font-medium text-sm mb-2 lg:mb-0">
+                  <button className="w-full bg-[#002349] text-white py-2 px-3 rounded-md hover:bg-[#002349] transition-colors font-medium text-sm mb-2 lg:mb-0">
                     Apply Now
                   </button>
                 </Link>
                 <Link to="/advisor-inquiriesform" className="w-full">
-                  <button className="w-full bg-white border-2 border-blue-900 text-blue-900 py-2 px-3 rounded-md hover:bg-blue-50 transition-colors font-medium text-sm">
+                  <button className="w-full bg-white border-2 border-[#002349] text-[#002349] py-2 px-3 rounded-md hover:bg-blue-50 transition-colors font-medium text-sm">
                     Ask an Advisor
                   </button>
                 </Link>

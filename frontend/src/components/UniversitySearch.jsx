@@ -94,7 +94,7 @@ const UniversitySearch = () => {
 
           <button
             onClick={handleSearch}
-            className="w-full sm:w-auto bg-[#F37021] hover:bg-[#e26417] text-white px-4 sm:px-6 py-2 rounded-md flex items-center justify-center gap-2 text-sm sm:text-base transition-colors duration-300"
+            className="w-full sm:w-auto bg-[#002349] hover:bg-[#002349] text-white px-4 sm:px-6 py-2 rounded-md flex items-center justify-center gap-2 text-sm sm:text-base transition-colors duration-300"
           >
             <Search className="h-4 w-4 sm:h-5 sm:w-5" />
             Search

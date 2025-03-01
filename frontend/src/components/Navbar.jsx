@@ -487,7 +487,7 @@ const Navbar = () => {
 
           <button
             type="submit"
-            className="w-full bg-[#F37021] text-white py-2 rounded-md hover:bg-[#e85d0a]"
+            className="w-full bg-[#002349] text-white py-2 rounded-md hover:bg-[#002349]"
           >
             Save Changes
           </button>
@@ -498,13 +498,13 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between font-medium py-5 w-full relative border-b shadow-sm pl-20">
+      <div className="flex items-center justify-between font-medium bg-[#F8F9FA] py-3 w-full relative border-b shadow-sm pl-4 sm:pl-20">
         {/* Logo */}
         <Link to="/">
           <img className="w-36" src={assets.f1successhubLogo} alt="Logo" />
         </Link>
 
-        {/* Desktop Navigation with Debug Info */}
+        {/* Desktop Navigation */}
         <ul className="hidden sm:flex items-center justify-end gap-5 text-sm text-gray-700 ml-auto relative z-10 mr-12">
           <NavLink to="/" className="flex flex-col items-center gap-1 mr-4">
             <p className="text-[#333333]">Home</p>
@@ -618,7 +618,7 @@ const Navbar = () => {
 
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-6 py-3 text-sm text-red-600 hover:bg-red-50"
+                      className="block w-full text-left px-6 py-3 text-sm text-[#002349] hover:bg-red-50"
                     >
                       Logout
                     </button>
@@ -632,40 +632,79 @@ const Navbar = () => {
           </div>
         </ul>
 
-        {/* Mobile Navigation */}
-        <div className="sm:hidden f1-dropdown">
-          <NavLink
-            onClick={() => setVisible(false)}
-            className="py-2 pl-6 border-b relative"
-            to="/f1questionsandanswers/all"
-          >
-            <div className="flex justify-between items-center pr-4">
-              <span>F1 Questions</span>
-            </div>
+        {/* Mobile Navigation - Updated */}
+        <div className="sm:hidden flex items-center gap-4 mr-24">
+          <NavLink to="/" className="flex flex-col items-center gap-1">
+            <img
+              src={assets.search_icon}
+              className="w-5 cursor-pointer"
+              alt=""
+            />
           </NavLink>
-        </div>
+          
+          {/* Profile Icon for Mobile */}
+          <div 
+            onClick={() => user ? setShowProfileDropdown(!showProfileDropdown) : setShowLogin(!showLogin)} 
+            className="flex flex-col items-center gap-1 cursor-pointer"
+          >
+            {user ? (
+              <div className="w-8 h-8 rounded-full overflow-hidden">
+                <img 
+                  src={user.profilePicture?.url || getDefaultProfilePicture(user.name)}
+                  alt={user.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <img
+                src={assets.default_profile_icon}
+                className="w-6 h-6 cursor-pointer rounded-full bg-gray-200 p-1"
+                alt="Profile"
+              />
+            )}
+          </div>
 
-        {/* Search Icon & Mobile Menu */}
-        <div className="flex items-center gap-6">
+          {/* Menu Icon */}
           <img
             onClick={() => setVisible(!visible)}
             src={assets.menu_icon}
-            className="w-5 cursor-pointer sm:hidden"
+            className="w-5 cursor-pointer"
             alt=""
           />
         </div>
 
-        {/* Red Triangle - Lower z-index */}
+        {/* Red Triangle - Updated for mobile responsiveness */}
         <div className="absolute top-0 right-0 w-20 h-full overflow-hidden z-0">
-          <div className="absolute top-0 right-0 w-28 h-28 bg-red-600 transform rotate-45 translate-x-14 -translate-y-14"></div>
+          <div className="absolute top-0 right-0 w-28 h-24 bg-[#002349] transform rotate-45 translate-x-14 -translate-y-14"></div>
         </div>
       </div>
+
+      {/* Mobile Menu Dropdown - Add this section */}
+      {visible && (
+        <div className="sm:hidden absolute top-full left-0 w-full bg-white shadow-md z-50">
+          <NavLink to="/" className="block px-6 py-3 hover:bg-gray-100">
+            Home
+          </NavLink>
+          <NavLink to="/f1questionsandanswers" className="block px-6 py-3 hover:bg-gray-100">
+            F1 Questions
+          </NavLink>
+          <NavLink to="/stories" className="block px-6 py-3 hover:bg-gray-100">
+            Stories
+          </NavLink>
+          <NavLink to="/event" className="block px-6 py-3 hover:bg-gray-100">
+            Events
+          </NavLink>
+          <NavLink to="/universityform" className="block px-6 py-3 hover:bg-gray-100">
+            Find University
+          </NavLink>
+        </div>
+      )}
 
       {/* Update the chat button positioning */}
       <div className={`fixed bottom-5 right-5 z-40 ${showChatContainer ? 'w-11/12 md:w-80' : ''}`}>
         <button
           onClick={handleChatClick}
-          className="bg-[#F37021] hover:bg-[#e85d0a] text-white rounded-full p-3 shadow-lg transition-all duration-300 ease-in-out hover:scale-110 flex flex-col items-center"
+          className="bg-[#002349] hover:bg-[#002349] text-white rounded-full p-3 shadow-lg transition-all duration-300 ease-in-out hover:scale-110 flex flex-col items-center"
           title={user ? "Open Messages" : "Login to Message"}
         >
           <IoChatbubbleEllipsesOutline size={24} />
@@ -716,7 +755,7 @@ const Navbar = () => {
                   {isSigningUp ? "Already have an account? " : "Don't have an account? "}
                   <button
                     onClick={() => setIsSigningUp(!isSigningUp)}
-                    className="text-[#F37021] hover:text-orange-600"
+                    className="text-[#002349] hover:text-orange-600"
                   >
                     {isSigningUp ? "Login here" : "Create an account"}
                   </button>
