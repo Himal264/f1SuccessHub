@@ -50,3 +50,7 @@ https://shorelight.com/student-stories/igcse-exams-a-complete-guide-for-internat
 🖤 Rich Black (#0D0D0D) – A deep black that feels bold and premium.
 🎩 Charcoal Black (#1A1A1A) – Slightly softened black for a refined look.
 🕶 Midnight Black (#121212) – A deep, slightly warm-toned black for a luxurious feel.
+
+
+
+https://openasset.com/blog/construction-website-examples/

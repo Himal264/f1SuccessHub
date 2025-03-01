@@ -498,10 +498,10 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between font-medium py-5 w-full relative border-b shadow-sm">
+      <div className="flex items-center justify-between font-medium py-5 w-full relative border-b shadow-sm pl-20">
         {/* Logo */}
         <Link to="/">
-          <img className="w-36 ml-5" src={assets.f1successhubLogo} alt="Logo" />
+          <img className="w-36" src={assets.f1successhubLogo} alt="Logo" />
         </Link>
 
         {/* Desktop Navigation with Debug Info */}
