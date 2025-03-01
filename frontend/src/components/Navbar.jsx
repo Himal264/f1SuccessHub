@@ -498,14 +498,14 @@ const Navbar = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between font-medium py-5 w-full relative">
+      <div className="flex items-center justify-between font-medium py-5 w-full relative border-b shadow-sm">
         {/* Logo */}
         <Link to="/">
-          <img className="w-36" src={assets.f1successhubLogo} alt="Logo" />
+          <img className="w-36 ml-5" src={assets.f1successhubLogo} alt="Logo" />
         </Link>
 
         {/* Desktop Navigation with Debug Info */}
-        <ul className="hidden sm:flex items-center justify-end gap-5 text-sm text-gray-700 ml-auto">
+        <ul className="hidden sm:flex items-center justify-end gap-5 text-sm text-gray-700 ml-auto relative z-10 mr-12">
           <NavLink to="/" className="flex flex-col items-center gap-1 mr-4">
             <p className="text-[#333333]">Home</p>
             <hr className="w-2/4 border-none hidden h-[1.5px] bg-gray-700" />
@@ -550,8 +550,8 @@ const Navbar = () => {
             />
           </NavLink>
 
-          {/* Profile Section */}
-          <div className="relative">
+          {/* Profile Section - Added z-index */}
+          <div className="relative z-10">
             <div 
               onClick={() => user ? setShowProfileDropdown(!showProfileDropdown) : setShowLogin(!showLogin)} 
               className="flex flex-col items-center gap-1 cursor-pointer"
@@ -654,11 +654,11 @@ const Navbar = () => {
             alt=""
           />
         </div>
-      </div>
 
-      {/* Red Triangle - Moved outside the navbar */}
-      <div className="fixed top-0 right-0 w-10 h-20 overflow-hidden z-10">
-        <div className="absolute top-0 right-0 w-20 h-40 bg-red-600 transform rotate-45 translate-x-20 -translate-y-20"></div>
+        {/* Red Triangle - Lower z-index */}
+        <div className="absolute top-0 right-0 w-20 h-full overflow-hidden z-0">
+          <div className="absolute top-0 right-0 w-28 h-28 bg-red-600 transform rotate-45 translate-x-14 -translate-y-14"></div>
+        </div>
       </div>
 
       {/* Update the chat button positioning */}
