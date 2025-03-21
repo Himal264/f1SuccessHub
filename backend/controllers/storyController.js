@@ -53,9 +53,18 @@ export const createStory = async (req, res) => {
 
 export const getStories = async (req, res) => {
   try {
-    const stories = await Story.find()
+    const { storyType, limit = 10 } = req.query;
+    
+    let query = {};
+    if (storyType) {
+      query.storyType = storyType;
+    }
+
+    const stories = await Story.find(query)
       .populate('author', 'name profilePicture')
-      .sort('-createdAt');
+      .sort('-createdAt')
+      .limit(parseInt(limit));
+      
     res.status(200).json({ success: true, stories });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

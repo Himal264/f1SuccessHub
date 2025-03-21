@@ -575,59 +575,64 @@ const Navbar = () => {
 
             {/* Profile Dropdown */}
             {showProfileDropdown && user && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50">
-                {!isEditingProfile ? (
-                  <>
-                    {/* Normal Profile View */}
-                    {renderProfileView()}
+              <>
+                <div 
+                  className="fixed inset-0 z-30"
+                  onClick={() => setShowProfileDropdown(false)}
+                />
+                <div className="absolute right-0 mt-2 w-80 bg-[#F8F9FA] rounded-md shadow-lg py-1 z-50">
+                  {!isEditingProfile ? (
+                    <>
+                      {renderProfileView()}
 
-                    <button
-                      onClick={() => setIsEditingProfile(true)}
-                      className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Edit Profile Settings
-                    </button>
-
-                    {/* Role-specific Options */}
-                    {user.role === 'user' && (
                       <button
-                        onClick={() => navigate('/applied-universities')}
+                        onClick={() => setIsEditingProfile(true)}
                         className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
                       >
-                        Applied Universities
+                        Edit Profile Settings
                       </button>
-                    )}
 
-                    {/* Add Stories and Create Event options for specific roles */}
-                    {(user.role === 'counselor' || user.role === 'alumni' || user.role === 'university') && (
-                      <>
+                      {/* Role-specific Options */}
+                      {user.role === 'user' && (
                         <button
-                          onClick={() => navigate('/stories/add')}
+                          onClick={() => navigate('/applied-universities')}
                           className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          Add Story
+                          Applied Universities
                         </button>
-                        <button
-                          onClick={() => navigate('/event/add')}
-                          className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          Create Event
-                        </button>
-                      </>
-                    )}
+                      )}
 
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-6 py-3 text-sm text-[#002349] hover:bg-red-50"
-                    >
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  /* Edit Profile View */
-                  renderEditForm()
-                )}
-              </div>
+                      {/* Add Stories and Create Event options for specific roles */}
+                      {(user.role === 'counselor' || user.role === 'alumni' || user.role === 'university') && (
+                        <>
+                          <button
+                            onClick={() => navigate('/stories/add')}
+                            className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            Add Story
+                          </button>
+                          <button
+                            onClick={() => navigate('/event/add')}
+                            className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            Create Event
+                          </button>
+                        </>
+                      )}
+
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-6 py-3 text-sm text-[#002349] hover:bg-red-50"
+                      >
+                        Logout
+                      </button>
+                    </>
+                  ) : (
+                    /* Edit Profile View */
+                    renderEditForm()
+                  )}
+                </div>
+              </>
             )}
           </div>
         </ul>
@@ -642,10 +647,10 @@ const Navbar = () => {
             />
           </NavLink>
           
-          {/* Profile Icon for Mobile */}
+          {/* Profile Icon for Mobile - Add hidden class */}
           <div 
             onClick={() => user ? setShowProfileDropdown(!showProfileDropdown) : setShowLogin(!showLogin)} 
-            className="flex flex-col items-center gap-1 cursor-pointer"
+            className="hidden sm:flex flex-col items-center gap-1 cursor-pointer"
           >
             {user ? (
               <div className="w-8 h-8 rounded-full overflow-hidden">
@@ -768,14 +773,13 @@ const Navbar = () => {
         </div>
       )}
 
-      {/* Update the overlay */}
-      {(showLogin || showProfileDropdown) && (
+      {/* Update the overlay to only show for login modal, not profile dropdown */}
+      {showLogin && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-30"
           onClick={() => {
             setShowLogin(false);
-            setShowProfileDropdown(false);
-            setShowChatContainer(false);
+            setIsSigningUp(false);
           }}
         />
       )}

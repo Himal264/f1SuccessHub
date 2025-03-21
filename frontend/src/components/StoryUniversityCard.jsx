@@ -9,33 +9,51 @@ const StoryUniversityCard = ({ universityName }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchUniversityStories = async () => {
+    const fetchStories = async () => {
       try {
-        const response = await axios.get(`/api/stories/university/${encodeURIComponent(universityName)}`);
-        if (response.data.success) {
-          setStories(response.data.stories);
+        // First try to fetch university-specific stories
+        const uniResponse = await axios.get(`/api/stories/university/${encodeURIComponent(universityName)}`);
+        
+        if (uniResponse.data.success && uniResponse.data.stories.length > 0) {
+          setStories(uniResponse.data.stories);
+        } else {
+          // If no university stories, fetch recent news stories
+          const newsResponse = await axios.get('/api/stories', {
+            params: {
+              storyType: 'news',
+              limit: 3
+            }
+          });
+          
+          if (newsResponse.data.success) {
+            setStories(newsResponse.data.stories);
+          }
         }
       } catch (err) {
         setError('Failed to fetch stories');
-        console.error('Error fetching university stories:', err);
+        console.error('Error fetching stories:', err);
       } finally {
         setLoading(false);
       }
     };
 
     if (universityName) {
-      fetchUniversityStories();
+      fetchStories();
     }
   }, [universityName]);
 
   if (loading) return <div className="text-center py-4">Loading stories...</div>;
-  if (error) return null; // Don't show anything if there's an error
-  if (stories.length === 0) return null; // Don't show the section if there are no stories
+  if (error) return null;
+  if (stories.length === 0) return null;
+
+  const sectionTitle = stories.some(story => story.tags?.includes(universityName))
+    ? `Stories about ${universityName}`
+    : "Recent News & Announcements";
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <h2 className="text-3xl font-bold text-gray-900 mb-8">
-        Stories about {universityName}
+        {sectionTitle}
       </h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -52,6 +70,11 @@ const StoryUniversityCard = ({ universityName }) => {
                   alt={story.title}
                   className="w-full h-full object-cover"
                 />
+                {story.storyType === 'news' && (
+                  <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+                    News
+                  </div>
+                )}
               </div>
               
               <div className="p-6">

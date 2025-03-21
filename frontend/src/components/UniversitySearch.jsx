@@ -110,16 +110,33 @@ const UniversitySearch = () => {
           }
           .scroll-container {
             overflow: hidden;
-            margin: 20px 0;
+            margin: 10px 0;
           }
           .scroll-content {
             display: flex;
             width: max-content;
-            animation: scroll 10s linear infinite;
+            animation: scroll 20s linear infinite;
           }
           .university-card {
             width: 280px;
             flex-shrink: 0;
+            padding: 0.5rem;
+          }
+          @media (max-width: 768px) {
+            .university-card {
+              width: 200px;
+            }
+            .scroll-content {
+              animation: scroll 15s linear infinite;
+            }
+          }
+          @media (max-width: 480px) {
+            .university-card {
+              width: 160px;
+            }
+            .scroll-content {
+              animation: scroll 12s linear infinite;
+            }
           }
         `}
       </style>
@@ -131,19 +148,17 @@ const UniversitySearch = () => {
           <div className="scroll-container">
             <div className="scroll-content">
               {[...firstRow, ...firstRow].map((uni, index) => (
-                <div key={`${uni._id}-${index}`} className="university-card p-4">
+                <div key={`${uni._id}-${index}`} className="university-card">
                   <Link to={`/university/${uni._id}`}>
-                    {" "}
-                    {/* Wrap with Link */}
-                    <div className="bg-white rounded-lg p-6 flex flex-col items-center">
-                      <div className="h-20 w-20 mb-4 flex items-center justify-center">
+                    <div className="bg-white rounded-lg p-3 sm:p-4 md:p-6 flex flex-col items-center">
+                      <div className="h-12 sm:h-16 md:h-20 w-12 sm:w-16 md:w-20 mb-2 sm:mb-3 md:mb-4 flex items-center justify-center">
                         <img
                           src={uni.logoUrl || "/api/placeholder/80/80"}
                           alt={uni.name}
                           className="max-h-full max-w-full object-contain"
                         />
                       </div>
-                      <h3 className="text-center font-medium text-gray-800">
+                      <h3 className="text-center font-medium text-gray-800 text-xs sm:text-sm md:text-base">
                         {uni.name}
                       </h3>
                     </div>
@@ -157,19 +172,17 @@ const UniversitySearch = () => {
           <div className="scroll-container">
             <div className="scroll-content">
               {[...secondRow, ...secondRow].map((uni, index) => (
-                <div key={`${uni._id}-${index}`} className="university-card p-4">
+                <div key={`${uni._id}-${index}`} className="university-card">
                   <Link to={`/university/${uni._id}`}>
-                    {" "}
-                    {/* Wrap with Link */}
-                    <div className="bg-white rounded-lg p-6 flex flex-col items-center">
-                      <div className="h-20 w-20 mb-4 flex items-center justify-center">
+                    <div className="bg-white rounded-lg p-3 sm:p-4 md:p-6 flex flex-col items-center">
+                      <div className="h-12 sm:h-16 md:h-20 w-12 sm:w-16 md:w-20 mb-2 sm:mb-3 md:mb-4 flex items-center justify-center">
                         <img
                           src={uni.logoUrl || "/api/placeholder/80/80"}
                           alt={uni.name}
                           className="max-h-full max-w-full object-contain"
                         />
                       </div>
-                      <h3 className="text-center font-medium text-gray-800">
+                      <h3 className="text-center font-medium text-gray-800 text-xs sm:text-sm md:text-base">
                         {uni.name}
                       </h3>
                     </div>
