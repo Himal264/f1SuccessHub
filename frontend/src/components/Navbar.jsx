@@ -603,7 +603,7 @@ const Navbar = () => {
                       )}
 
                       {/* Add Stories and Create Event options for specific roles */}
-                      {(user.role === 'counselor' || user.role === 'alumni' || user.role === 'university') && (
+                      {(user.role === 'counselor' || user.role === 'alumni' || user.role === 'university' || user.role === 'F1SuccessHub Team') && (
                         <>
                           <button
                             onClick={() => navigate('/stories/add')}

@@ -71,7 +71,6 @@ export const addUniversity = async (req, res) => {
       graduatePrograms: JSON.parse(graduatePrograms),
       scholarships: JSON.parse(scholarships),
       rankings: JSON.parse(rankings),
-
       feeStructure: JSON.parse(feeStructure),
       location: JSON.parse(location),
       contact: JSON.parse(contact),
@@ -132,6 +131,18 @@ export const addUniversity = async (req, res) => {
       locationPhoto = result.secure_url;
     }
 
+    // Initialize empty articles
+    const emptyArticle = {
+      title: "",
+      subtitle: "",
+      content: "",
+      photo: { url: "", public_id: "" },
+      tags: [],
+      autoLinks: [],
+      publishedAt: new Date()
+    };
+
+    // Add empty articles to all sections that should have them
     const university = new University({
       name,
       logoUrl,
@@ -142,12 +153,34 @@ export const addUniversity = async (req, res) => {
       acceptancerate,
       locationPhoto,
       location: {
+        ...parsedLocation,
         name: locationName,
         state,
         region,
         citysize,
-        ...otherLocationDetails,
+        article: emptyArticle
       },
+      undergraduatePrograms: {
+        ...parsedData.undergraduatePrograms,
+        article: emptyArticle
+      },
+      graduatePrograms: {
+        ...parsedData.graduatePrograms,
+        article: emptyArticle
+      },
+      feeStructure: {
+        undergraduate: {
+          ...parsedData.feeStructure.undergraduate,
+          article: emptyArticle
+        },
+        graduate: {
+          ...parsedData.feeStructure.graduate,
+          article: emptyArticle
+        }
+      },
+      scholarshipsArticle: emptyArticle,
+      descriptionArticle: emptyArticle,
+      admissionRequirementsArticle: emptyArticle,
       ...parsedData,
     });
 
@@ -194,13 +227,108 @@ export const updateUniversity = async (req, res) => {
   }
 };
 
+// New controller to handle article updates for specific sections
+export const updateUniversityArticle = async (req, res) => {
+  try {
+    const { id, section } = req.params;
+    const { title, subtitle, content, tags } = req.body;
+    
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid university ID format" });
+    }
+
+    // Find the university
+    const university = await University.findById(id);
+    if (!university) {
+      return res.status(404).json({ message: "University not found" });
+    }
+
+    // Upload article photo if present
+    let photoData = null;
+    if (req.files && req.files.articlePhoto) {
+      const result = await cloudinary.uploader.upload(req.files.articlePhoto[0].path, {
+        folder: "university-articles",
+      });
+      photoData = {
+        url: result.secure_url,
+        public_id: result.public_id
+      };
+    }
+
+    // Create the update object based on the section
+    const updateObj = {};
+    let updatePath = '';
+    
+    // Define the valid article sections and their paths in the database
+    const validSections = {
+      'undergraduatePrograms': 'undergraduatePrograms.article',
+      'graduatePrograms': 'graduatePrograms.article',
+      'scholarships': 'scholarshipsArticle',
+      'description': 'descriptionArticle',
+      'admissionRequirements': 'admissionRequirementsArticle',
+      'location': 'location.article',
+      'feeStructureUndergraduate': 'feeStructure.undergraduate.article',
+      'feeStructureGraduate': 'feeStructure.graduate.article',
+      'intake': 'intake.article'
+    };
+
+    // Check if the section is valid
+    if (!validSections[section]) {
+      return res.status(400).json({ message: "Invalid article section" });
+    }
+
+    updatePath = validSections[section];
+    
+    // Create the article update object
+    const articleUpdate = {
+      title: title || '',
+      subtitle: subtitle || '',
+      content: content || '',
+      tags: tags ? JSON.parse(tags) : [],
+      publishedAt: new Date()
+    };
+
+    // Add photo if uploaded
+    if (photoData) {
+      articleUpdate.photo = photoData;
+    }
+
+    // Set the path for the update
+    updateObj[updatePath] = articleUpdate;
+
+    // Perform the update
+    const updatedUniversity = await University.findByIdAndUpdate(
+      id,
+      { $set: updateObj },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUniversity) {
+      return res.status(500).json({ message: "Failed to update university article" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `${section} article updated successfully`,
+      data: updatedUniversity
+    });
+    
+  } catch (error) {
+    console.error("Error updating university article:", error);
+    res.status(500).json({ 
+      message: "An error occurred while updating the university article",
+      error: error.message 
+    });
+  }
+};
+
 export const deleteUniversity = async (req, res) => {
   const { id } = req.params;
 
   try {
     const university = await University.findById(id);
     if (university) {
-      await university.remove();
+      await university.deleteOne(); // Using deleteOne instead of remove which is deprecated
       res.status(200).json({ message: "University removed" });
     } else {
       res.status(404).json({ message: "University not found" });

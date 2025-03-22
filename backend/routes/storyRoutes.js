@@ -17,7 +17,7 @@ const router = express.Router();
 router.post(
   '/',
   auth,
-  checkRole(['counselor', 'university', 'alumni', 'admin']),
+  checkRole(['counselor', 'university', 'alumni', 'F1SuccessHub Team']),
   upload.single('photo'),
   createStory
 );

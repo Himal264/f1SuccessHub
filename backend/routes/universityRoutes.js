@@ -6,9 +6,11 @@ import {
   updateUniversity,
   deleteUniversity,
   getUniversityByName,
+  updateUniversityArticle
 } from "../controllers/universityControllers.js";
-import  { upload }  from "../middlewares/multer.js";
+import { upload } from "../middlewares/multer.js";
 import adminAuth from "../middlewares/adminAuth.js";
+import { auth, checkRole } from '../middlewares/auth.js';
 import University from '../models/universityModel.js';
 
 const universityRouter = express.Router();
@@ -21,15 +23,28 @@ const uploadFields = upload.fields([
   { name: "media4", maxCount: 1 },
   { name: "media5", maxCount: 1 },
   { name: "locationPhoto", maxCount: 1 },
+  { name: "articlePhoto", maxCount: 1 }, // For article photos
 ]);
+
 // Public routes
 universityRouter.get("/list", getUniversities);
 universityRouter.get("/:id", getUniversityById);
 
-// Admin-protected routes (add middleware for authentication/authorization)
+// Admin-only can create universities
 universityRouter.post("/add", uploadFields, adminAuth, addUniversity);
-universityRouter.put("/:id", uploadFields, adminAuth, updateUniversity);
-universityRouter.delete("/:id", adminAuth, deleteUniversity);
+
+// University and F1SuccessHub Team can update universities
+universityRouter.put("/:id", uploadFields, auth, checkRole(['university', 'F1SuccessHub Team']), updateUniversity);
+universityRouter.delete("/:id", auth, checkRole(['university', 'F1SuccessHub Team']), deleteUniversity);
+
+// Article update route - accessible to university roles and F1SuccessHub Team
+universityRouter.put(
+  "/:id/article/:section", 
+  auth,
+  checkRole(['university', 'F1SuccessHub Team']),
+  uploadFields,
+  updateUniversityArticle
+);
 
 universityRouter.get("/api/university/:id", async (req, res) => {
   try {

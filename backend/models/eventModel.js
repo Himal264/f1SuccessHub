@@ -59,7 +59,7 @@ const eventSchema = new mongoose.Schema({
   creatorRole: {
     type: String,
     required: true,
-    enum: ['admin', 'counselor', 'alumni', 'university']
+    enum: ['admin', 'counselor', 'alumni', 'university', 'F1SuccessHub Team']
   },
   status: {
     type: String,

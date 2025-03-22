@@ -127,7 +127,7 @@ const EventAdd = () => {
     }
 
     // Verify if user has permission to create events
-    const allowedRoles = ['admin', 'counselor', 'alumni', 'university'];
+    const allowedRoles = ['F1SuccessHub Team', 'counselor', 'alumni', 'university', 'admin'];
     if (!allowedRoles.includes(userRole)) {
       toast.error('You do not have permission to create events');
       navigate('/');

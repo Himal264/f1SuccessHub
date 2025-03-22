@@ -66,8 +66,8 @@ eventRouter.get('/all', getAllEvents);
 eventRouter.get('/:id', getEventById);
 
 // Protected routes for event creation/management
-eventRouter.post('/create', auth, checkRole(['admin', 'counselor', 'university']), createEvent);
-eventRouter.put('/update/:id', auth, checkRole(['admin', 'counselor', 'university']), updateEvent);
-eventRouter.delete('/delete/:id', auth, checkRole(['admin', 'counselor', 'university']), deleteEvent);
+eventRouter.post('/create', auth, checkRole(['admin', 'counselor', 'university', 'F1SuccessHub Team']), createEvent);
+eventRouter.put('/update/:id', auth, checkRole(['admin', 'counselor', 'university', 'F1SuccessHub Team']), updateEvent);
+eventRouter.delete('/delete/:id', auth, checkRole(['admin', 'counselor', 'university', 'F1SuccessHub Team']), deleteEvent);
 
 export default eventRouter;

@@ -5,6 +5,42 @@ function arrayLimit(val) {
   return val.length <= 5;
 }
 
+// Create a reusable article schema structure
+const articleSchema = {
+  title: { 
+    type: String, 
+    required: false,
+    trim: true
+  },
+  subtitle: { 
+    type: String, 
+    required: false,
+    trim: true
+  },
+  content: { 
+    type: String, 
+    required: false,
+    trim: false
+  },
+  photo: {
+    url: { type: String, required: false },
+    public_id: { type: String, required: false }
+  },
+  tags: [{
+    type: String,
+    required: false,
+    trim: true
+  }],
+  autoLinks: [{
+    word: String,
+    link: String
+  }],
+  publishedAt: {
+    type: Date,
+    default: Date.now
+  }
+};
+
 const universitySchema = new mongoose.Schema(
   {
     name: {
@@ -47,6 +83,7 @@ const universitySchema = new mongoose.Schema(
         },
       ],
       required: true,
+      article: articleSchema // Add article for intake
     },
     graduationrate: {
       type: Number,
@@ -68,6 +105,7 @@ const universitySchema = new mongoose.Schema(
         SocialScience: { type: [String], required: true },
         Education: { type: [String], required: true },
       },
+      article: articleSchema // Existing article for undergraduate programs
     },
     graduatePrograms: {
       description: { type: String, required: true },
@@ -81,6 +119,7 @@ const universitySchema = new mongoose.Schema(
         SocialScience: { type: [String], required: true },
         Education: { type: [String], required: true },
       },
+      article: articleSchema // Existing article for graduate programs
     },
     scholarships: [
       {
@@ -91,6 +130,7 @@ const universitySchema = new mongoose.Schema(
         duration: { type: String, required: true },
       },
     ],
+    scholarshipsArticle: articleSchema, // Add article for scholarships
     rankings: {
       world: { type: Number, default: null },
       usa: { type: Number, default: null },
@@ -109,11 +149,13 @@ const universitySchema = new mongoose.Schema(
         tuitionFee: { type: Number, required: true },
         livingFee: { type: Number, required: true },
         otherFees: { type: Number, required: true },
+        article: articleSchema // Add article for undergraduate fee structure
       },
       graduate: {
         tuitionFee: { type: Number, required: true },
         livingFee: { type: Number, required: true },
         otherFees: { type: Number, required: true },
+        article: articleSchema // Add article for graduate fee structure
       },
     },
     location: {
@@ -159,6 +201,7 @@ const universitySchema = new mongoose.Schema(
           time: { type: String, required: true },
         },
       ],
+      article: articleSchema // Add article for location
     },
     contact: {
       email: { type: String, required: true },
@@ -170,6 +213,7 @@ const universitySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    descriptionArticle: articleSchema, // Add article for description
     scores: {
       safety: { type: Number, min: 0, max: 100, required: true },
       employment: { type: Number, min: 0, max: 100, required: true },
@@ -199,11 +243,59 @@ const universitySchema = new mongoose.Schema(
         GMAT: { type: Number, min: 1, max: 1600, required: false },
       },
     },
+    admissionRequirementsArticle: articleSchema, // Add article for admission requirements
   },
   {
     timestamps: true,
   }
 );
+
+// Add pre-save middleware to process auto-linking words in all articles
+universitySchema.pre('save', function(next) {
+  const autoLinkWords = [
+    'undergraduate',
+    'graduate',
+    'stem',
+    'engineering',
+    'f1question',
+    'event',
+    'scholarship',
+    'tuition',
+    'admission',
+    'application',
+    'location',
+    'dormitory',
+    'housing'
+    // Add more words as needed
+  ];
+
+  // Helper function to process article content and generate autoLinks
+  const processArticle = (article) => {
+    if (article?.content) {
+      article.autoLinks = autoLinkWords
+        .filter(word => article.content.toLowerCase().includes(word.toLowerCase()))
+        .map(word => ({
+          word: word,
+          link: `/topics/${word.toLowerCase()}`
+        }));
+    }
+  };
+
+  // Process all articles
+  processArticle(this.undergraduatePrograms?.article);
+  processArticle(this.graduatePrograms?.article);
+  processArticle(this.scholarshipsArticle);
+  processArticle(this.feeStructure?.undergraduate?.article);
+  processArticle(this.feeStructure?.graduate?.article);
+  processArticle(this.location?.article);
+  processArticle(this.descriptionArticle);
+  processArticle(this.admissionRequirements?.undergraduate?.article);
+  processArticle(this.admissionRequirements?.graduate?.article);
+  processArticle(this.intake?.article);
+  processArticle(this.admissionRequirementsArticle);
+
+  next();
+});
 
 const University = mongoose.model("University", universitySchema);
 

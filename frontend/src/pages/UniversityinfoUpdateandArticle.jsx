@@ -1,0 +1,681 @@
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import { toast } from 'react-toastify';
+
+const UniversityinfoUpdateandArticle = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const quillRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [tagInput, setTagInput] = useState('');
+  const [tagSuggestions, setTagSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [university, setUniversity] = useState(null);
+  const [user] = useState(JSON.parse(localStorage.getItem('userInfo')));
+  const [selectedSection, setSelectedSection] = useState('');
+
+  // Define article sections that can be updated
+  const articleSections = [
+    { id: 'undergraduatePrograms', name: 'Undergraduate Programs' },
+    { id: 'graduatePrograms', name: 'Graduate Programs' },
+    { id: 'scholarships', name: 'Scholarships' },
+    { id: 'description', name: 'University Description' },
+    { id: 'admissionRequirements', name: 'Admission Requirements' },
+    { id: 'location', name: 'University Location' },
+    { id: 'feeStructureUndergraduate', name: 'Undergraduate Fee Structure' },
+    { id: 'feeStructureGraduate', name: 'Graduate Fee Structure' },
+    { id: 'intake', name: 'Intake Information' }
+  ];
+
+  // Predefined tags list for university articles
+  const predefinedTags = {
+    programs: [
+      'Engineering', 'Computer Science', 'Business', 'Arts', 'Sciences',
+      'Medicine', 'Law', 'Education', 'Architecture'
+    ],
+    locations: [
+      'Northeast', 'Midwest', 'South', 'West', 'Urban', 'Rural', 'Suburban'
+    ],
+    topics: [
+      'Admissions', 'Financial Aid', 'Housing', 'International Students',
+      'Research', 'Campus Life', 'Career Services', 'Athletics', 'Alumni'
+    ]
+  };
+
+  // Initialize form data
+  const [formData, setFormData] = useState({
+    title: '',
+    subtitle: '',
+    content: '',
+    tags: [],
+    photo: null
+  });
+
+  // Fetch university data
+  useEffect(() => {
+    const fetchUniversity = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/university/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setUniversity(response.data.university);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to fetch university data.');
+        setLoading(false);
+        toast.error('Failed to fetch university data');
+      }
+    };
+
+    if (id) {
+      fetchUniversity();
+    }
+  }, [id]);
+
+  // Update form data when section changes
+  useEffect(() => {
+    if (university && selectedSection) {
+      // Map section ID to path in university object
+      let articleData = null;
+      
+      switch (selectedSection) {
+        case 'undergraduatePrograms':
+          articleData = university.undergraduatePrograms?.article;
+          break;
+        case 'graduatePrograms':
+          articleData = university.graduatePrograms?.article;
+          break;
+        case 'scholarships':
+          articleData = university.scholarshipsArticle;
+          break;
+        case 'description':
+          articleData = university.descriptionArticle;
+          break;
+        case 'admissionRequirements':
+          articleData = university.admissionRequirementsArticle;
+          break;
+        case 'location':
+          articleData = university.location?.article;
+          break;
+        case 'feeStructureUndergraduate':
+          articleData = university.feeStructure?.undergraduate?.article;
+          break;
+        case 'feeStructureGraduate':
+          articleData = university.feeStructure?.graduate?.article;
+          break;
+        case 'intake':
+          articleData = university.intake?.article;
+          break;
+        default:
+          break;
+      }
+
+      if (articleData) {
+        setFormData({
+          title: articleData.title || '',
+          subtitle: articleData.subtitle || '',
+          content: articleData.content || '',
+          tags: articleData.tags || [],
+          photo: null
+        });
+        
+        // Set preview URL if photo exists
+        if (articleData.photo?.url) {
+          setPreviewUrl(articleData.photo.url);
+        } else {
+          setPreviewUrl(null);
+        }
+      } else {
+        // Initialize with empty values if no article data exists
+        setFormData({
+          title: '',
+          subtitle: '',
+          content: '',
+          tags: [],
+          photo: null
+        });
+        setPreviewUrl(null);
+      }
+    }
+  }, [university, selectedSection]);
+
+  // Quill modules configuration
+  const modules = useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'size': ['8px', '10px', '12px', '14px', '16px', '18px', '20px', '24px', '32px', '48px'] }],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'script': 'sub'}, { 'script': 'super' }],
+        [{ 'indent': '-1'}, { 'indent': '+1' }],
+        ['blockquote'],
+        [{ 'font': [] }],
+        [{ 'align': [] }],
+        ['clean'],
+        ['link', 'image']
+      ],
+      handlers: {
+        'image': function() {
+          const input = document.createElement('input');
+          input.setAttribute('type', 'file');
+          input.setAttribute('accept', 'image/*');
+          input.click();
+
+          input.onchange = () => {
+            const file = input.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const range = this.quill.getSelection(true);
+                
+                // Insert a line break before the image
+                this.quill.insertText(range.index, '\n');
+                
+                // Insert the image with margin styling
+                this.quill.insertEmbed(
+                  range.index + 1,
+                  'image',
+                  reader.result,
+                  'user'
+                );
+                
+                // Apply margin to the inserted image
+                const imageFormat = {
+                  'style': 'margin: 40px;'
+                };
+                this.quill.formatText(range.index + 1, 1, imageFormat);
+                
+                // Insert a line break after the image
+                this.quill.insertText(range.index + 2, '\n');
+              };
+              reader.readAsDataURL(file);
+            }
+          };
+        }
+      }
+    }
+  }), []);
+
+  // Update formats to include all necessary formats
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet',
+    'script', 'super', 'sub',
+    'indent',
+    'size',
+    'blockquote',
+    'color', 'background',
+    'font',
+    'align',
+    'clean',
+    'link', 'image'
+  ];
+
+  // Input handlers
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleContentChange = (content) => {
+    setFormData(prev => ({
+      ...prev,
+      content: content
+    }));
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData(prev => ({
+        ...prev,
+        photo: file
+      }));
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Tag suggestions handlers
+  const getTagSuggestions = (input) => {
+    if (!input) return [];
+    
+    const inputLower = input.toLowerCase();
+    let suggestions = [];
+    
+    // Search through all categories
+    Object.values(predefinedTags).forEach(category => {
+      const matches = category.filter(tag => 
+        tag.toLowerCase().includes(inputLower)
+      );
+      suggestions = [...suggestions, ...matches];
+    });
+    
+    // Remove duplicates and limit to 5 suggestions
+    return [...new Set(suggestions)]
+      .slice(0, 5)
+      .sort((a, b) => {
+        // Prioritize tags that start with the input
+        const aStartsWith = a.toLowerCase().startsWith(inputLower);
+        const bStartsWith = b.toLowerCase().startsWith(inputLower);
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+        return a.localeCompare(b);
+      });
+  };
+
+  const handleTagInputChange = (e) => {
+    const value = e.target.value;
+    setTagInput(value);
+    const suggestions = getTagSuggestions(value);
+    setTagSuggestions(suggestions);
+    setShowSuggestions(suggestions.length > 0);
+  };
+
+  const handleTagSuggestionClick = (tag) => {
+    if (!formData.tags.includes(tag)) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, tag]
+      }));
+    }
+    setTagInput('');
+    setShowSuggestions(false);
+  };
+
+  const handleTagRemove = (tagToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
+  };
+
+  // Submit handler
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedSection) {
+      toast.error('Please select a section to update');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const formDataToSend = new FormData();
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('subtitle', formData.subtitle);
+      formDataToSend.append('content', formData.content);
+      formDataToSend.append('tags', JSON.stringify(formData.tags));
+      
+      if (formData.photo) {
+        formDataToSend.append('articlePhoto', formData.photo);
+      }
+      
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/university/${id}/article/${selectedSection}`,
+        formDataToSend,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      setLoading(false);
+      toast.success('Article updated successfully!');
+      
+      // Refetch university data to get updated content
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/university/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUniversity(response.data.university);
+      
+    } catch (err) {
+      setLoading(false);
+      setError(err.response?.data?.message || 'Failed to update article');
+      toast.error(err.response?.data?.message || 'Failed to update article');
+    }
+  };
+
+  // Add custom styles for editor
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .ql-editor img {
+        margin: 40px;
+        max-width: calc(100% - 80px);
+        height: auto;
+        display: block;
+      }
+      
+      .article-preview img {
+        margin: 40px;
+        max-width: calc(100% - 80px);
+        height: auto;
+        display: block;
+      }
+      
+      .ql-editor a {
+        color: #2A3342;
+        text-decoration: underline;
+        cursor: pointer;
+        transition: color 0.3s ease;
+      }
+
+      .ql-editor a:hover {
+        color: #F37021;
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  // Preview component
+  const ArticlePreview = () => {
+    const sectionName = articleSections.find(s => s.id === selectedSection)?.name || 'Article';
+    
+  return (
+      <div className="bg-white">
+        <div className="max-w-6xl mx-auto">
+          {/* Title and Image Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            {/* Left side - Title and Content */}
+            <div>
+              <h1 className="text-[52px] leading-tight font-serif text-[#2A3342] mb-4">
+                {formData.title || sectionName}
+              </h1>
+
+              {/* Tags */}
+              <div className="flex flex-wrap gap-3 mb-4">
+                {formData.tags.map((tag, index) => (
+                  <span 
+                    key={index}
+                    className="px-4 py-2 bg-gray-50 text-gray-700 rounded-full text-sm border border-gray-200 hover:bg-gray-100 transition-colors"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              {/* University Info */}
+              <div className="border-t border-gray-200 pt-4">
+                <div className="flex items-center">
+                  <div className="w-16 h-16 mr-4">
+                    {university?.logoUrl && (
+                      <img 
+                        src={university.logoUrl} 
+                        alt={university.name}
+                        className="w-full h-full object-contain"
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">{university?.name}</h2>
+                    <p className="text-gray-600">{university?.location?.state}, {university?.location?.region}</p>
+                  </div>
+                </div>
+                <div className="border-t border-gray-200 mt-4"></div>
+              </div>
+
+              {/* Author and Date */}
+              <div className="mt-4 mb-4">
+                <div className="text-gray-700">
+                  By <span className="text-[#2A3342] font-semibold text-lg">{user?.name || 'Admin'}</span>
+                </div>
+                <div className="text-gray-700">
+                  Last updated on {new Date().toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </div>
+              </div>
+
+              {/* Subtitle */}
+              <div className="text-lg text-gray-700 mb-4 leading-relaxed">
+                {formData.subtitle}
+              </div>
+            </div>
+
+            {/* Right side - Image */}
+            <div>
+              {previewUrl && (
+                <div className="relative h-[265px]">
+                  <img 
+                    src={previewUrl} 
+                    alt={formData.title}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="mt-8">
+            <div className="prose max-w-none">
+              <div 
+                dangerouslySetInnerHTML={{ __html: formData.content }} 
+                className="article-content"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  if (loading && !university) {
+    return <div className="flex justify-center items-center h-96">Loading university data...</div>;
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto p-4">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">
+          {university ? `Update ${university.name} Information` : 'University Article Editor'}
+        </h2>
+        
+        <div className="flex space-x-4">
+          <button
+            type="button"
+            onClick={() => setShowPreview(!showPreview)}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+          >
+            {showPreview ? 'Edit Article' : 'Preview Article'}
+          </button>
+          
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+
+      <div className={showPreview ? 'hidden' : 'block'}>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Section Selector */}
+          <div>
+            <label className="block mb-2 font-medium">Select Section to Update</label>
+            <select
+              value={selectedSection}
+              onChange={(e) => setSelectedSection(e.target.value)}
+              className="w-full border rounded-lg p-3"
+              required
+            >
+              <option value="">Select a section</option>
+              {articleSections.map(section => (
+                <option key={section.id} value={section.id}>{section.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block mb-2 font-medium">Article Title</label>
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              className="w-full border rounded-lg p-3"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-2 font-medium">Article Subtitle</label>
+            <input
+              type="text"
+              name="subtitle"
+              value={formData.subtitle}
+              onChange={handleInputChange}
+              className="w-full border rounded-lg p-3"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block mb-2 font-medium">Cover Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              className="w-full border rounded-lg p-3"
+            />
+            {previewUrl && (
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="mt-2 w-full h-48 object-cover rounded-lg"
+              />
+            )}
+          </div>
+
+          <div className="relative">
+            <label className="block mb-2 font-medium">Tags</label>
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                value={tagInput}
+                onChange={handleTagInputChange}
+                onFocus={() => setShowSuggestions(!!tagInput)}
+                onBlur={() => {
+                  setTimeout(() => setShowSuggestions(false), 200);
+                }}
+                className="flex-1 border rounded-lg p-3"
+                placeholder="Add a tag"
+              />
+              <button
+                onClick={() => {
+                  if (tagInput && !formData.tags.includes(tagInput)) {
+                    handleTagSuggestionClick(tagInput);
+                  }
+                }}
+                type="button"
+                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                Add
+              </button>
+            </div>
+
+            {/* Tag Suggestions Dropdown */}
+            {showSuggestions && tagSuggestions.length > 0 && (
+              <div className="absolute z-10 w-full bg-white border rounded-lg shadow-lg mt-1">
+                {tagSuggestions.map((suggestion, index) => (
+                  <button
+                    key={index}
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                    onClick={() => handleTagSuggestionClick(suggestion)}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Selected Tags */}
+            <div className="flex flex-wrap gap-2">
+              {formData.tags.map(tag => (
+                <span
+                  key={tag}
+                  className="bg-gray-200 px-3 py-1 rounded-lg flex items-center gap-2"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => handleTagRemove(tag)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <label className="block mb-2 font-medium">Content</label>
+            <div className="border rounded-lg overflow-hidden">
+              <ReactQuill 
+                ref={quillRef}
+                value={formData.content}
+                onChange={handleContentChange}
+                modules={modules}
+                formats={formats}
+                theme="snow"
+                placeholder="Write your article content here..."
+                className="quill-editor"
+                style={{ 
+                  minHeight: '400px'
+                }}
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || !selectedSection}
+            className={`w-full py-3 px-4 rounded-lg text-white ${
+              loading || !selectedSection ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
+            }`}
+          >
+            {loading ? 'Updating...' : 'Update Article'}
+          </button>
+        </form>
+      </div>
+
+      {showPreview && <ArticlePreview />}
+    </div>
+  );
+};
+
+export default UniversityinfoUpdateandArticle;
