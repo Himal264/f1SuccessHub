@@ -4,21 +4,19 @@ import axios from 'axios';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import { toast } from 'react-toastify';
+import { backendUrl } from '../App';
 
 const UniversityinfoUpdateandArticle = () => {
-  const { id } = useParams();
+  const { id, section } = useParams();
   const navigate = useNavigate();
   const quillRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [tagInput, setTagInput] = useState('');
-  const [tagSuggestions, setTagSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [university, setUniversity] = useState(null);
   const [user] = useState(JSON.parse(localStorage.getItem('userInfo')));
-  const [selectedSection, setSelectedSection] = useState('');
+  const [selectedSection, setSelectedSection] = useState(section || '');
 
   // Define article sections that can be updated
   const articleSections = [
@@ -33,27 +31,9 @@ const UniversityinfoUpdateandArticle = () => {
     { id: 'intake', name: 'Intake Information' }
   ];
 
-  // Predefined tags list for university articles
-  const predefinedTags = {
-    programs: [
-      'Engineering', 'Computer Science', 'Business', 'Arts', 'Sciences',
-      'Medicine', 'Law', 'Education', 'Architecture'
-    ],
-    locations: [
-      'Northeast', 'Midwest', 'South', 'West', 'Urban', 'Rural', 'Suburban'
-    ],
-    topics: [
-      'Admissions', 'Financial Aid', 'Housing', 'International Students',
-      'Research', 'Campus Life', 'Career Services', 'Athletics', 'Alumni'
-    ]
-  };
-
   // Initialize form data
   const [formData, setFormData] = useState({
-    title: '',
-    subtitle: '',
     content: '',
-    tags: [],
     photo: null
   });
 
@@ -63,10 +43,28 @@ const UniversityinfoUpdateandArticle = () => {
       try {
         setLoading(true);
         const token = localStorage.getItem('token');
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/university/${id}`, {
+        const response = await axios.get(`${backendUrl}/api/university/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setUniversity(response.data.university);
+        
+        const universityData = response.data.university;
+        setUniversity(universityData);
+        
+        // Check permission for university role
+        if (user && user.role === 'university') {
+          const userUniversityName = user.universityInfo?.universityName;
+          if (!userUniversityName || userUniversityName.toLowerCase() !== universityData.name.toLowerCase()) {
+            toast.error(`You only have permission to edit ${userUniversityName || 'your own university'}`);
+            navigate('/');
+            return;
+          }
+        } else if (user && user.role !== 'F1SuccessHub Team') {
+          // If user is neither university nor F1SuccessHub Team
+          toast.error('You do not have permission to edit university articles');
+          navigate('/');
+          return;
+        }
+        
         setLoading(false);
       } catch (err) {
         setError('Failed to fetch university data.');
@@ -78,7 +76,7 @@ const UniversityinfoUpdateandArticle = () => {
     if (id) {
       fetchUniversity();
     }
-  }, [id]);
+  }, [id, navigate, user]);
 
   // Update form data when section changes
   useEffect(() => {
@@ -120,10 +118,7 @@ const UniversityinfoUpdateandArticle = () => {
 
       if (articleData) {
         setFormData({
-          title: articleData.title || '',
-          subtitle: articleData.subtitle || '',
           content: articleData.content || '',
-          tags: articleData.tags || [],
           photo: null
         });
         
@@ -136,10 +131,7 @@ const UniversityinfoUpdateandArticle = () => {
       } else {
         // Initialize with empty values if no article data exists
         setFormData({
-          title: '',
-          subtitle: '',
           content: '',
-          tags: [],
           photo: null
         });
         setPreviewUrl(null);
@@ -223,14 +215,6 @@ const UniversityinfoUpdateandArticle = () => {
   ];
 
   // Input handlers
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
   const handleContentChange = (content) => {
     setFormData(prev => ({
       ...prev,
@@ -254,60 +238,6 @@ const UniversityinfoUpdateandArticle = () => {
     }
   };
 
-  // Tag suggestions handlers
-  const getTagSuggestions = (input) => {
-    if (!input) return [];
-    
-    const inputLower = input.toLowerCase();
-    let suggestions = [];
-    
-    // Search through all categories
-    Object.values(predefinedTags).forEach(category => {
-      const matches = category.filter(tag => 
-        tag.toLowerCase().includes(inputLower)
-      );
-      suggestions = [...suggestions, ...matches];
-    });
-    
-    // Remove duplicates and limit to 5 suggestions
-    return [...new Set(suggestions)]
-      .slice(0, 5)
-      .sort((a, b) => {
-        // Prioritize tags that start with the input
-        const aStartsWith = a.toLowerCase().startsWith(inputLower);
-        const bStartsWith = b.toLowerCase().startsWith(inputLower);
-        if (aStartsWith && !bStartsWith) return -1;
-        if (!aStartsWith && bStartsWith) return 1;
-        return a.localeCompare(b);
-      });
-  };
-
-  const handleTagInputChange = (e) => {
-    const value = e.target.value;
-    setTagInput(value);
-    const suggestions = getTagSuggestions(value);
-    setTagSuggestions(suggestions);
-    setShowSuggestions(suggestions.length > 0);
-  };
-
-  const handleTagSuggestionClick = (tag) => {
-    if (!formData.tags.includes(tag)) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, tag]
-      }));
-    }
-    setTagInput('');
-    setShowSuggestions(false);
-  };
-
-  const handleTagRemove = (tagToRemove) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
-  };
-
   // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -322,17 +252,14 @@ const UniversityinfoUpdateandArticle = () => {
       const token = localStorage.getItem('token');
       
       const formDataToSend = new FormData();
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('subtitle', formData.subtitle);
       formDataToSend.append('content', formData.content);
-      formDataToSend.append('tags', JSON.stringify(formData.tags));
       
       if (formData.photo) {
         formDataToSend.append('articlePhoto', formData.photo);
       }
       
       await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/university/${id}/article/${selectedSection}`,
+        `${backendUrl}/api/university/${id}/article/${selectedSection}`,
         formDataToSend,
         {
           headers: {
@@ -346,7 +273,7 @@ const UniversityinfoUpdateandArticle = () => {
       toast.success('Article updated successfully!');
       
       // Refetch university data to get updated content
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/university/${id}`, {
+      const response = await axios.get(`${backendUrl}/api/university/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUniversity(response.data.university);
@@ -398,91 +325,53 @@ const UniversityinfoUpdateandArticle = () => {
   const ArticlePreview = () => {
     const sectionName = articleSections.find(s => s.id === selectedSection)?.name || 'Article';
     
-  return (
+    return (
       <div className="bg-white">
         <div className="max-w-6xl mx-auto">
-          {/* Title and Image Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-            {/* Left side - Title and Content */}
-            <div>
-              <h1 className="text-[52px] leading-tight font-serif text-[#2A3342] mb-4">
-                {formData.title || sectionName}
-              </h1>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-3 mb-4">
-                {formData.tags.map((tag, index) => (
-                  <span 
-                    key={index}
-                    className="px-4 py-2 bg-gray-50 text-gray-700 rounded-full text-sm border border-gray-200 hover:bg-gray-100 transition-colors"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-
-              {/* University Info */}
-              <div className="border-t border-gray-200 pt-4">
-                <div className="flex items-center">
-                  <div className="w-16 h-16 mr-4">
-                    {university?.logoUrl && (
-                      <img 
-                        src={university.logoUrl} 
-                        alt={university.name}
-                        className="w-full h-full object-contain"
-                      />
-                    )}
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold">{university?.name}</h2>
-                    <p className="text-gray-600">{university?.location?.state}, {university?.location?.region}</p>
-                  </div>
-                </div>
-                <div className="border-t border-gray-200 mt-4"></div>
-              </div>
-
-              {/* Author and Date */}
-              <div className="mt-4 mb-4">
-                <div className="text-gray-700">
-                  By <span className="text-[#2A3342] font-semibold text-lg">{user?.name || 'Admin'}</span>
-                </div>
-                <div className="text-gray-700">
-                  Last updated on {new Date().toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </div>
-              </div>
-
-              {/* Subtitle */}
-              <div className="text-lg text-gray-700 mb-4 leading-relaxed">
-                {formData.subtitle}
-              </div>
-            </div>
-
-            {/* Right side - Image */}
-            <div>
-              {previewUrl && (
-                <div className="relative h-[265px]">
-                  <img 
-                    src={previewUrl} 
-                    alt={formData.title}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                </div>
+          {/* Header Section */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-4">{sectionName}</h1>
+            
+            {/* University Info */}
+            <div className="flex items-center mb-6">
+              {university?.logoUrl && (
+                <img 
+                  src={university.logoUrl} 
+                  alt={university.name}
+                  className="w-12 h-12 object-contain mr-4"
+                />
               )}
+              <div>
+                <h2 className="text-xl font-semibold">{university?.name}</h2>
+                <p className="text-gray-600">{university?.location?.state}, {university?.location?.region}</p>
+              </div>
             </div>
+            
+            {/* Last updated info */}
+            <p className="text-sm text-gray-600 mb-6">
+              Last updated by {user?.name || 'Admin'} on {new Date().toLocaleDateString('en-US', {
+                month: 'long', day: 'numeric', year: 'numeric'
+              })}
+            </p>
           </div>
 
-          {/* Content */}
-          <div className="mt-8">
-            <div className="prose max-w-none">
-              <div 
-                dangerouslySetInnerHTML={{ __html: formData.content }} 
-                className="article-content"
+          {/* Featured Image */}
+          {previewUrl && (
+            <div className="mb-8">
+              <img 
+                src={previewUrl} 
+                alt={sectionName}
+                className="w-full max-h-[400px] object-cover rounded-lg"
               />
             </div>
+          )}
+
+          {/* Content */}
+          <div className="prose max-w-none">
+            <div 
+              dangerouslySetInnerHTML={{ __html: formData.content }} 
+              className="article-content"
+            />
           </div>
         </div>
       </div>
@@ -540,31 +429,7 @@ const UniversityinfoUpdateandArticle = () => {
           </div>
 
           <div>
-            <label className="block mb-2 font-medium">Article Title</label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              className="w-full border rounded-lg p-3"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block mb-2 font-medium">Article Subtitle</label>
-            <input
-              type="text"
-              name="subtitle"
-              value={formData.subtitle}
-              onChange={handleInputChange}
-              className="w-full border rounded-lg p-3"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block mb-2 font-medium">Cover Image</label>
+            <label className="block mb-2 font-medium">Cover Image (Optional)</label>
             <input
               type="file"
               accept="image/*"
@@ -578,68 +443,6 @@ const UniversityinfoUpdateandArticle = () => {
                 className="mt-2 w-full h-48 object-cover rounded-lg"
               />
             )}
-          </div>
-
-          <div className="relative">
-            <label className="block mb-2 font-medium">Tags</label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={tagInput}
-                onChange={handleTagInputChange}
-                onFocus={() => setShowSuggestions(!!tagInput)}
-                onBlur={() => {
-                  setTimeout(() => setShowSuggestions(false), 200);
-                }}
-                className="flex-1 border rounded-lg p-3"
-                placeholder="Add a tag"
-              />
-              <button
-                onClick={() => {
-                  if (tagInput && !formData.tags.includes(tagInput)) {
-                    handleTagSuggestionClick(tagInput);
-                  }
-                }}
-                type="button"
-                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                Add
-              </button>
-            </div>
-
-            {/* Tag Suggestions Dropdown */}
-            {showSuggestions && tagSuggestions.length > 0 && (
-              <div className="absolute z-10 w-full bg-white border rounded-lg shadow-lg mt-1">
-                {tagSuggestions.map((suggestion, index) => (
-                  <button
-                    key={index}
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                    onClick={() => handleTagSuggestionClick(suggestion)}
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Selected Tags */}
-            <div className="flex flex-wrap gap-2">
-              {formData.tags.map(tag => (
-                <span
-                  key={tag}
-                  className="bg-gray-200 px-3 py-1 rounded-lg flex items-center gap-2"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => handleTagRemove(tag)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
           </div>
 
           <div className="mb-6">

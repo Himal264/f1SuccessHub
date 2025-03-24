@@ -7,16 +7,6 @@ function arrayLimit(val) {
 
 // Create a reusable article schema structure
 const articleSchema = {
-  title: { 
-    type: String, 
-    required: false,
-    trim: true
-  },
-  subtitle: { 
-    type: String, 
-    required: false,
-    trim: true
-  },
   content: { 
     type: String, 
     required: false,
@@ -26,11 +16,6 @@ const articleSchema = {
     url: { type: String, required: false },
     public_id: { type: String, required: false }
   },
-  tags: [{
-    type: String,
-    required: false,
-    trim: true
-  }],
   autoLinks: [{
     word: String,
     link: String

@@ -80,6 +80,9 @@ import StoriesAdd from './components/StoriesAdd';
 import F1QuestionAndPerAnswer from './components/f1questionandanswerperanswer';
 import StoriesDetail from './pages/StoriesDetail';
 import AuthorProfile from './pages/AuthorProfile';
+import UniversityManagement from './pages/UniversityManagement';
+import UniversityEdit from './pages/UniversityEdit';
+import UniversityinfoUpdateandArticle from './pages/UniversityinfoUpdateandArticle';
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -290,6 +293,9 @@ const App = () => {
                       <Route path="/stories/add" element={<StoriesAdd />} />
                       <Route path="/stories/:id" element={<StoriesDetail />} />
                       <Route path="/author/:authorId" element={<AuthorProfile />} />
+                      <Route path="/universities/manage" element={<UniversityManagement />} />
+                      <Route path="/university-edit/:id" element={<UniversityEdit />} />
+                      <Route path="/university/:id/article/:section" element={<UniversityinfoUpdateandArticle />} />
                     </Routes>
                     <ScrollToTop />
                   </div>

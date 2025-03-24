@@ -133,11 +133,8 @@ export const addUniversity = async (req, res) => {
 
     // Initialize empty articles
     const emptyArticle = {
-      title: "",
-      subtitle: "",
       content: "",
       photo: { url: "", public_id: "" },
-      tags: [],
       autoLinks: [],
       publishedAt: new Date()
     };
@@ -231,7 +228,7 @@ export const updateUniversity = async (req, res) => {
 export const updateUniversityArticle = async (req, res) => {
   try {
     const { id, section } = req.params;
-    const { title, subtitle, content, tags } = req.body;
+    const { content } = req.body;
     
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid university ID format" });
@@ -281,10 +278,7 @@ export const updateUniversityArticle = async (req, res) => {
     
     // Create the article update object
     const articleUpdate = {
-      title: title || '',
-      subtitle: subtitle || '',
       content: content || '',
-      tags: tags ? JSON.parse(tags) : [],
       publishedAt: new Date()
     };
 

@@ -620,6 +620,46 @@ const Navbar = () => {
                         </>
                       )}
 
+                      {/* University management options for university roles and F1SuccessHub Team */}
+                      {user.role === 'university' && (
+                        <button
+                          onClick={() => {
+                            // For university role, navigate to their specific university
+                            const universityName = user.universityInfo?.universityName;
+                            if (universityName) {
+                              // First fetch university ID by name and then navigate
+                              axios.get(`${backendUrl}/api/university/name/${encodeURIComponent(universityName)}`)
+                                .then(response => {
+                                  if (response.data.university) {
+                                    navigate(`/university-edit/${response.data.university._id}`);
+                                  } else {
+                                    toast.error("University information not found");
+                                  }
+                                })
+                                .catch(error => {
+                                  console.error("Error fetching university:", error);
+                                  toast.error("Failed to load university information");
+                                });
+                            } else {
+                              toast.error("University name not found in your profile");
+                            }
+                          }}
+                          className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Update University Info & Articles
+                        </button>
+                      )}
+
+                      {/* All universities management option for F1SuccessHub Team only */}
+                      {user.role === 'F1SuccessHub Team' && (
+                        <button
+                          onClick={() => navigate('/universities/manage')}
+                          className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Manage All Universities
+                        </button>
+                      )}
+
                       <button
                         onClick={handleLogout}
                         className="block w-full text-left px-6 py-3 text-sm text-[#002349] hover:bg-red-50"
