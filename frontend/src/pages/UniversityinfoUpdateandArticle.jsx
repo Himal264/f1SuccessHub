@@ -53,8 +53,16 @@ const UniversityinfoUpdateandArticle = () => {
         // Check permission for university role
         if (user && user.role === 'university') {
           const userUniversityName = user.universityInfo?.universityName;
-          if (!userUniversityName || userUniversityName.toLowerCase() !== universityData.name.toLowerCase()) {
-            toast.error(`You only have permission to edit ${userUniversityName || 'your own university'}`);
+          if (!userUniversityName) {
+            toast.error("University name not found in your profile");
+            navigate('/');
+            return;
+          }
+          
+          // Case-insensitive comparison with trim to remove extra spaces
+          if (userUniversityName.toLowerCase().trim() !== universityData.name.toLowerCase().trim()) {
+            toast.error(`You only have permission to edit ${userUniversityName}. 
+                         You cannot edit ${universityData.name}.`);
             navigate('/');
             return;
           }

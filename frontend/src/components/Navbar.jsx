@@ -29,6 +29,7 @@ const Navbar = () => {
   const [profileData, setProfileData] = useState({
     name: '',
     email: '',
+    universityName: '',
     profilePicture: null,
     previewUrl: '',
     bio: '',
@@ -226,7 +227,7 @@ const Navbar = () => {
     }
   };
 
-  // Update useEffect to properly fetch saved profile data
+  // Update useEffect to properly fetch saved profile data including university name
   useEffect(() => {
     if (user) {
       // Get the role-specific info
@@ -236,6 +237,7 @@ const Navbar = () => {
       setProfileData({
         name: user.name,
         email: user.email,
+        universityName: user.role === 'university' ? roleInfo?.universityName || '' : '',
         profilePicture: null,
         previewUrl: user.profilePicture?.url || getDefaultProfilePicture(user.name),
         bio: roleInfo?.documents?.bio || '', // Get bio from documents
@@ -249,6 +251,7 @@ const Navbar = () => {
 
       // Debug log to verify data
       console.log('Profile Data Loaded:', {
+        universityName: roleInfo?.universityName,
         bio: roleInfo?.documents?.bio,
         socialLinks: roleInfo?.documents?.socialLinks
       });
@@ -278,45 +281,85 @@ const Navbar = () => {
         }
       }
 
-      // Update profile info
-      const response = await fetch('/api/user/update-profile', {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: profileData.name,
-          bio: profileData.bio,
-          socialLinks: profileData.socialLinks
-        })
-      });
+      // Create an update object that will be sent to the server
+      const updateData = {
+        name: profileData.name,
+        bio: profileData.bio,
+        socialLinks: profileData.socialLinks
+      };
 
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
+      // For university role, include the university name
+      if (user.role === 'university' && profileData.universityName) {
+        updateData.universityName = profileData.universityName;
       }
 
-      const data = await response.json();
-      
-      // Update local user state with new data
-      if (data.success) {
+      // Update profile info
+      const response = await axios.put(`${backendUrl}/api/user/update-profile`, 
+        updateData,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.data.success) {
+        // Create updated user object
         const updatedUser = {
           ...user,
-          name: data.user.name,
-          [`${user.role}Info`]: {
-            ...user[`${user.role}Info`],
-            documents: {
-              ...user[`${user.role}Info`].documents,
-              bio: profileData.bio,
-              socialLinks: profileData.socialLinks
-            }
-          }
+          name: profileData.name
         };
+
+        // Update university info if user is a university
+        if (user.role === 'university') {
+          if (!updatedUser.universityInfo) {
+            updatedUser.universityInfo = {};
+          }
+          updatedUser.universityInfo.universityName = profileData.universityName;
+          
+          // Also ensure documents exist
+          if (!updatedUser.universityInfo.documents) {
+            updatedUser.universityInfo.documents = {};
+          }
+          updatedUser.universityInfo.documents.bio = profileData.bio;
+          updatedUser.universityInfo.documents.socialLinks = profileData.socialLinks;
+        } else {
+          // For other roles
+          if (!updatedUser[`${user.role}Info`]) {
+            updatedUser[`${user.role}Info`] = {};
+          }
+          if (!updatedUser[`${user.role}Info`].documents) {
+            updatedUser[`${user.role}Info`].documents = {};
+          }
+          updatedUser[`${user.role}Info`].documents.bio = profileData.bio;
+          updatedUser[`${user.role}Info`].documents.socialLinks = profileData.socialLinks;
+        }
         
+        // Update local state and storage
         setUser(updatedUser);
         localStorage.setItem('userInfo', JSON.stringify(updatedUser));
         toast.success('Profile updated successfully');
         setIsEditingProfile(false);
+        
+        // If the university name was set, try to redirect to the university edit page
+        if (user.role === 'university' && profileData.universityName) {
+          setTimeout(() => {
+            axios.get(`${backendUrl}/api/university/name/${encodeURIComponent(profileData.universityName)}`, {
+              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            })
+              .then(response => {
+                if (response.data.university) {
+                  navigate(`/university-edit/${response.data.university._id}`);
+                }
+              })
+              .catch(error => {
+                console.error("Could not find university after update:", error);
+              });
+          }, 1000);
+        }
+      } else {
+        throw new Error('Failed to update profile');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -423,6 +466,9 @@ const Navbar = () => {
 
   // Update the edit form section
   const renderEditForm = () => {
+    // Add university-specific fields if the user is a university
+    const isUniversity = user.role === 'university';
+    
     return (
       <form onSubmit={handleProfileUpdate} className="p-4">
         <div className="space-y-4">
@@ -451,6 +497,26 @@ const Navbar = () => {
               className="w-full px-3 py-2 border rounded-md"
             />
           </div>
+
+          {/* University Name - Only for university role */}
+          {isUniversity && (
+            <div>
+              <label className="block text-sm font-medium mb-1">University Name</label>
+              <input
+                type="text"
+                value={profileData.universityName || ''}
+                onChange={(e) => setProfileData(prev => ({ 
+                  ...prev, 
+                  universityName: e.target.value 
+                }))}
+                className="w-full px-3 py-2 border rounded-md"
+                required={isUniversity}
+              />
+              <p className="text-xs text-red-500 mt-1">
+                *Required to update university information. Enter the exact name of your university as it appears in the system.
+              </p>
+            </div>
+          )}
 
           {/* Bio */}
           <div>
@@ -622,32 +688,57 @@ const Navbar = () => {
 
                       {/* University management options for university roles and F1SuccessHub Team */}
                       {user.role === 'university' && (
-                        <button
-                          onClick={() => {
-                            // For university role, navigate to their specific university
-                            const universityName = user.universityInfo?.universityName;
-                            if (universityName) {
-                              // First fetch university ID by name and then navigate
-                              axios.get(`${backendUrl}/api/university/name/${encodeURIComponent(universityName)}`)
-                                .then(response => {
-                                  if (response.data.university) {
-                                    navigate(`/university-edit/${response.data.university._id}`);
-                                  } else {
-                                    toast.error("University information not found");
-                                  }
+                        <>
+                          <button
+                            onClick={() => {
+                              // For university role, navigate to their specific university
+                              const universityName = user.universityInfo?.universityName;
+                              console.log("University info in profile:", user.universityInfo); // Debug log
+                              
+                              if (universityName) {
+                                // First fetch university ID by name and then navigate
+                                console.log("Fetching university by name:", universityName);
+                                axios.get(`${backendUrl}/api/university/name/${encodeURIComponent(universityName)}`, {
+                                  headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
                                 })
-                                .catch(error => {
-                                  console.error("Error fetching university:", error);
-                                  toast.error("Failed to load university information");
-                                });
-                            } else {
-                              toast.error("University name not found in your profile");
-                            }
-                          }}
-                          className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          Update University Info & Articles
-                        </button>
+                                  .then(response => {
+                                    if (response.data.university) {
+                                      console.log("Found university:", response.data.university);
+                                      navigate(`/university-edit/${response.data.university._id}`);
+                                    } else {
+                                      toast.error("University information not found. Please make sure your university name matches exactly with a university in our database.");
+                                    }
+                                  })
+                                  .catch(error => {
+                                    console.error("Error fetching university:", error);
+                                    // Try to get all universities and log them for debugging
+                                    axios.get(`${backendUrl}/api/university/list`, {
+                                      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                                    })
+                                      .then(response => {
+                                        console.log("Available universities:", response.data.universities.map(u => u.name));
+                                        toast.error("Could not find your university. Please update your profile with the exact university name.");
+                                      })
+                                      .catch(err => {
+                                        console.error("Error listing universities:", err);
+                                      });
+                                  });
+                              } else {
+                                toast.error("University name not found in your profile. Please update your profile with your university name.");
+                              }
+                            }}
+                            className="block w-full text-left px-6 py-3 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            Update University Info & Articles
+                          </button>
+                          
+                          {/* Show university name for debugging */}
+                          <div className="px-6 py-2 text-xs text-gray-500 border-t">
+                            Your university: {user.universityInfo?.universityName || 'Not set'} 
+                            <br />
+                            <span className="text-blue-500">(Set this in 'Edit Profile Settings' above)</span>
+                          </div>
+                        </>
                       )}
 
                       {/* All universities management option for F1SuccessHub Team only */}

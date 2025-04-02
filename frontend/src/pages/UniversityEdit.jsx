@@ -38,12 +38,26 @@ const UniversityEdit = () => {
         setUniversity(universityData);
         
         // Check permission for university role
-        if (user.role === 'university') {
+        if (user && user.role === 'university') {
           const userUniversityName = user.universityInfo?.universityName;
-          if (userUniversityName && userUniversityName.toLowerCase() !== universityData.name.toLowerCase()) {
+          if (!userUniversityName) {
+            toast.error("University name not found in your profile");
+            navigate('/');
+            return;
+          }
+          
+          // Case-insensitive comparison with trim to remove extra spaces
+          console.log("Comparing:", userUniversityName.toLowerCase().trim(), "with", universityData.name.toLowerCase().trim());
+          if (userUniversityName.toLowerCase().trim() !== universityData.name.toLowerCase().trim()) {
             toast.error(`You only have permission to edit ${userUniversityName}`);
             navigate('/');
+            return;
           }
+        } else if (user && user.role !== 'F1SuccessHub Team') {
+          // If user is neither university nor F1SuccessHub Team
+          toast.error('You do not have permission to edit university information');
+          navigate('/');
+          return;
         }
         
         setLoading(false);
@@ -51,7 +65,7 @@ const UniversityEdit = () => {
         console.error('Error fetching university:', err);
         setError('Failed to load university information');
         setLoading(false);
-        toast.error('Failed to load university information');
+        toast.error('Failed to load university information: ' + err.message);
       }
     };
     
