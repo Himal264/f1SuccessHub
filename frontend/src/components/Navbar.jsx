@@ -6,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import { IoChatbubbleEllipsesOutline, IoSend } from 'react-icons/io5';
-import Chat from './Chat.jsx';
+import Chat from './chat.jsx';
 import axios from 'axios';
 import { backendUrl } from '../App';
 
