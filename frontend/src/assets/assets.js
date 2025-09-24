@@ -32,7 +32,7 @@ import ColoradoChristian_logo from "./ColoradoChristian.png";
 import Coppin_logo from "./CoppinState.png";
 import CornellUniversity_logo from "./CornellUniversity.png";
 import Denison_logo from "./DenisonUniversity.png";
-import DevryUniversity_logo from "./DevryUniversity.png";
+import DevryUniversity_logo from "./DeVryUniversity.png";
 import Drew_logo from "./DrewUniversity.png";
 import Rutgers_logo from "./Rutgers.png";
 import SFa_log from "./SFAStephen.png";
