@@ -55,7 +55,7 @@ const httpServer = createServer(app);
 
 // CORS configuration
 app.use(cors({
-  origin: ["http://localhost:5173","http://localhost:5174"],
+  origin: ["http://localhost:5173","http://localhost:5174", "https://f1successhub.com"],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"]
