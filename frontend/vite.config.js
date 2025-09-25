@@ -9,7 +9,7 @@ export default defineConfig({
     port: 5174,
     proxy: {
       '/api': {
-        target: 'https://localhost:9000', // Backend server URL
+        target: 'https://api.f1successhub.com', // Backend server URL
         changeOrigin: true,
         secure: false,
       },
