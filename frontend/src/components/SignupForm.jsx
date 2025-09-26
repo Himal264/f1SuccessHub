@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
+import { backendUrl } from '../App';
 
 const SignupForm = ({ onClose }) => {
   const [signupStep, setSignupStep] = useState(1);
@@ -161,7 +162,7 @@ const SignupForm = ({ onClose }) => {
     }
 
     try {
-      const response = await fetch("http://localhost:9000/api/user/register", {
+      const response = await fetch(`${backendUrl}/api/user/register`, {
         method: "POST",
         body: formDataToSend,
       });

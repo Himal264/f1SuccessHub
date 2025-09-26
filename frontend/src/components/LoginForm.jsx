@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Eye, EyeOff } from "lucide-react"; // Importing eye icons from lucide-react
+import { backendUrl } from '../App';
 
 const LoginForm = ({ onClose }) => {
   // State variables to store form data
@@ -36,7 +37,7 @@ const LoginForm = ({ onClose }) => {
 
     try {
       console.log('Attempting login...'); // Debug log
-      const response = await fetch("/api/user/login", {
+      const response = await fetch(`${backendUrl}/api/user/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
