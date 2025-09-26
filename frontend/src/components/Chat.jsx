@@ -5,6 +5,7 @@ import { IoClose, IoSend } from 'react-icons/io5';
 import { BsPersonCircle } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
+import { backendUrl } from '../App';
 
 const Chat = ({ isOpen, onClose, user }) => {
   const [activeChat, setActiveChat] = useState(null);
@@ -55,7 +56,7 @@ const Chat = ({ isOpen, onClose, user }) => {
     try {
       setError(null);
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/chat/list?userId=${authUser._id}`,
+        `${backendUrl}/api/chat/list?userId=${authUser._id}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -78,7 +79,7 @@ const Chat = ({ isOpen, onClose, user }) => {
   const fetchAvailableUsers = async (type) => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/chat/available-users?type=${type}`,
+        `${backendUrl}/api/chat/available-users?type=${type}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -96,7 +97,7 @@ const Chat = ({ isOpen, onClose, user }) => {
     try {
       setSelectedUser(userDetails);
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/chat/create`,
+        `${backendUrl}/api/chat/create`,
         {
           method: 'POST',
           headers: {
@@ -131,7 +132,7 @@ const Chat = ({ isOpen, onClose, user }) => {
   const fetchChatMessages = async (chatId) => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/chat/${chatId}/messages?userId=${authUser._id}`,
+        `${backendUrl}/api/chat/${chatId}/messages?userId=${authUser._id}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -149,7 +150,7 @@ const Chat = ({ isOpen, onClose, user }) => {
   const handleSetActiveChat = async (chat) => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/chat/${chat._id}/messages?userId=${authUser._id}`,
+        `${backendUrl}/api/chat/${chat._id}/messages?userId=${authUser._id}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`

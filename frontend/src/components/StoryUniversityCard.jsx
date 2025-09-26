@@ -2,23 +2,25 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import assets from '../assets/assets';
+import { backendUrl } from '../App';
 
 const StoryUniversityCard = ({ universityName }) => {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
 
   useEffect(() => {
     const fetchStories = async () => {
       try {
         // First try to fetch university-specific stories
-        const uniResponse = await axios.get(`/api/stories/university/${encodeURIComponent(universityName)}`);
+        const uniResponse = await axios.get(`${backendUrl}/api/stories/university/${encodeURIComponent(universityName)}`);
         
         if (uniResponse.data.success && uniResponse.data.stories.length > 0) {
           setStories(uniResponse.data.stories);
         } else {
           // If no university stories, fetch recent news stories
-          const newsResponse = await axios.get('/api/stories', {
+          const newsResponse = await axios.get(`/api/stories`, {
             params: {
               storyType: 'news',
               limit: 3

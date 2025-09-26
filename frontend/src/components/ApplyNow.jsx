@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
+import { backendUrl } from '../App';
 
 const ApplyNow = () => {
   const { id } = useParams();
@@ -420,7 +421,7 @@ const ApplyNow = () => {
       if (!id) return;
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/api/university/${id}`
+          `${backendUrl}/api/university/${id}`
         );
         if (!response.ok)
           throw new Error(`HTTP error! status: ${response.status}`);

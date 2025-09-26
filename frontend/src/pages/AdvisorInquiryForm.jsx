@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-const VITE_BACKEND_URL = import.meta.env.VITE_BACKEND_URL
+import { backendUrl } from "../App";
 
 const AdvisorInquiryForm = () => {
   // Country and phone code mapping
@@ -89,7 +89,7 @@ const AdvisorInquiryForm = () => {
     try {
       // Replace with your API endpoint
       const response = await fetch(
-         `${import.meta.env.VITE_BACKEND_URL}/api/advisor-inquiryform/send`, {
+         `${backendUrl}/api/advisor-inquiryform/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

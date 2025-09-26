@@ -6,6 +6,7 @@ import 'react-quill/dist/quill.snow.css';
 import Stories1AskAdvisor from './Stories1AskAdvisor';
 import Stories2FindSchool from './Stories2FindSchool';
 import Quill from 'quill';
+import { backendUrl } from '../App';
 
 const StoriesAdd = () => {
   const navigate = useNavigate();

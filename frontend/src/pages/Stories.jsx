@@ -3,6 +3,7 @@ import axios from "axios";
 import Stories1AskAdvisor from '../components/Stories1AskAdvisor';
 import Stories2FindSchool from '../components/Stories2FindSchool';
 import { Link } from "react-router-dom";
+import { backendUrl } from "../App";
 import assets from "../assets/assets";
 
 const Stories = () => {

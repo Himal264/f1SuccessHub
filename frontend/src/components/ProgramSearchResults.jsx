@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Search, ChevronLeft } from "lucide-react";
 import { Link, useParams, useNavigate } from "react-router-dom";
+import { backendUrl } from "../App";
 
 const ProgramSearchResults = () => {
   const { level, subject } = useParams();
@@ -11,7 +12,7 @@ const ProgramSearchResults = () => {
   useEffect(() => {
     const fetchUniversities = async () => {
       try {
-        const response = await fetch(`http://localhost:9000/api/university/search?level=${level}&subject=${subject}`);
+        const response = await fetch(`${backendUrl}/api/university/search?level=${level}&subject=${subject}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
         setUniversities(data.universities || []);

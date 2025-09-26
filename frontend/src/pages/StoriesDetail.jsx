@@ -5,6 +5,7 @@ import Stories1AskAdvisor from "../components/Stories1AskAdvisor";
 import Stories2FindSchool from "../components/Stories2FindSchool";
 import Footer from "../components/Footer";
 import assets from "../assets/assets";
+import { backendUrl } from "../App";
 
 // Add this CSS at the top of your component or in a separate CSS file
 const storyContentStyles = `
@@ -30,7 +31,7 @@ const StoriesDetail = () => {
   useEffect(() => {
     const fetchStory = async () => {
       try {
-        const { data } = await axios.get(`/api/stories/${id}`);
+        const { data } = await axios.get(`${backendUrl}/api/stories/${id}`);
         if (data.success) {
           setStory(data.story);
           console.log('Story data:', data.story);

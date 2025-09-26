@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
+import { backendUrl } from '../App';
 
 const UniversitySearch = () => {
   const [universities, setUniversities] = useState([]);
@@ -12,7 +13,7 @@ const UniversitySearch = () => {
   useEffect(() => {
     const fetchUniversities = async () => {
       try {
-        const response = await fetch('http://localhost:9000/api/university/list');
+        const response = await fetch(`${backendUrl}/api/university/list`);
         const data = await response.json();
         setUniversities(data);
       } catch (error) {

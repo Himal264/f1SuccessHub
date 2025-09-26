@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { backendUrl } from "../App";
 
 const RelatedUniversities = ({ currentUniversity, searchProfileId }) => {
   const [relatedUniversities, setRelatedUniversities] = useState([]);
@@ -14,7 +15,7 @@ const RelatedUniversities = ({ currentUniversity, searchProfileId }) => {
         if (searchProfileId) {
           // If we have a search profile ID, use it to get personalized matches
           const response = await fetch(
-            `http://localhost:9000/api/match/${searchProfileId}`
+            `${backendUrl}/api/match/${searchProfileId}`
           );
           if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
           const data = await response.json();
@@ -25,7 +26,7 @@ const RelatedUniversities = ({ currentUniversity, searchProfileId }) => {
         } else {
           // Fall back to regular related universities logic
           const response = await fetch(
-            "http://localhost:9000/api/university/list"
+            `${backendUrl}/api/university/list`
           );
           if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
           const data = await response.json();

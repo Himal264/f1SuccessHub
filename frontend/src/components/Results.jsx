@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { backendUrl } from '../App';
 
 const Results = () => {
   const [matches, setMatches] = useState([]);
@@ -18,7 +19,7 @@ const Results = () => {
           throw new Error('No search profile ID found');
         }
 
-        const response = await fetch(`http://localhost:9000/api/match/${searchProfileId}`);
+        const response = await fetch(`${backendUrl}/api/match/${searchProfileId}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
