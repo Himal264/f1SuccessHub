@@ -134,7 +134,7 @@ const Navbar = () => {
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/user/loginform", {
+      const response = await fetch(`${backendUrl}/api/user/loginform`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -187,7 +187,7 @@ const Navbar = () => {
     }
 
     try {
-      const response = await fetch("/api/user/register", {
+      const response = await fetch(`${backendUrl}/api/user/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -268,7 +268,7 @@ const Navbar = () => {
         const formData = new FormData();
         formData.append('profilePicture', profileData.profilePicture);
 
-        const pictureResponse = await fetch('/api/user/update-profile-picture', {
+        const pictureResponse = await fetch(`${backendUrl}/api/user/update-profile-picture`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
